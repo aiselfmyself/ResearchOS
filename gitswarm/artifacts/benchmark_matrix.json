@@ -1,0 +1,22 @@
+{
+  "greedy": {
+    "mean_distance": 5320.14,
+    "min_distance": 5057.94,
+    "runs": 5
+  },
+  "random": {
+    "mean_distance": 13150.8,
+    "min_distance": 12216.73,
+    "runs": 5
+  },
+  "two_opt": {
+    "mean_distance": 4792.4,
+    "min_distance": 4584.58,
+    "runs": 5
+  },
+  "simulated_annealing": {
+    "mean_distance": 4410.25,
+    "min_distance": 4258.86,
+    "runs": 5
+  }
+}
