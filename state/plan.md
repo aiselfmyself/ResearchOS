@@ -212,3 +212,17 @@ approver may not edit (R2). Recorded here instead of patched:
 - Do not "fix" this by appending `APR-001 revision 2` with `decision: rejected`:
   that would falsify the decision this round reached, and `requires_passing_review`
   plus the reviewer/proposer separation would still be satisfied by it.
+
+### 7. A8 — CI 観察（このPRの赤から）
+
+`arena/955f8586-researchos` の push run `39253001209` は失敗したが、内訳は
+**スキーマ・参照整合性検証 = success / unittest = 1件失敗（A7）/ 以後すべて skipped**。
+つまり `check-append-only`・`check-commits`・`check-authorship`・ベンチマーク再現性
+チェックは**実行されないまま終わる**（GitHub Actions は step 失敗で job を止める）。
+
+| ID | Severity | Finding |
+| :--- | :--- | :--- |
+| **A8** | Medium | 回帰テスト1件の赤が、同じ job の**ガバナンス検査全体を skip させる**。「テストが落ちているから様子を見る」はガードが働いていない時間になる。しかも land ゲート（`main` のみ実行、F3 で壊れている）も同 job の後段にあるので、**A7 を放置したまま main にマージすると land ゲートは一度も走らない**。`continue-on-error: true` + 最終ステップでの集約判定、または検査の job 分割を PRP-002 に含める |
+
+ローカル側は `check-all` ok=true・`validate_researchos.py` exit 0 で確認済み。CI の赤は
+A7 の主張どおり「手続きどおりに承認を記録したこと」だけで発生する。
