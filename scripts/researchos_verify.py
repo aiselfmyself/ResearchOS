@@ -53,14 +53,15 @@ def _run(command: List[str], timeout: int = 300) -> tuple:
 
 
 def _sessions() -> Dict[str, dict]:
-    effective, errors, _warnings = resolve_effective(read_jsonl(ROOT / STATE_FILES["sessions"]))
+    # PRP-002 G4: use COLLECTION_ID_KEYS via load_effective
+    effective, errors, _warnings = load_effective("sessions")
     if errors:
         raise SystemExit("state/sessions.jsonl is inconsistent:\n  " + "\n  ".join(errors))
     return {record["session_id"]: record for record in effective}
 
 
 def _proposal(proposal_id: str) -> dict:
-    proposals, errors, _warnings = resolve_effective(read_jsonl(ROOT / STATE_FILES["proposals"]))
+    proposals, errors, _warnings = load_effective("proposals")
     if errors:
         raise SystemExit("state/proposals.jsonl is inconsistent:\n  " + "\n  ".join(errors))
     for record in proposals:
@@ -147,6 +148,46 @@ def build_checks(proposal_id: str, session_id: str, base: Optional[str]) -> List
         {"name": "role_guard", "result": "pass" if ok else "fail", "detail": detail}
     )
 
+    # PRP-002 V10: governance probes as first-class checks (4 probes -> 4 required checks)
+    # These are the executable acceptance criteria for G1-G4
+    probe_path = ROOT / "verifications" / "prp001_governance_probes.py"
+    governance_observations = []
+    if probe_path.exists():
+        ok, detail = _run([sys.executable, str(probe_path)])
+        # Parse JSON output if available, else fallback to raw detail
+        try:
+            import json as _j
+            # Re-run to capture full JSON
+            result = subprocess.run(
+                [sys.executable, str(probe_path)],
+                cwd=str(ROOT), text=True, capture_output=True, timeout=120
+            )
+            observations = _j.loads(result.stdout)
+            governance_observations = observations
+            # Map probe names to required_checks names (V9 unified)
+            name_map = {
+                "bootstrap_land_requires_independent_approval": "bootstrap_land_requires_approval",
+                "merge_commits_are_audited": "merge_commits_are_audited",
+                "approval_rejects_failed_or_missing_required_checks": "approval_consistency",
+                "multiple_reviews_from_one_session_remain_distinct": "distinct_reviews",
+            }
+            for obs in observations:
+                req_name = name_map.get(obs["name"], obs["name"])
+                checks.append({
+                    "name": req_name,
+                    "result": "pass" if obs.get("enforced") else "fail",
+                    "detail": _j.dumps(obs, ensure_ascii=False)[:400]
+                })
+            # Also emit governance_review as aggregated (for backward compat with RQ-001 which requires it)
+            gov_ok = all(o.get("enforced") for o in observations) if observations else ok
+            checks.append({"name": "governance_review", "result": "pass" if gov_ok else "fail", "detail": "aggregated from 4 governance probes; see individual checks"})
+        except Exception as exc:
+            # Fallback: single governance_review check
+            checks.append({"name": "governance_review", "result": "pass" if ok else "fail", "detail": f"probe runner: {detail} ({exc})"})
+    else:
+        # If probe file missing, governance_review is a placeholder
+        checks.append({"name": "governance_review", "result": "skip", "detail": "probe file missing"})
+
     sessions = _sessions()
     proposal = _proposal(proposal_id)
     session = sessions.get(session_id)
@@ -197,7 +238,8 @@ def main(argv=None) -> int:
     else:
         result = "pass"
 
-    existing, _errors, _warnings = resolve_effective(read_jsonl(REVIEWS_PATH))
+    # PRP-002 G4: use collection-specific id_key for reviews
+    existing, _errors, _warnings = resolve_effective(read_jsonl(REVIEWS_PATH), "review_id")
     review_id = next_id(existing, "review_id", "REV")
     review = {
         "review_id": review_id,

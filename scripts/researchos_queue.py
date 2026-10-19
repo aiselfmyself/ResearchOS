@@ -40,7 +40,22 @@ SESSIONS_PATH = ROOT / "state" / "sessions.jsonl"
 
 
 def _load(path: Path):
-    effective, errors, _warnings = resolve_effective(read_jsonl(path))
+    # PRP-002 G4: use collection-specific id_key to avoid session_id mis-grouping
+    # Use load_effective with COLLECTION_ID_KEYS; fallback to generic for safety.
+    from researchos_common import STATE_FILES as _SF
+    # Direct mapping by path name
+    name_map = {
+        "sessions.jsonl": "sessions",
+        "proposals.jsonl": "proposals",
+        "reviews.jsonl": "reviews",
+        "approvals.jsonl": "approvals",
+        "review_queue.jsonl": "review_queue",
+    }
+    collection = name_map.get(path.name)
+    if collection:
+        effective, errors, _warnings = load_effective(collection)
+    else:
+        effective, errors, _warnings = resolve_effective(read_jsonl(path))
     if errors:
         raise SystemExit(f"{path.name} is inconsistent:\n  " + "\n  ".join(errors))
     return effective

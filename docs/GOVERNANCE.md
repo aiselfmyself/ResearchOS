@@ -97,7 +97,7 @@ Informed-By: <ancestor sha>
 | 承認の前提 | 参照するレビューに `result: pass` が最低 1 件 |
 | 承認の効果 | **approval レジャーが正**。提案の `status` は書き換え不要 |
 
-### R4. 追記専用
+### R4. 追記専用（PRP-002 で強化: ローリングハッシュ鎖）
 
 `state/*.jsonl` は行の追加のみ。既存行の編集・削除・並べ替えは `check-append-only` が拒否する。
 訂正は同じ ID で新しい行を追記する:
@@ -109,6 +109,8 @@ Informed-By: <ancestor sha>
 基準点は `policy/state_baseline.json`（`base_commit: 066b937`）。
 それ以前の行は**祖父条項**で免除され、行ハッシュで識別される。
 
+**PRP-002 以降の追加保証 (C2/A1):** 各ファイルの全行は `revision` と `supersedes` によるローリングハッシュ鎖で検証される。`state/reviews.jsonl` 等の base 後に作成された台帳も、接頭辞だけでなく各追記行の `supersedes == line_hash(prev)` が `check-append-only` で検証される。単なる前方一致では保護されない追記行の書き換え (A1) はハッシュ鎖で検出される。静的 baseline は段階的にハッシュ鎖のみへ移行する。
+
 ### R5. レコード authorship 束縛
 
 `state/*.jsonl` の各行は `git blame` で導入コミットを特定し、
@@ -117,14 +119,14 @@ Informed-By: <ancestor sha>
 
 これにより「別セッションを名乗るレコード」は、そのセッションを名乗るコミットを必要とする。
 
-### R6. ガバナンス変更の 2 段階
+### R6. ガバナンス変更の 2 段階（PRP-002 G1 で明確化）
 
 | ステージ | 必要条件 | 使う場面 |
 | :--- | :--- | :--- |
-| `propose` | `Governance-Proposal: PRP-xxx` があり、提案が `pending_review` 以上 | 機能ブランチでの変更 |
-| `land` | 提案が**別セッションにより承認済み**。自分の提案は着地できない | `main` へのマージ |
+| `propose` | `Governance-Proposal: PRP-xxx` があり、提案が `pending_review` 以上。`bootstrap` はこのステージのみ `Governance-Proposal` 無しで許可 (インストール時の1回限り) | 機能ブランチでの変更 |
+| `land` | 提案が**別セッションにより承認済み**。自分の提案は着地できない。**`bootstrap` も例外なく適用** — `may_use_governance_paths_without_proposal` は `land` では無効 | `main` へのマージ |
 
-CI は通常 `propose` を検査し、`main` への push では `land` を検査する。
+CI は通常 `propose` を検査し、`main` への push では `land` (`--stage land`) を検査する。`bootstrap` が `land` で無承認の governance 変更を着地させることは `check_governance_path` が拒否する (G1)。
 
 ---
 
@@ -159,7 +161,27 @@ CI は通常 `propose` を検査し、`main` への push では `land` を検査
 
 ---
 
-## 6. 運用手順（手動起動を前提）
+## 6. 並行線路の照合手順（PRP-002 C6/A5）
+
+並行する独立セッション線路 (例: `arena/eb670d1f` と `arena/f63b6887` が同一親から分岐し独自の REV-001/RQ-001/PRP-002 を発行) は `next_id` の衝突等で union マージ時に validator エラー (duplicate revision, supersedes mismatch) になるが `check-all` は `ok=true` のままである。照合は手動で行う:
+
+```bash
+# 線路B (例: arena/f63b6887) を線路A (arena/5491cb12) に照合
+git fetch origin arena/f63b6887-researchos
+git checkout arena/5491cb12-researchos
+git merge --no-ff --no-commit origin/arena/f63b6887-researchos
+python3 scripts/validate_researchos.py  # 失敗すれば
+# 競合した ID は新しい revision で supersedes を正しい前行ハッシュに付け替え
+# 両方の行を保持しつつ、重複 ID は手動で新 ID に採番し直す
+git status  # state/*.jsonl の競合を手動解消
+python3 scripts/validate_researchos.py --quiet && python3 scripts/researchos_guard.py check-all --stage propose
+git commit -m "reconcile: merge parallel line B into A" # + Session-Id/Role trailers
+```
+
+* `next_id` は線路間で衝突する。ガバナンス ID (PRP-*, REV-*, APR-*, RQ-*) は並行線路では手動で一意な suffix を付与するか、将来の PRP-003 の UUID 方式を待つこと。
+* 現行 `policy/state_baseline.json` の `files` 接頭辞検査は将来 PRP-003 で撤廃し、ハッシュ鎖のみに移行する。現時点では両方を検査する。
+
+## 7. 運用手順（手動起動を前提）
 
 ### 6.1 セッションを終えるとき
 

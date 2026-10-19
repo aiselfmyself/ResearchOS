@@ -32,11 +32,12 @@ NEXT_PATH = ROOT / "state" / "NEXT_SESSION.md"
 
 
 def _effective(name: str):
+    # PRP-002 G4 + V11: use load_effective with COLLECTION_ID_KEYS
     try:
-        records, errors, _warnings = resolve_effective(read_jsonl(ROOT / STATE_FILES[name]))
+        effective, errors, _warnings = load_effective(name)
     except (OSError, ValueError):
         return []
-    return records if not errors else records
+    return effective if not errors else effective
 
 
 def decide_role(queue: List[dict], proposals: List[dict], reviews: List[dict], approvals: List[dict]) -> str:
@@ -50,13 +51,27 @@ def decide_role(queue: List[dict], proposals: List[dict], reviews: List[dict], a
         for review in reviews
         if review.get("result") in ("pass", "partial")
     }
+    # V11: if latest review for a pending proposal is fail, recommend proposer rework
+    # Find proposals where latest review is fail
+    failed_proposals = {
+        review.get("proposal_id")
+        for review in reviews
+        if review.get("result") == "fail"
+    }
+    # If any open queue, verifier needed
     if any(item.get("status") == "open" for item in queue):
         return "verifier"
+    # If any pending proposal hasn't been reviewed (no pass/partial), verifier
     if any(
         proposal.get("status") == "pending_review"
         for proposal in proposals
         if proposal.get("proposal_id") not in reviewed
     ):
+        # But if its latest review is fail, it needs proposer rework, not another verifier loop
+        # Check if any unreviewed proposal has a fail review (rework needed)
+        for prop in proposals:
+            if prop.get("proposal_id") not in reviewed and prop.get("proposal_id") in failed_proposals:
+                return "proposer"
         return "verifier"
     if any(
         proposal.get("proposal_id") in reviewed
@@ -65,6 +80,9 @@ def decide_role(queue: List[dict], proposals: List[dict], reviews: List[dict], a
         for proposal in proposals
     ):
         return "approver"
+    # V11: if all reviewed are fail, proposer should rework
+    if any(p.get("proposal_id") in failed_proposals for p in proposals if p.get("status") == "pending_review"):
+        return "proposer"
     return "proposer"
 
 

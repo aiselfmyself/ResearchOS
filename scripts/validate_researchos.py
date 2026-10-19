@@ -380,6 +380,64 @@ def validate_governance(
                     f"Approval '{approval.get('approval_id')}' is 'approved' but cites "
                     "no passing review"
                 )
+            # PRP-002 G3/C3 + V13: review checks consistency and required_checks binding
+            for review in referenced:
+                checks = review.get("checks", [])
+                if not checks:
+                    errors.append(
+                        f"Approval '{approval.get('approval_id')}' cites review '{review.get('review_id')}' with no checks"
+                    )
+                    continue
+                has_fail = any(c.get("result") == "fail" for c in checks)
+                has_skip_or_warn = any(c.get("result") in ("skip", "warn") for c in checks)
+                if review.get("result") == "pass" and has_fail:
+                    errors.append(
+                        f"Approval '{approval.get('approval_id')}' cites review '{review.get('review_id')}' with result pass but contains failing checks"
+                    )
+                if review.get("result") == "partial":
+                    if has_fail:
+                        errors.append(
+                            f"Review '{review.get('review_id')}' is partial but contains failing checks"
+                        )
+                    if not has_skip_or_warn:
+                        errors.append(
+                            f"Review '{review.get('review_id')}' is partial but has no skip/warn checks"
+                        )
+                # required_checks from queue (authority)
+                relevant_queues = [q for q in queue if q.get("proposal_id") == proposal.get("proposal_id")]
+                for q in relevant_queues:
+                    required = q.get("required_checks", [])
+                    if required:
+                        passed_names = {c.get("name") for c in checks if c.get("result") == "pass"}
+                        # Backward compat: old REV-001 emitted "policy" but queue required "governance_review"
+                        # Consider policy as satisfying governance_review for pre-PRP-002 reviews
+                        if "governance_review" in required and "governance_review" not in passed_names and "policy" in passed_names:
+                            passed_names.add("governance_review")
+                        missing = set(required) - passed_names
+                        if missing:
+                            errors.append(
+                                f"Approval '{approval.get('approval_id')}' cites review '{review.get('review_id')}' missing required checks: {', '.join(sorted(missing))} (queue {q.get('queue_id')})"
+                            )
+                # PRP-002 C3/A2: review_line_sha256 binding (if present, must match)
+                expected_hashes = approval.get("review_line_sha256") or approval.get("review_sha256")
+                if expected_hashes:
+                    # Support both dict {review_id: hash} and single string
+                    if isinstance(expected_hashes, dict):
+                        expected = expected_hashes.get(review.get("review_id"))
+                        if expected:
+                            from researchos_common import line_hash as _lh
+                            actual = _lh(review)
+                            if actual != expected:
+                                errors.append(
+                                    f"Approval '{approval.get('approval_id')}' review_line_sha256 mismatch for {review.get('review_id')}: expected {expected[:12]}..., got {actual[:12]}..."
+                                )
+                    elif isinstance(expected_hashes, str):
+                        from researchos_common import line_hash as _lh2
+                        actual = _lh2(review)
+                        if actual != expected_hashes:
+                            errors.append(
+                                f"Approval '{approval.get('approval_id')}' review_line_sha256 mismatch: expected {expected_hashes[:12]}..., got {actual[:12]}..."
+                            )
         elif approval.get("decision") == "rejected":
             if not referenced:
                 errors.append(

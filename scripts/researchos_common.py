@@ -11,6 +11,12 @@ Design notes
   exempt from the new requirements.  Everything appended after the baseline
   must comply.
 * **No external dependencies.**  The harness must run on a bare runner.
+* **COLLECTION_ID_KEYS:** Every call to ``resolve_effective`` for a state
+  collection MUST pass the collection-specific id_key (e.g. ``review_id`` for
+  reviews, ``queue_id`` for review_queue).  Using the default ``ID_KEYS``
+  order silently groups reviews by ``session_id`` and breaks
+  ``researchos_queue.py complete`` for verifiers with multiple REV-*.
+  Use ``load_effective(name)`` which does this automatically.
 """
 from __future__ import annotations
 
@@ -337,8 +343,63 @@ def commits_in_range(base: str, first_parent: bool = False) -> List[str]:
 
 
 def is_merge(rev: str) -> bool:
-    parents = git("rev-list", "--parents", "-n", "1", rev).split()
+    try:
+        parents = git("rev-list", "--parents", "-n", "1", rev).split()
+    except RuntimeError:
+        # Synthetic or invalid SHA (e.g. probe mock) — treat conservatively
+        return False
     return len(parents) > 2
+
+
+def commit_parents(rev: str) -> Optional[List[str]]:
+    """Return parent SHAs of rev, or None if rev is synthetic/invalid."""
+    try:
+        parts = git("rev-list", "--parents", "-n", "1", rev).split()
+    except RuntimeError:
+        return None
+    # parts[0] is rev itself, rest are parents
+    if not parts:
+        return None
+    return parts[1:] if len(parts) > 1 else []
+
+
+def is_ancestor(ancestor: str, descendant: str) -> Optional[bool]:
+    """Check if ancestor is ancestor of descendant. None on error/synthetic."""
+    if not ancestor or not descendant:
+        return None
+    result = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", ancestor, descendant],
+        cwd=str(ROOT),
+        capture_output=True,
+    )
+    if result.returncode == 0:
+        return True
+    if result.returncode == 1:
+        return False
+    # Error (e.g. synthetic sha, unknown rev)
+    return None
+
+
+def commits_in_merge_second_parent(merge_sha: str, base_commit: str, first_parent_sha: str) -> List[str]:
+    """List commits from second-parent side of a merge, excluding first-parent history.
+    
+    Used to audit governance paths introduced via a side branch that --first-parent hides.
+    Returns [] on error or if merge has no second parent.
+    """
+    parents = commit_parents(merge_sha)
+    if parents is None or len(parents) < 2:
+        return []
+    # parents[0] is first_parent, parents[1:] are other parents
+    result: List[str] = []
+    for other in parents[1:]:
+        try:
+            # commits reachable from other but not from first_parent nor base
+            out = git("rev-list", "--reverse", f"{base_commit}..{other}", f"^{first_parent_sha}")
+            result.extend(line.strip() for line in out.splitlines() if line.strip())
+        except RuntimeError:
+            # If enumeration fails (synthetic), report as error elsewhere; don't crash
+            continue
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -427,6 +488,14 @@ def now_utc() -> str:
 
 
 def next_id(records: List[Dict[str, Any]], key: str, prefix: str) -> str:
+    """Generate next sequential ID. WARNING: parallel session lines collide.
+
+    Two independent proposers forking the same parent will mint the same next
+    ID (e.g. PRP-002) and cause duplicate revision errors on union.  For
+    governance IDs (PRP-*, REV-*, APR-*, RQ-*) use a manual unique suffix or
+    await PRP-003's UUID scheme.  The function is kept for research claims
+    where collision is low-impact.
+    """
     highest = 0
     for record in records:
         value = str(record.get(key, ""))

@@ -24,7 +24,7 @@
   ],
   "roles": {
     "bootstrap": {
-      "description": "One-time installation of the governance harness. Capped at a single session by the validator; every bootstrap commit is flagged for post-hoc independent review.",
+      "description": "One-time installation of the governance harness. Capped at a single session by the validator; every bootstrap commit is flagged for post-hoc independent review. At 'land' stage (merge to main), bootstrap must still present an approved Governance-Proposal from a different session — the without-proposal exemption applies only to 'propose'.",
       "may_write": [
         "**"
       ],

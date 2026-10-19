@@ -14,8 +14,8 @@ permissions:
   contents: read
 
 jobs:
-  verify:
-    name: 基本実行の確認
+  test:
+    name: テストと決定論的検証
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -45,18 +45,41 @@ jobs:
         run: |
           python3 gitswarm/benchmarks/benchmark.py --check
 
-      - name: ResearchOS ガバナンス検査
+      - name: ガバナンス否定プローブ（G1-G4）
+        run: |
+          python3 verifications/prp001_governance_probes.py
+
+      - name: ジョブサマリ（test）
+        if: always()
+        run: |
+          {
+            echo "## GitHub Actions 動作確認 — test"
+            echo "| 項目 | 値 |"
+            echo "| --- | --- |"
+            echo "| イベント | \`${{ github.event_name }}\` |"
+            echo "| ブランチ | \`${{ github.ref_name }}\` |"
+            echo "| 実行番号 | ${{ github.run_number }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  guard:
+    name: ガバナンス検査と着地ゲート
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: []  # PRP-002 A8: don't skip guard when test fails — run independently
+    if: always()
+    steps:
+      - name: リポジトリを取得
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ResearchOS ガバナンス検査（propose ステージ）
         run: |
           set -euo pipefail
           python3 scripts/researchos_guard.py check-policy
           python3 scripts/researchos_guard.py check-append-only
-          python3 scripts/researchos_guard.py check-commits --branch "${GITHUB_REF_NAME}"
+          python3 scripts/researchos_guard.py check-commits --branch "${GITHUB_REF_NAME}" --stage propose
           python3 scripts/researchos_guard.py check-authorship
-
-      - name: 次セッションへの引き継ぎを生成
-        run: |
-          python3 scripts/researchos_next.py --write > /dev/null
-          cat state/NEXT_SESSION.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: ガバナンス着地ゲート（main のみ）
         if: github.ref_name == 'main'
@@ -64,6 +87,23 @@ jobs:
           set -euo pipefail
           python3 scripts/researchos_guard.py check-commits --branch main --stage land
           python3 scripts/validate_researchos.py --quiet
+          echo "land gate PASS for main"
+
+      - name: 次セッションへの引き継ぎを生成
+        if: always()
+        run: |
+          python3 scripts/researchos_next.py --write > /dev/null || true
+          cat state/NEXT_SESSION.md >> "$GITHUB_STEP_SUMMARY" || true
+
+  artifacts:
+    name: 成果物とサマリ
+    runs-on: ubuntu-latest
+    needs: [test, guard]
+    if: always()
+    timeout-minutes: 5
+    steps:
+      - name: リポジトリを取得
+        uses: actions/checkout@v4
 
       - name: 簡単な計算テスト
         run: |
@@ -87,7 +127,7 @@ jobs:
       - name: ジョブサマリ
         run: |
           {
-            echo "## GitHub Actions 動作確認"
+            echo "## GitHub Actions 動作確認 — artifacts"
             echo "| 項目 | 値 |"
             echo "| --- | --- |"
             echo "| イベント | \`${{ github.event_name }}\` |"

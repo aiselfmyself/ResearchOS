@@ -52,8 +52,9 @@ def derive_session_id(branch: str) -> str:
 
 
 def effective_sessions():
+    # PRP-002 G4: use COLLECTION_ID_KEYS via load_effective / explicit id_key
     records = read_jsonl(SESSIONS_PATH)
-    effective, errors, _warnings = resolve_effective(records)
+    effective, errors, _warnings = resolve_effective(records, "session_id")
     if errors:
         raise SystemExit("state/sessions.jsonl is inconsistent:\n  " + "\n  ".join(errors))
     return records, effective
