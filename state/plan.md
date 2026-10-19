@@ -270,3 +270,108 @@ Claimed `RQ-002` and ran the 13 required checks: **13/13 pass** (`researchos_ver
 **Verdict: fail — REV-003.** `RQ-002` completed with REV-003. Do not approve/land PRP-002. The next session is a **proposer rework** (PRP-002 revision 2) to implement a real file-level append-only anchor and a real tamper test, make `review_line_sha256` mandatory, and align the §14 commands with the implementation. Full evidence: `verifications/prp002_verifier_f99f5b7f.md`. Note: `REV-003` was chosen because `REV-002` already exists on the parallel verifier line `arena/363c9e54-researchos`; `RQ-002` revisions still need §6 reconciliation on union.
 
 *Generated: 2026-10-19T13:31:00+00:00*
+
+## PRP-002 rev3 Rework Round (2026-10-19, Proposer — SES-86da9dab)
+
+**Branch:** `arena/86da9dab-researchos`, parent `e45cdd8` (Verifier SES-f99f5b7f, REV-003 fail + hand-off).
+
+This session executes `state/NEXT_SESSION.md` from `arena/f99f5b7f-researchos`, which recommended
+**proposer** for a rework of PRP-002 revision 2. Scope is exactly the four items REV-003 §9 raised as
+blocking or DoD-breaking: (1) a file-wide append-only anchor, (2) a real tamper test, (3) mandatory
+`review_line_sha256`, (4) §14 command alignment. Session claimed via
+`researchos_session.py claim --role proposer` (SES-86da9dab, `first_commit` e45cdd8).
+
+### What REV-003 proved, and what changed
+
+REV-003 measured **13/13 required checks pass** and still failed the proposal, because the checks ran
+on a clean tree: rewriting `REV-001` in place, deleting `REV-001`, and rewriting a *freshly appended
+and committed* `REV-9001` all left `check-append-only` at exit 0 and `check-all --json` at `ok=true`.
+The rev2 "rolling hash chain" only chained `supersedes` **between revisions of the same id**, so the
+newest line of every ledger was pinned by nothing, and `state/reviews.jsonl` was created empty at
+`e236b57`, so the baseline prefix protected zero lines.
+
+`check_append_only` now runs four independent layers, each of which tolerates appending and rejects
+rewriting or deleting an existing line:
+
+| layer | implementation | catches |
+| :--- | :--- | :--- |
+| 1 baseline prefix | `prefix_violations` (unchanged, kept for compatibility) | lines that existed at `base_commit` |
+| 2 **HEAD prefix** | `check_working_tree_against_head` | uncommitted rewrite/deletion (attacks 1-2) |
+| 3 **per-commit audit** | `check_state_history` + `_state_commit_log` + `subsequence_violations`, one `git cat-file --batch` | committed rewrite/deletion, side branches included, merges must keep every parent line (attack 3) |
+| 4 **file-wide anchor** | `state/anchors.jsonl` + `anchor_errors` (rolling head over raw lines) | rewrite/deletion of any *anchored* line, newest line included, without needing history traversal |
+
+`scripts/researchos_anchor.py` (`update` / `list` / `verify`) writes and checks the pins; `append_jsonl`
+refreshes the pin automatically for repository ledgers, so the standard tools never go stale. Each
+anchor entry pins `head_sha256` of the first `lines` lines, chains to the previous anchor of the same
+ledger (`prev_head_sha256` / `prev_lines`) and to the anchor ledger itself
+(`prev_anchor_head_sha256` / `prev_anchor_lines`). **Re-anchoring after a rewrite does not hide it**:
+the older entry still pins the original prefix (probe R1.3, test
+`test_re_anchoring_does_not_hide_a_rewrite`).
+
+`review_line_sha256` is now **mandatory** for an `approved` decision: `schemas/approval.json` lists it
+in `required`, and `validate_governance` errors on a missing binding, a missing entry for a cited
+review, a single `review_sha256` string citing several reviews, and (always) a mismatch. The only
+exemption is data: `policy/roles.json` → `enforcement.approval_review_binding.grandfathered_approvals
+= ["APR-001"]`, which downgrades *absence* to a warning; a wrong hash is still an error. `APR-001`
+already carries the binding, so the repository stays green.
+
+`researchos_verify.py` now emits **15 checks**: the 13 of RQ-002 plus `append_only_adversarial` and
+`approval_binding`. Both attack a throwaway copy and both run a positive control, so "everything is
+red" cannot pass as green. This is the structural fix for "13/13 pass but the DoD does not hold".
+
+§14 was rewritten as a table that `verifications/prp002_rev2_acceptance_probes.py` executes
+(26 probes, R1-R4): every guard sub-command now accepts `--json` (REV-003 §5 saw exit 2), a new
+`check-anchors` sub-command exists, the hard-coded "52 tests" is gone (probe R4.13 asserts that §14
+carries no drifting count), and the probe file §14 references exists (R4.14). Probe **R2.3 is a
+mutation control**: it neuters `anchor_errors`, `check_working_tree_against_head` and
+`check_state_history` in a copy and *requires* `tests/test_append_only_tamper.py` to go red — a tamper
+suite that cannot fail when the guard is broken proves nothing, which is what REV-003 §3.4 found in
+`test_append_only_hash_chain_is_enforced`. That test now really tampers.
+
+### Measured in this session (Python 3.11.2 / git 2.39.5 / Linux)
+
+```
+python3 verifications/prp002_rev2_acceptance_probes.py --json   -> 26/26 ok, exit 0
+python3 -m unittest discover -s tests                           -> Ran 82 tests ... OK  (rev2: 57)
+python3 scripts/researchos_guard.py check-all --json            -> ok=true (policy/append_only/commits/authorship/anchors all 0)
+python3 scripts/validate_researchos.py --quiet                  -> exit 0
+python3 scripts/researchos_anchor.py verify                     -> ok=true (10 ledgers pinned)
+attack 1  rewrite REV-001 summary (uncommitted)                 -> check-append-only exit 1
+attack 1b rewrite + researchos_anchor.py update                 -> exit 1 (re-anchoring cannot hide it)
+attack 2  delete the REV-001 line                               -> exit 1, check-all --json ok=false
+attack 3  append REV-9001 -> commit (exit 0) -> rewrite         -> exit 1 uncommitted, exit 1 after commit
+          (layer 3 names the commit: "5092212: ... against c69f9ca")
+```
+
+All attacks were run in throwaway copies (`/tmp` and `tempfile`); no protected file in this repository
+was modified to produce them.
+
+### Ledger
+
+- `PRP-002` **revision 3** appended (`supersedes` = hash of the rev2 line), `status: pending_review`,
+  `changes` = 21 paths including the four new files. rev2 is left untouched (append-only).
+- `RQ-003` appended: open, priority high, **15 required_checks**, created_by `SES-86da9dab`.
+  `RQ-002` stays `completed` with `REV-003` — no status regression.
+- `state/anchors.jsonl` created with the genesis pins for all 10 ledgers.
+- Union-merge caveat, unchanged from REV-003 §8: the parallel track `arena/f63b6887` also minted
+  `RQ-003` (design-only rev2) and `arena/363c9e54` holds `REV-002`. Reconcile per
+  `docs/GOVERNANCE.md` §6. rev3 reduces the collision surface by deriving anchor ids from content and
+  treating identical duplicate anchor lines as idempotent.
+
+### Not done in this round (honest record)
+
+Layer 1 (`policy/state_baseline.json`) is kept for compatibility instead of being retired; the anchor
+root still lives in git history, so rewriting history itself remains out of reach of repository code
+(`docs/GOVERNANCE.md` §8-6); `next_id` collisions across parallel tracks remain a PRP-003 item; and
+the fixes REV-003 confirmed as working (F1, F2, F4, G1, G3, G4) were deliberately left untouched.
+
+### Next session
+
+**verifier**: claim `RQ-003`, run `researchos_verify.py --proposal PRP-002 --session <id> --write`
+(15 checks — `append_only_adversarial` and `approval_binding` must be among them), re-run the REV-003
+§3 attacks independently, and check that the mutation control R2.3 still turns the tamper suite red.
+An approver from a third session must then record `APR-002` **with `review_line_sha256` for every
+cited review** — the validator now rejects an approval without it. `main` merge stays blocked until
+then (APR-001 C1).
+
+*Generated: 2026-10-19T15:02:31+00:00*
