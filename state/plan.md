@@ -83,3 +83,82 @@ to see whether it fails when it should. Log:
 
 `PRP-001` is reviewed (`REV-001`, pass with conditions) and waits for an approver
 session that is neither `SES-c4426c6b` nor `SES-eb670d1f`.
+
+## Approval Round (2026-10-19, Approver — SES-955f8586)
+
+Third session in the `PRP-001` cycle: proposer `SES-c4426c6b`, reviewer
+`SES-eb670d1f`, approver `SES-955f8586`. Entry sequence per
+`state/NEXT_SESSION.md`: fast-forward merge of `arena/eb670d1f-researchos`
+(`631e7bf`), then `researchos_session.py claim --role approver`. The session
+holds **approver only**, so it can write `state/approvals.jsonl`, its own session
+record, the queue, `state/plan.md` and `state/NEXT_SESSION.md` — and not
+`reports/**` or `verifications/**`. That constraint is respected rather than
+worked around: this section **is** the approver's evidence log, and no second
+role was claimed to route around R2.
+
+### 1. The review was re-executed, not trusted
+
+| Check | Result here |
+| :--- | :--- |
+| `scripts/validate_researchos.py --quiet` | exit 0 |
+| `python3 -m unittest discover -s tests` | 49 tests, OK |
+| `gitswarm/benchmarks/benchmark.py --check` | PASS on a fresh run |
+| fresh `benchmark.py --json` means | greedy 5521.41 / random 12279.86 / two_opt 4739.72 / simulated_annealing 4731.96 — equal to the committed artifact |
+| `readout.py` vs `readout_snapshot.json` | matches |
+| `researchos_guard.py check-all` | ok=true (policy, append_only, commits, authorship) |
+| `researchos_verify.py` (read-only) | 6/8 pass; `role_separation` fail = "session does not hold the verifier role" — correct: an approver must not emit `REV-*` |
+
+`REV-001`'s `pass` is therefore reproduced. Findings F1–F6 were also reproduced
+in throwaway clones (nothing in this section was written to the real branch):
+
+- **F1 confirmed** — commit forging `Session-Id: SES-c4426c6b` / `Session-Role:
+  bootstrap` that edits `scripts/researchos_guard.py` itself, followed by a
+  legitimate commit: `check-all` **ok=true**. The same forgery at HEAD: rejected.
+- **F2 confirmed** — `.github/workflows/verify-github-actions.yml` changed with
+  **no trailers at all** on a side branch, landed with `--no-ff`: `check-all`
+  **ok=true**.
+- **F3 confirmed, and sharper** — `check-commits --stage land` is not a CLI
+  argument (exit 2). The CI step runs under `set -euo pipefail` with no
+  `continue-on-error`, so the first push to `main` will turn that job **red**; and
+  `gh run list --branch main` is empty, i.e. the land gate has **never executed**,
+  so it is untested rather than only mis-wired.
+- **F4 confirmed** — `researchos_session.py close` on your own session makes the
+  close commit fail `check-commits` with `session 'SES-…' is closed`.
+- **T/U (detection works)** — tampering `benchmark_matrix.json` (`greedy = 1.0`)
+  is caught by `--check`; deleting a **pre-baseline-count** line in
+  `state/claims.jsonl` is caught by `check-append-only`.
+
+### 2. New findings (A1–A5), found while approving
+
+| ID | Severity | Finding | Evidence |
+| :--- | :--- | :--- | :--- |
+| **A1** | High | R4 protects only the **prefix** as of `policy/state_baseline.json` `base_commit` (`066b937`), else the file's creation commit. `state/reviews.jsonl`, `state/approvals.jsonl`, `state/review_queue.jsonl` were created at/after that point → their appended lines are unprotected | REV-001 `summary` rewritten in place (and `result`/`checks` are in the same line): `check-all` ok=true, validator exit 0 |
+| **A2** | High | An approval cites `review_ids` only — never the reviewed bytes — so a justification can be replaced after the fact | `schemas/approval.json` has no content binding; `APR-001` records `review_line_sha256 = d1bf998f…` voluntarily as an anchor |
+| **A3** | Medium | The HEAD-only identity rule mis-fires on legitimate inheritance: after the documented `git merge` and **before commit 1**, `check-all` fails with `631e7bf: session 'SES-eb670d1f' belongs to branch 'arena/eb670d1f-researchos'` | observed in this session at claim time |
+| **A4** | Low | F1 × A1 compose into the real threat: forge a session whose role *may* write the ledger (no HEAD check for non-HEAD commits), rewrite the review an approval cites — every gate stays green | same reproduction as F1 + A1 |
+| **A5** | High | No reconciliation path for **parallel session lines**. `arena/e7ac466a` → `47c55a23` → `e09f19e4` → `f63b6887` forked the same parent and minted their own `REV-001`/`RQ-001`/`PRP-002` | union-merging `eb670d1f` + `f63b6887` in a scratch clone → 5 conflicted state files; after a keep-both-lines merge: **7 validator errors** (`REV-001: duplicate revision 1`, `RQ-001: revision 2 'supersedes' does not match the previous line hash`, …) while `check-all` reported **ok=true** |
+
+The interesting asymmetry in A5: the `supersedes` **line-hash chain** caught the
+collision that the append-only prefix check missed. The chain is the part worth
+generalising; the static baseline is the part worth deleting.
+
+### 3. Decision
+
+`APR-001` = **approved**, scope-limited: *adopt the harness on `arena/*` session
+branches*, with conditions C1–C6 recorded in the approval ledger (schema allows
+only `approved|rejected`, so conditions live in `rationale` + `conditions`).
+`main` merge withheld until `PRP-002` closes **C2 (A1)**, **C3 (A2)**, **C4
+(F1/F2)** and **C6 (A5)**; C5 (A3) is advisory. Reading `REV-001` is not enough
+for the next sessions: a `pass` there means "the eight required checks passed".
+
+`reports/**` and `verifications/**` are not approver-writable, so the
+PRP-002 draft spec lives here and in `state/NEXT_SESSION.md`.
+
+### 4. State as left by this session
+
+- `PRP-001` — `pending_review` in the proposal ledger (the approver may not
+  rewrite it, R3); authoritative record is `APR-001 approved`.
+- `RQ-001` — completed (by `SES-eb670d1f`).
+- Nothing here enforces the conditions (a `blocking` condition is text plus
+  human judgement, not a gate): honest note — the harness cannot even enforce
+  what this round says it must enforce, which is the point of `PRP-002`.
