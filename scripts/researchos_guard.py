@@ -262,15 +262,18 @@ def check_commits(
 # ---------------------------------------------------------------------------
 
 
+# For each record file, the session fields a revision may legitimately claim.
+# Order matters: a later queue revision is authored by the claimant, not by the
+# session that originally opened the item.
 RECORD_FILES = [
-    ("state/sessions.jsonl", "session_id"),
-    ("state/proposals.jsonl", "session_id"),
-    ("state/reviews.jsonl", "session_id"),
-    ("state/approvals.jsonl", "session_id"),
-    ("state/review_queue.jsonl", "created_by_session"),
-    ("state/claims.jsonl", "session_id"),
-    ("state/evidence.jsonl", "session_id"),
-    ("state/verifications.jsonl", "session_id"),
+    ("state/sessions.jsonl", ["session_id"]),
+    ("state/proposals.jsonl", ["session_id"]),
+    ("state/reviews.jsonl", ["session_id"]),
+    ("state/approvals.jsonl", ["session_id"]),
+    ("state/review_queue.jsonl", ["claimed_by_session", "created_by_session"]),
+    ("state/claims.jsonl", ["session_id"]),
+    ("state/evidence.jsonl", ["session_id"]),
+    ("state/verifications.jsonl", ["session_id"]),
 ]
 
 
@@ -293,7 +296,7 @@ def check_record_authorship() -> List[str]:
     merged branch (where the current branch name says nothing).
     """
     errors: List[str] = []
-    for relative_path, session_field in RECORD_FILES:
+    for relative_path, session_fields in RECORD_FILES:
         path = ROOT / relative_path
         if not path.exists():
             continue
@@ -303,7 +306,8 @@ def check_record_authorship() -> List[str]:
                 record = json.loads(line)
             except json.JSONDecodeError:
                 continue
-            claimed = record.get(session_field)
+            candidates = [record.get(field) for field in session_fields]
+            claimed = next((value for value in candidates if value), None)
             if not claimed:
                 continue
             sha = _blame_commit(relative_path, index)
@@ -316,11 +320,11 @@ def check_record_authorship() -> List[str]:
                     f"{relative_path}:{index}: introduced by {sha[:7]} without a "
                     "Session-Id trailer"
                 )
-            elif author_session != claimed:
+            elif author_session not in [value for value in candidates if value]:
                 errors.append(
                     f"{relative_path}:{index}: record claims session '{claimed}' but "
                     f"was introduced by commit {sha[:7]} authored by "
-                    f"'{author_session}'"
+                    f"'{author_session}' (accepted: {candidates})"
                 )
     return errors
 
