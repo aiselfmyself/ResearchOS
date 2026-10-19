@@ -31,3 +31,22 @@ prior session's artifacts, not a re-run of the same happy path.
    `Informed-By` references.
 6. **Record corrections and prevent regressions.** Update `state/`, harden the
    validator, add unit tests and CI drift checks, and write an independent report.
+
+## Governance Round (2026-10-19, Proposer)
+
+Implements the three recommendations from the independent audit. Session launch
+itself is frozen: Arena.ai chats are opened by a human, and the harness produces
+a paste-ready hand-off prompt instead.
+
+1. **Separation of duties.** `state/sessions.jsonl` binds a session to a branch,
+   `policy/roles.json` defines path allowlists, and `scripts/researchos_guard.py`
+   enforces commit trailers, path permissions, and `git blame` authorship.
+2. **Append-only state.** Corrections are new lines with `revision` and
+   `supersedes`; `check-append-only` rejects edits, deletions, and reordering.
+3. **Independent review trigger.** `state/review_queue.jsonl` plus
+   `scripts/researchos_verify.py` and `scripts/researchos_next.py` turn a
+   proposal into a reviewable, claimable, reproducible unit.
+
+Proposal `PRP-001` is `pending_review`. This session installed the harness
+(bootstrap) and proposed it; it must not review or approve it. The next session
+should claim the verifier role; a third session (or a human) approves.

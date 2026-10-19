@@ -7,7 +7,7 @@ ResearchOS は、研究状態を会話履歴から分離し、Git リポジト�
 - **研究課題:** 自律型 AI エージェントにおける長期推論・分散協調アーキテクチャ（Stateless vs GitSwarm）
 - **実行環境:** Arena.ai Agent Mode × GitHub
 - **前セッション:** `arena/01673a58-researchos`（`8763d08`）
-- **本ブランチ:** `arena/c4426c6b-researchos`（独立検証 `Auditor-01`）
+- **現行ブランチ:** `arena/c4426c6b-researchos`（独立監査 + ガバナンス・ハーネス）
 
 > **重要:** `gitswarm/` は **プロトコルレベルのシミュレーション** です。単一プロセスがワーカー役を逐次演じるものであり、非同期・独立コンテキストのマルチエージェント実行環境ではありません。詳細は [`reports/independent-verification-report.md`](reports/independent-verification-report.md) を参照してください。
 
@@ -16,29 +16,80 @@ ResearchOS は、研究状態を会話履歴から分離し、Git リポジト�
 ## クイックスタート
 
 ```bash
-# 1. 決定論的検証（スキーマ・ID 一意性・参照整合性・Informed-By の祖先関係）
+# 1. 決定論的検証（スキーマ・参照整合性・分離・Informed-By の祖先関係）
 python3 scripts/validate_researchos.py
 
-# 2. 回帰テスト（監査 Findings の固定）
+# 2. ガバナンス検査（ロール権限・追記専用・authorship）
+python3 scripts/researchos_guard.py check-all
+
+# 3. 回帰テスト
 python3 -m unittest discover -s tests -v
 
-# 3. GitSwarm ベンチマークの再現性チェック
+# 4. GitSwarm ベンチマークの再現性チェック
 python3 gitswarm/benchmarks/benchmark.py --check
 
-# 4. GitSwarm readout（既定は gitswarm/ にスコープ）
+# 5. GitSwarm readout（既定は gitswarm/ にスコープ）
 python3 gitswarm/readout.py
 
-# 5. プロトコル・シミュレーション（既定はドライラン推奨）
-python3 gitswarm/run_simulation.py --dry-run
+# 6. 次セッション用の引き継ぎプロンプトを生成
+python3 scripts/researchos_next.py --write
 ```
 
-### ベンチマーク成果物の再生成
+### セッションとして参加する
 
 ```bash
-python3 gitswarm/benchmarks/benchmark.py --write
+# ブランチ名からセッションIDを自動導出してロールを宣言
+python3 scripts/researchos_session.py claim --role verifier
+
+# レビューキューを確認して着手
+python3 scripts/researchos_queue.py list --status open
+python3 scripts/researchos_queue.py claim --queue RQ-001 --session SES-xxxx
+
+# 標準検証スイート（合否は実行結果のみ）
+python3 scripts/researchos_verify.py --proposal PRP-001 --session SES-xxxx --write
+
+# 完了を記録
+python3 scripts/researchos_queue.py complete --queue RQ-001 --review REV-001 --session SES-xxxx
 ```
 
-`gitswarm/artifacts/benchmark_matrix.json` には `_meta`（seeds / random_iterations / SA パラメータ / Python / platform / solver SHA-256 / git HEAD）と `per_seed` が含まれます。
+---
+
+## ガバナンス（提案者・検証者・承認者の分離）
+
+2026-10-19 の監査で、**自己検証が PASS したのに内容が誤っていた**ことが判明しました。これを構造的に防ぐため、セッション単位の分離を導入しています。
+
+```
+1 チャット = 1 セッション = 1 ブランチ
+proposer ──> PRP-xxx + RQ-xxx
+verifier ──> REV-xxx（別セッション、検証器・テストは編集不可）
+approver ──> APR-xxx（さらに別セッション）
+human    ──> main へマージ（land ゲート）
+```
+
+| ルール | 仕組み |
+| :--- | :--- |
+| 役割の分離 | 提案・レビュー・承認の `session_id` がすべて異なることを検証器が強制 |
+| パス権限 | verifier は `scripts/`, `schemas/`, `policy/`, `tests/`, `.github/` を変更できない |
+| 追記専用 | 訂正は `revision` + `supersedes` の新しい行。既存行の編集・削除は拒否 |
+| authorship | `git blame` で導入コミットを特定し、`Session-Id` とレコードのセッションを照合 |
+| ガバナンス変更 | `propose`（提案あり）と `land`（別セッションの承認済み）の 2 段階 |
+| 起動 | **手動のまま**（Arena.ai のチャットは人間が開く）。`state/NEXT_SESSION.md` が引き継ぎを担う |
+
+詳細: [`docs/GOVERNANCE.md`](docs/GOVERNANCE.md)
+実装レポート: [`reports/governance-implementation-report.md`](reports/governance-implementation-report.md)
+
+**現在の状態:** `PRP-001`（ガバナンス・ハーネス採用）が `pending_review`、`RQ-001` が `open`。
+このセッションは自分の提案をレビュー・承認できません。次のセッション（verifier）を待っています。
+
+### モデルが毎回変わることについて
+
+Arena.ai はチャットごとにモデルが変わり得ますが、**分離はモデルの違いに依存しません**。
+
+- ✅ 別チャットは提案者の推論履歴を持たないため、リポジトリから再導出する（コンテキスト独立）。
+- ⚠️ モデル系列の多様性は保証されず、自己申告も検証できない。
+- ❌ 同一性は暗号学的に証明できない（git author は全セッション共通）。
+
+そのため、セッション ID・ブランチ・レコード・`git blame` で分離を強制しています。
 
 ---
 
@@ -47,19 +98,20 @@ python3 gitswarm/benchmarks/benchmark.py --write
 | パス | 役割 |
 | :--- | :--- |
 | `task/TASK.md` | 研究課題・Ground Truth 要件・検証プロトコル |
-| `state/` | 研究状態（sources / evidence / claims / verifications / hypotheses / plan） |
-| `schemas/` | JSON Schema（source / evidence / claim / verification / hypothesis） |
+| `state/` | 研究状態（sources / evidence / claims / verifications / hypotheses / sessions / proposals / reviews / approvals / review_queue） |
+| `schemas/` | JSON Schema（研究レコード + ガバナンスレコード） |
+| `policy/` | ロールポリシーと追記専用の基準点 |
 | `scripts/validate_researchos.py` | 決定論的検証器（依存ライブラリなし） |
-| `gitswarm/problem.py` | 30都市 Euclidean TSP |
-| `gitswarm/solvers/` | greedy / random search / 2-opt / simulated annealing |
-| `gitswarm/benchmarks/benchmark.py` | 5シード・ベンチマーク（`--write` / `--check`） |
-| `gitswarm/readout.py` | 推薦集計と Compounding 指標（パス・スコープ対応） |
-| `gitswarm/run_simulation.py` | 7ワーカーエピソードのプロトコル・シミュレーション |
-| `tests/` | 監査 Findings を固定する回帰テスト |
-| `reports/` | 研究統合・GitSwarm 検証・独立監査レポート |
-| `contributions/` | 各ワーカーの調査ノート |
-| `verifications/` | 反証レポート・監査ログ |
-| `.github/workflows/` | CI（validator / tests / benchmark drift check） |
+| `scripts/researchos_guard.py` | ロール権限・追記専用・authorship の検査 |
+| `scripts/researchos_session.py` | セッション台帳の操作 |
+| `scripts/researchos_queue.py` | レビューキュー |
+| `scripts/researchos_verify.py` | 標準検証スイート |
+| `scripts/researchos_next.py` | 次セッション用プロンプト生成 |
+| `gitswarm/` | 30都市TSP のベンチマークと readout |
+| `tests/` | 監査 Findings とガバナンス規則の回帰テスト（49 件） |
+| `reports/` | 研究統合・GitSwarm 検証・独立監査・ガバナンス実装 |
+| `docs/GOVERNANCE.md` | ガバナンス・プロトコル |
+| `.github/workflows/` | CI（validator / tests / benchmark / governance） |
 
 ---
 
@@ -69,13 +121,18 @@ python3 gitswarm/benchmarks/benchmark.py --write
 Source ──< Evidence ──< Claim ──< Verification
                          │
                          └──< Hypothesis
+
+Session ──< Proposal ──< Review ──< Approval
+              │
+              └──< QueueItem ──< Review
 ```
 
 - **Source**: arXiv 等の一次資料（DOI / 著者 / 年 / URL）
 - **Evidence**: 逐語引用・測定値・メタデータ照合（`quote_type` 必須）
 - **Claim**: 証拠に紐づく主張（`candidate` / `supported` / `disputed` / `rejected`）
-- **Verification**: 主張・出典・証拠に対する検証（`pass` / `fail` / `warn` / `falsified`）
-- **Hypothesis**: 検証可能な仮説（`proposed` / `testing` / `supported` / `falsified` / `inconclusive`）
+- **Verification**: 検証結果（`pass` / `fail` / `warn` / `falsified`）
+- **Hypothesis**: 検証可能な仮説
+- **Session / Proposal / Review / Approval**: 役割分離の台帳
 
 `Informed-By:` コミットトレーラは、物理的な親とは別に**意味的な依存**を記録します。検証器は、引用先が実在するだけでなく、**引用元の祖先である**ことも確認します。
 
@@ -85,8 +142,9 @@ Source ──< Evidence ──< Claim ──< Verification
 
 | チェック | 結果 |
 | :--- | :--- |
-| `scripts/validate_researchos.py` | PASS（4 Sources / 14 Evidence / 7 Claims / 21 Verifications / 3 Hypotheses） |
-| `python3 -m unittest discover -s tests -v` | 15 tests OK |
+| `scripts/validate_researchos.py` | PASS（4 Sources / 14 Evidence / 7 Claims / 21 Verifications / 3 Hypotheses / 1 Session / 1 Proposal / 1 Queue） |
+| `scripts/researchos_guard.py check-all` | PASS（policy / append_only / commits / authorship） |
+| `python3 -m unittest discover -s tests -v` | 49 tests OK |
 | `benchmark.py --check` | PASS |
 | `readout.py`（`gitswarm/` スコープ） | 7 worker commits / 5 candidates / reuse 100% / negative 100% / ancestry 80% |
 
@@ -107,7 +165,9 @@ Source ──< Evidence ──< Claim ──< Verification
 - 非同期・独立ワーカーの実運用は未検証（本リポジトリは逐次シミュレーション）。
 - ベンチマークは 30都市 TSP・5シードの toy 規模。
 - `CLM-003`（多数決の危険性）は `candidate`。均質投票の誤り増幅を直接測った実験はない。
-- arXiv メタデータは 2026-10-19 時点の照合結果。
+- ガードはリポジトリ内のコードであり、書き込み権限があれば弱められる。最終ゲートは人間のマージ。
+- セッションの同一性は暗号学的に証明されない。
+- セッションの起動は手動（Arena.ai のチャットは人間が開く）。
 
 ---
 
