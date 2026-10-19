@@ -393,14 +393,10 @@ def validate_governance(
                 f"Proposal '{proposal['proposal_id']}' is 'approved' but has no "
                 "approved approval record"
             )
-        if (
-            proposal.get("status") == "pending_review"
-            and proposal["proposal_id"] in approved_ids
-        ):
-            warnings.append(
-                f"Proposal '{proposal['proposal_id']}' has an approved approval record "
-                "but its status is still pending_review"
-            )
+        # The approval ledger is authoritative for "approved".  The proposer may
+        # leave the self-declared status at pending_review; the approver is not
+        # allowed to rewrite the proposal record (that would be a separation
+        # violation), so this is intentionally not a warning.
 
     for item in queue:
         proposal_id = item.get("proposal_id")
