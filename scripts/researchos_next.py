@@ -40,6 +40,74 @@ def _effective(name: str):
     return effective if not errors else effective
 
 
+def scan_all_branches_for_open_queues() -> List[Dict]:
+    """Scan all remote arena/* branches for open review queues.
+
+    Returns list of dicts with branch, queue_id, proposal_id, created_at.
+    Best-effort: ignores branches where file missing or unreadable.
+    Resolves per-branch effective status (like load_effective) so that
+    claimed/completed revisions hide their earlier open line.
+    """
+    import subprocess
+    import json
+
+    result: List[Dict] = []
+    try:
+        branches = subprocess.check_output(
+            ["git", "for-each-ref", "--format=%(refname:strip=3)", "refs/remotes/origin/arena/*"],
+            text=True,
+        ).splitlines()
+    except Exception:
+        return result
+
+    for branch_ref in branches:
+        remote_ref = f"origin/{branch_ref}"
+        try:
+            content = subprocess.check_output(
+                ["git", "show", f"{remote_ref}:state/review_queue.jsonl"],
+                text=True,
+                stderr=subprocess.DEVNULL,
+            )
+        except Exception:
+            continue
+        records = []
+        for line in content.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rec = json.loads(line)
+            except Exception:
+                continue
+            records.append(rec)
+        if not records:
+            continue
+        # Resolve effective per queue_id (same logic as load_effective)
+        # Group by queue_id and pick latest revision
+        from collections import defaultdict
+        grouped: Dict[str, List[Dict]] = defaultdict(list)
+        for rec in records:
+            qid = rec.get("queue_id")
+            if qid:
+                grouped[qid].append(rec)
+        for qid, recs in grouped.items():
+            # Pick effective: max revision, or last if no revision field
+            # Use resolve logic: sort by revision then supersedes chain is validated elsewhere,
+            # but for scan we just pick highest revision number.
+            recs_sorted = sorted(recs, key=lambda r: r.get("revision", 1))
+            latest = recs_sorted[-1]
+            if latest.get("status") == "open":
+                result.append({
+                    "branch": branch_ref,
+                    "queue_id": latest.get("queue_id"),
+                    "proposal_id": latest.get("proposal_id"),
+                    "created_at": latest.get("created_at", ""),
+                    "required_checks": latest.get("required_checks", []),
+                })
+    result.sort(key=lambda x: x.get("created_at", ""))
+    return result
+
+
 def decide_role(queue: List[dict], proposals: List[dict], reviews: List[dict], approvals: List[dict]) -> str:
     approved_ids = {
         approval.get("proposal_id")
@@ -86,7 +154,7 @@ def decide_role(queue: List[dict], proposals: List[dict], reviews: List[dict], a
     return "proposer"
 
 
-def build_prompt(role: str, branch: str) -> str:
+def build_prompt(role: str, branch: str, scan_all: bool = False, global_open: Optional[List[Dict]] = None) -> str:
     queue = _effective("review_queue")
     proposals = _effective("proposals")
     reviews = _effective("reviews")
@@ -208,6 +276,29 @@ def build_prompt(role: str, branch: str) -> str:
             f"- `{session.get('session_id')}` {session.get('status', 'active')} "
             f"{'+'.join(session.get('roles', []))} — {session.get('branch')}"
         )
+    # Global verifier prioritization hint
+    if scan_all and global_open is not None:
+        lines.append("")
+        lines.append("## 他ブランチで Verifier を待っているキュー（優先度順）")
+        lines.append("")
+        if not global_open:
+            lines.append("なし。現ブランチのキューを優先してください。")
+        else:
+            lines.append("| Branch | Queue | Proposal | Created |")
+            lines.append("| :--- | :--- | :--- | :--- |")
+            for item in global_open:
+                lines.append(
+                    f"| `{item['branch']}` | {item['queue_id']} | {item['proposal_id']} | {item['created_at']} |"
+                )
+            # Highlight oldest
+            oldest = global_open[0]
+            if oldest["branch"] != branch:
+                lines.append("")
+                lines.append(f"> **優先推奨:** 最古の open キューは `{oldest['branch']}` の `{oldest['queue_id']}` ({oldest['proposal_id']}) です。")
+                lines.append(f"> 現ブランチ `{branch}` より優先度が高い可能性があります。`git fetch` 後に `git show origin/{oldest['branch']}:state/proposals.jsonl` で内容を確認し、必要ならそちらを Verifier として claim してください。")
+                lines.append("> ただし merge は人間の判断で — 同一ブランチで Verifier を完結させる場合は現ブランチを優先して構いません。")
+            lines.append("")
+            lines.append("ヒント: `python3 scripts/researchos_next.py --scan-all` で再取得できます。")
     lines.append("")
     lines.append("> このファイルは `scripts/researchos_next.py` が生成します。手動で編集しないでください。")
     return "\n".join(lines) + "\n"
@@ -217,6 +308,7 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="next-session hand-off prompt")
     parser.add_argument("--write", action="store_true", help="update state/NEXT_SESSION.md")
     parser.add_argument("--role", default=None, choices=["verifier", "approver", "proposer", "integrator"])
+    parser.add_argument("--scan-all", action="store_true", help="scan all remote arena/* branches for open queues and prioritize verifier")
     args = parser.parse_args(argv)
 
     branch = current_branch()
@@ -226,7 +318,17 @@ def main(argv=None) -> int:
         _effective("reviews"),
         _effective("approvals"),
     )
-    prompt = build_prompt(role, branch)
+    scan_all = args.scan_all
+    global_open = None
+    if scan_all:
+        global_open = scan_all_branches_for_open_queues()
+        # If global oldest is older than current branch's oldest open, suggest switching
+        # But role decision remains local unless --role explicitly overrides
+        if global_open:
+            # If global oldest is not current branch, hint verifier to prioritize it
+            # Don't auto-change role; just add hint section via build_prompt
+            pass
+    prompt = build_prompt(role, branch, scan_all=scan_all, global_open=global_open)
     print(prompt)
     if args.write:
         NEXT_PATH.write_text(prompt, encoding="utf-8")

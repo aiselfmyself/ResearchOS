@@ -1,6 +1,6 @@
 # ResearchOS 次セッションへの引き継ぎ
 
-生成日時: 2026-10-19T13:15:23+00:00
+生成日時: 2026-10-19T13:19:04+00:00
 引き継ぎ元ブランチ: `arena/5491cb12-researchos`
 推奨ロール: **verifier**
 
@@ -54,5 +54,13 @@ python3 scripts/researchos_queue.py complete --queue RQ-001 --review REV-001 --s
 - `SES-eb670d1f` active verifier — arena/eb670d1f-researchos
 - `SES-955f8586` active approver — arena/955f8586-researchos
 - `SES-5491cb12` active proposer — arena/5491cb12-researchos
+
+## 他ブランチで Verifier を待っているキュー（優先度順）
+
+| Branch | Queue | Proposal | Created |
+| :--- | :--- | :--- | :--- |
+| `arena/5491cb12-researchos` | RQ-002 | PRP-002 | 2026-10-19T12:45:26+00:00 |
+
+ヒント: `python3 scripts/researchos_next.py --scan-all` で再取得できます。
 
 > このファイルは `scripts/researchos_next.py` が生成します。手動で編集しないでください。
