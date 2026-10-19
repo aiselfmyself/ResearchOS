@@ -1,0 +1,80 @@
+name: GitHub Actions 動作確認
+
+on:
+  push:
+    branches: ["**"]
+  workflow_dispatch:
+    inputs:
+      note:
+        description: "動作確認メモ（任意）"
+        required: false
+        default: "manual dispatch"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: 基本実行の確認
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: リポジトリを取得
+        uses: actions/checkout@v4
+
+      - name: 実行コンテキストを表示
+        run: |
+          echo "actor      : ${{ github.actor }}"
+          echo "event_name : ${{ github.event_name }}"
+          echo "ref        : ${{ github.ref }}"
+          echo "sha        : ${{ github.sha }}"
+          echo "run_id     : ${{ github.run_id }}"
+          echo "input_note : ${{ inputs.note }}"
+
+      - name: 簡単な計算テスト
+        run: |
+          set -euo pipefail
+          total=0
+          for i in 1 2 3 4 5; do total=$((total + i)); done
+          echo "1..5 の合計 = ${total}"
+          test "${total}" -eq 15
+
+      - name: 成果物を作成
+        run: |
+          {
+            echo "# GitHub Actions 動作確認"
+            echo "- 日時(UTC): $(date -u '+%Y-%m-%d %H:%M:%S')"
+            echo "- イベント: ${{ github.event_name }}"
+            echo "- ブランチ: ${{ github.ref_name }}"
+            echo "- コミット: ${{ github.sha }}"
+          } > verify-output.txt
+          cat verify-output.txt
+
+      - name: ジョブサマリ
+        run: |
+          {
+            echo "## GitHub Actions 動作確認"
+            echo "| 項目 | 値 |"
+            echo "| --- | --- |"
+            echo "| イベント | \`${{ github.event_name }}\` |"
+            echo "| ブランチ | \`${{ github.ref_name }}\` |"
+            echo "| 実行番号 | ${{ github.run_number }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 成果物をアップロード
+        uses: actions/upload-artifact@v4
+        with:
+          name: verify-artifact
+          path: verify-output.txt
+          retention-days: 7
+
+  expected-failure:
+    name: 失敗検知の確認（意図的に失敗）
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+    steps:
+      - name: 意図的に失敗させる
+        run: |
+          echo "このステップは失敗する想定です"
+          exit 1
