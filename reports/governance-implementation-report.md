@@ -47,7 +47,7 @@
  "git_author":"aiselfmyself","first_commit":"066b937","status":"active"}
 ```
 
-- `state/researchos_common.py` の `resolve_effective()` が `revision` で最新版を解決する。
+- `scripts/researchos_common.py` の `resolve_effective()` が `revision` で最新版を解決する。
 - ブランチは**不変**。変更は検証器が拒否する。
 - 1 ブランチにつき active なセッションは 1 つだけ。
 - `bootstrap` は 1 セッションに限定。2 つ目は検証器が拒否する。
