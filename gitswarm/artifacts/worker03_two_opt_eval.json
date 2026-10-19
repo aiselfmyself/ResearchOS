@@ -1,0 +1,9 @@
+{
+  "worker": "Worker-03",
+  "tour_distance": 4584.578,
+  "improvement_over_greedy": 473.36,
+  "citations": [
+    "4e5dac2",
+    "36559f9"
+  ]
+}
