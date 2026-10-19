@@ -50,3 +50,36 @@ a paste-ready hand-off prompt instead.
 Proposal `PRP-001` is `pending_review`. This session installed the harness
 (bootstrap) and proposed it; it must not review or approve it. The next session
 should claim the verifier role; a third session (or a human) approves.
+
+## Verification Round (2026-10-19, Verifier — SES-eb670d1f)
+
+Adversarial verification of `PRP-001` from a session other than the proposer.
+Method: re-run the standard suite, then *attack* the harness in throwaway clones
+to see whether it fails when it should. Log:
+`verifications/verifier_eb670d1f_audit_log.md`; summary for approvers:
+`reports/verification-prp-001-review.md`.
+
+1. **Reproduce the standard suite.** 8/8 pass (`REV-001`).
+2. **Confirm the benchmark is really executed.** Fresh run reproduces the
+   committed matrix (greedy 5521.41 / random 12279.86 / two_opt 4739.72 /
+   SA 4731.96); tampering the artifact or `per_seed` fails `--check`.
+3. **Re-check the corrected metadata against primary sources.** SRC-001/002/003
+   author lists match arXiv (18/14/23 authors).
+4. **Attack the guard.** 7 ordinary violations are all caught (verifier writing
+   `scripts/`, verifier writing `state/claims.jsonl`, missing trailers, unknown
+   session, unheld role, edited state line, deleted state file), as are
+   self-review, append-only violations, and forged record authorship (R5).
+5. **Found gaps the suite cannot see.** F1 (High): `Session-Id` is self-declared
+   and the branch binding is enforced for HEAD only, so a commit can impersonate
+   another session — demonstrated by disabling the guard itself under a forged
+   bootstrap identity with `check-all` returning ok. F2 (High): merge commits are
+   skipped and `--first-parent` hides side-branch commits, so governance paths can
+   be landed without trailers or a proposal. F3 (Medium): the CI land gate
+   `check-commits --stage land` is not a CLI argument and exits 2. F4 (Medium):
+   `researchos_session.py close` on your own session breaks `check-commits`.
+6. **Follow-up required.** F1-F4 need a separate proposal (`PRP-002`) written by a
+   proposer session; a verifier may not touch `scripts/`. Until `PRP-002` lands,
+   the human merge to `main` remains the only effective gate.
+
+`PRP-001` is reviewed (`REV-001`, pass with conditions) and waits for an approver
+session that is neither `SES-c4426c6b` nor `SES-eb670d1f`.
