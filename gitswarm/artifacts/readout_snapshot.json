@@ -1,0 +1,47 @@
+{
+  "generated_at_utc": "2026-10-19T09:01:55+00:00",
+  "scope": {
+    "paths": [
+      "gitswarm"
+    ],
+    "since": null,
+    "commits_scanned": 9
+  },
+  "total_worker_commits": 7,
+  "candidate_commits": 5,
+  "nomination_votes": [
+    {
+      "nominator": "Worker-06",
+      "nominator_sha": "ba0832f",
+      "target_sha": "c66b253",
+      "vote_commit": "[Worker-06] nominate: candidate c66b253 (Worker-04)"
+    },
+    {
+      "nominator": "Worker-07",
+      "nominator_sha": "788856b",
+      "target_sha": "c66b253",
+      "vote_commit": "[Worker-07] nominate: candidate c66b253 (Worker-04)"
+    }
+  ],
+  "invalid_nominations": [],
+  "vote_tallies": {
+    "c66b253": 2
+  },
+  "winning_candidate_sha": "c66b253",
+  "winning_candidate_full_sha": "c66b25315b2fe11011dc6d0c00f610d89605873c",
+  "compounding_metrics": {
+    "contribution_reuse_rate_pct": 100.0,
+    "negative_results_total": 1,
+    "negative_results_reused": 1,
+    "negative_reuse_rate_pct": 100.0,
+    "winner_ancestry_coverage_pct": 80.0
+  },
+  "reused_commits": [
+    "36559f9",
+    "4e5dac2",
+    "b6a5f59",
+    "c66b253",
+    "e95bb65"
+  ],
+  "unreused_commits": []
+}

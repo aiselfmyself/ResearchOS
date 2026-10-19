@@ -37,6 +37,14 @@ jobs:
         run: |
           python3 scripts/validate_researchos.py
 
+      - name: ResearchOS 回帰テスト（独立監査 Findings の固定）
+        run: |
+          python3 -m unittest discover -s tests -v
+
+      - name: GitSwarm ベンチマーク再現性チェック
+        run: |
+          python3 gitswarm/benchmarks/benchmark.py --check
+
       - name: 簡単な計算テスト
         run: |
           set -euo pipefail
