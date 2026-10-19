@@ -1,0 +1,93 @@
+{
+  "policy_version": 1,
+  "base_commit": "066b937454263aa6685f2bf7869124698829d3f9",
+  "description": "Append-only baseline. Records whose canonical line hash appears in legacy_line_sha256 are grandfathered; all later lines must carry a revision, a session, and (for supported claims) independent backing.",
+  "files": {
+    "state/sources.jsonl": {
+      "sha256": "27f058fef90c1c47eacab5e6a3359925448283edb291d457f627731208460b9b",
+      "bytes": 4438,
+      "lines": 4
+    },
+    "state/evidence.jsonl": {
+      "sha256": "63ca9e2afe76bd16f19b9e47cad0cdfd84c14fb66a7a522d2d81509fc0070ed2",
+      "bytes": 10390,
+      "lines": 14
+    },
+    "state/claims.jsonl": {
+      "sha256": "34b9adadb99cbbce3897a2310e038f9b5c3ae51207975a427c42997fde375381",
+      "bytes": 4455,
+      "lines": 7
+    },
+    "state/verifications.jsonl": {
+      "sha256": "a76136762a9dd99362faaeec35c0e2a9eb8f20169005c05457d4fdc0a23e4463",
+      "bytes": 8079,
+      "lines": 21
+    },
+    "state/hypotheses.jsonl": {
+      "sha256": "f51fd690bdb4915829433e5fe1ebdb030cb42e53a5c6357e0455a932e6e656fa",
+      "bytes": 1178,
+      "lines": 3
+    }
+  },
+  "legacy_line_sha256": {
+    "state/sources.jsonl": [
+      "b179e9c81ce4dc2a460c392ad487406d8b5929d5e9478c29f7c81b7ceb08900d",
+      "2feed35f81f983b3beb70b0ebf3ec7a3da60644837270f060eed852384b83388",
+      "d0efc161eabe96c63eb63cfe6cbebd33958d6a6b60fc126f3f65f3e9f3b9a501",
+      "ea8179567d5a99194b2793171057fb442af46119bbb4257638c5aa2a340dc066"
+    ],
+    "state/evidence.jsonl": [
+      "3a6c969c1fc35a0538d092f233e6ce66b62624d26f9c73b19d03a8fab4ff9c31",
+      "e432f830d0cf7a9814c760b414bb5c1324fb6d1e241ceeb357b0eb9b65688e18",
+      "42351e78e3d7ee26abac829b1528c40c5cc6b236bf538f96eaae8062ca37e31e",
+      "04d26e353cf10e2e51f8993c5f62633282a69492bb5bfa00b14a1ed420349c26",
+      "f7abdfc6dbed993a2449a588b6f7f5493d2a5c9ff016a2bbe3c71f261b16e10f",
+      "aff2584cbfdd61be6e4d84cce8b1e710f5595744989b921c2a022cb477f16111",
+      "8f8e54aef8240f4f440765ad1934774d29ba6354714c494ffd937d382604ba09",
+      "ff40f6ee9e74c084ac46c49623597209892b240a4df68f6a0151864a61832180",
+      "c7a7d8278c5c99d8947f582601ded85a4cac4e8cd712e96b4dfae14fb8b71b51",
+      "4a978cba4aad3c9354dae3a0aaab6064e704e08292fed2ff1cddff02bfefe730",
+      "15883e9d92b9c4989a0b6714913a83b556406a92ca384d5b112a61cff1b72ad6",
+      "1234d14e51dedf5760ac87277e3233126a231b6d18a334818d03268503b75d5a",
+      "2aca60db5468350a5870812364f68277c29570158a10256538499a9c3e838a83",
+      "c390cf4f381493ea3dd7c48e08c06402eedd14ddac7736be95981e3398b6088c"
+    ],
+    "state/claims.jsonl": [
+      "39827178485a780a44b6110e1e89c7baf1e31bd23c523a9d8fbb4620f383c6d8",
+      "b02af1a55d5c5ac538e1543a08cdaedbe6552b26f9a420996474cc668df6bcbe",
+      "c99b1b04a9762a97a266d4e47f361c02953661776477b38af12fd354ebe92e91",
+      "24a93d348da90159126780eb32bbaa793301b9593d7cd404ed77dd77219f64f1",
+      "d53c46cd4ca93459ffd084a2e4d8d57d3f3c0a127551a434ba0a18483cbeae13",
+      "4a26c69842138190ecc2ca2325dd28c99caf342fbd8fd78dc703f268c8172603",
+      "b050186de3a1e41470f59a2c59eda7269f17d8fbcca3d742f952cd4429794cea"
+    ],
+    "state/verifications.jsonl": [
+      "a990642532156d8380e4100080d8f1edbe331f54ec891259c4d682e2bc32b23a",
+      "51b98b343fb7b74ac63ffd4e01470e6768c6b93bff8c4db15aadfa1d52fab800",
+      "ea3c05ad9ba1c88d1479ab27aa5b0bcf8e335382f8c2e56ca2aa3ce540862c96",
+      "0721e71b3491312ae46662112c31ca4d8997ed2d4a634bba8dd55ddac335c5fb",
+      "16044ff9e1f78d4a6fea1e0e7d515bcea7b431eb7f188ad68fc934ea563a9c0f",
+      "4df6cb7a9493e0d70e5d65382f4be4650274e56f7273bdc7c4faccd92c64fd77",
+      "9b3213fbeba9dd5633a41a7f0cb8858609a8e20d60f190d4255c365b3c12ab21",
+      "37f8d7922012a1293e4144b5b56d0c138d86e78a410cb23024129ed61e451461",
+      "b6e2e00c7375da915bec0e74db38bf2738441be3121f2a06b132942a14211c9b",
+      "946f98a86a4b7184451e4809bfe1e60efbf017fe5748c0f963367c7f02323a66",
+      "5ae99bd88e8d21040f9a185afed20d92aa7e7e645be05cdc93c6795044ecd781",
+      "e62322259200ac4b012adc1575c0707439c64ee92b70dcc73278dccc7b280a5a",
+      "a52752128d46da1d64608bc7259e5eaa4de0d8e4766cd98cf3d33f44cffe9f20",
+      "f913005bcf7b379a1869ad21e84f96eb6f84d502df5a193503fd310594d1d416",
+      "5e1d35e9ad5aa2b4c6c978d9e96d09b722d3e691affb78a0ac8cdf1f2f9f4736",
+      "2bb03f1b04ea47b80868cb13b5d2615c4d7b6dfce6f3a5d45680fe90ad511004",
+      "99c7bf06d4727796b0cacf205723734bcec5ef2d08419c69e8bed3f6b98064fc",
+      "e440f047cdc5e5d174761bd9ca81e3a59c5946ca94ade5771a6d720de18ad8b6",
+      "25d92b86ee3dbcd413826e451c0f3cf36427a67d19ee2e5c8086d95b766ab946",
+      "5e01a12cda376c48f09e5cfbf2451916c55386ddc2eeeb08d9780702035c981d",
+      "720cc9eae6d18427068c893bdcdd47462be4cbffbb96dfd1dc310bbb7e3793c2"
+    ],
+    "state/hypotheses.jsonl": [
+      "4344f5f579978eebedb773d522c99411a17d80ce72c2ccb652f8ed947ca71532",
+      "292293aa74de4f3d0c189e57dd9208db7a6b176886969e51f356485157076879",
+      "fe81b330d9272c8bc835c1b00e0094cd809e767cf1f3066a9d8e249cbe9031f3"
+    ]
+  }
+}

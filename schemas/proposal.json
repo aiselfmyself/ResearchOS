@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ResearchOS Proposal",
+  "type": "object",
+  "required": [
+    "proposal_id",
+    "title",
+    "kind",
+    "summary",
+    "changes",
+    "session_id",
+    "status",
+    "created_at"
+  ],
+  "properties": {
+    "proposal_id": {"type": "string", "pattern": "^PRP-[0-9]{3}$"},
+    "title": {"type": "string"},
+    "kind": {"type": "string", "enum": ["governance", "research", "artifact"]},
+    "summary": {"type": "string"},
+    "changes": {"type": "array", "items": {"type": "string"}},
+    "session_id": {"type": "string", "pattern": "^SES-[a-z0-9][a-z0-9-]*$"},
+    "status": {
+      "type": "string",
+      "enum": ["pending_review", "approved", "rejected", "withdrawn"]
+    },
+    "created_at": {"type": "string"},
+    "base_commit": {"type": "string"},
+    "evidence_ids": {"type": "array", "items": {"type": "string"}},
+    "claim_ids": {"type": "array", "items": {"type": "string"}},
+    "artifact_paths": {"type": "array", "items": {"type": "string"}},
+    "rationale": {"type": "string"},
+    "revision": {"type": "integer", "minimum": 1},
+    "supersedes": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

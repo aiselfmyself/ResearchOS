@@ -45,6 +45,19 @@ jobs:
         run: |
           python3 gitswarm/benchmarks/benchmark.py --check
 
+      - name: ResearchOS ガバナンス検査
+        run: |
+          set -euo pipefail
+          python3 scripts/researchos_guard.py check-policy
+          python3 scripts/researchos_guard.py check-append-only
+          python3 scripts/researchos_guard.py check-commits --branch "${GITHUB_REF_NAME}"
+          python3 scripts/researchos_guard.py check-authorship
+
+      - name: 次セッションへの引き継ぎを生成
+        run: |
+          python3 scripts/researchos_next.py --write > /dev/null
+          cat state/NEXT_SESSION.md >> "$GITHUB_STEP_SUMMARY"
+
       - name: 簡単な計算テスト
         run: |
           set -euo pipefail
@@ -81,14 +94,3 @@ jobs:
           name: verify-artifact
           path: verify-output.txt
           retention-days: 7
-
-  expected-failure:
-    name: 失敗検知の確認（意図的に失敗）
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    continue-on-error: true
-    steps:
-      - name: 意図的に失敗させる
-        run: |
-          echo "このステップは失敗する想定です"
-          exit 1

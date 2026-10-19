@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ResearchOS Session",
+  "type": "object",
+  "required": [
+    "session_id",
+    "branch",
+    "roles",
+    "kind",
+    "started_at",
+    "policy_version"
+  ],
+  "properties": {
+    "session_id": {"type": "string", "pattern": "^SES-[a-z0-9][a-z0-9-]*$"},
+    "branch": {"type": "string", "pattern": "^arena/[a-z0-9-]+$"},
+    "roles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": ["bootstrap", "proposer", "verifier", "approver", "integrator"]
+      }
+    },
+    "kind": {"type": "string", "enum": ["agent", "human"]},
+    "started_at": {"type": "string"},
+    "closed_at": {"type": "string"},
+    "status": {"type": "string", "enum": ["active", "closed"]},
+    "policy_version": {"type": "integer", "minimum": 1},
+    "declared_model": {"type": "string"},
+    "declared_model_source": {"type": "string", "enum": ["self", "unknown"]},
+    "git_author": {"type": "string"},
+    "first_commit": {"type": "string", "pattern": "^[0-9a-f]{7,40}$"},
+    "notes": {"type": "string"},
+    "revision": {"type": "integer", "minimum": 1},
+    "supersedes": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

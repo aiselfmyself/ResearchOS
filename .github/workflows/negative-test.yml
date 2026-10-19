@@ -1,0 +1,24 @@
+name: Negative test (expected failure, isolated)
+
+# This workflow exists to prove that a failing job is detected.  It is kept
+# OUT of verify-github-actions.yml on purpose: a green main workflow must mean
+# that every real check passed, not that a failing job was swallowed by
+# `continue-on-error`.
+
+on:
+  push:
+    branches: ["**"]
+
+permissions:
+  contents: read
+
+jobs:
+  expected-failure:
+    name: 失敗検知の確認（意図的に失敗）
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: 意図的に失敗させる
+        run: |
+          echo "このジョブは失敗する想定です（メイン検証とは分離されています）"
+          exit 1

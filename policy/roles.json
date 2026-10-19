@@ -1,0 +1,118 @@
+{
+  "policy_version": 1,
+  "description": "ResearchOS governance roles. A session is one Arena.ai chat, which the platform binds to one branch. Roles are declared per session and enforced by scripts/researchos_guard.py: a commit must carry Session-Id and Session-Role trailers, the session must exist in state/sessions.jsonl, the session branch must match the commit branch, and every changed path must be allowed for that role.",
+  "enforcement": {
+    "require_trailers": [
+      "Session-Id",
+      "Session-Role"
+    ],
+    "session_branch_unique": true,
+    "append_only_state": true,
+    "governance_requires_approved_proposal": true,
+    "max_bootstrap_sessions": 1
+  },
+  "governance_paths": [
+    "scripts/**",
+    "schemas/**",
+    "policy/**",
+    "tests/**",
+    ".github/**"
+  ],
+  "roles": {
+    "bootstrap": {
+      "description": "One-time installation of the governance harness. Capped at a single session by the validator; every bootstrap commit is flagged for post-hoc independent review.",
+      "may_write": [
+        "**"
+      ],
+      "may_use_governance_paths_without_proposal": true
+    },
+    "proposer": {
+      "description": "Explores sources, records evidence, drafts claims and hypotheses, writes proposals, and implements research code and benchmark artifacts.",
+      "may_write": [
+        "state/sources.jsonl",
+        "state/evidence.jsonl",
+        "state/claims.jsonl",
+        "state/hypotheses.jsonl",
+        "state/proposals.jsonl",
+        "state/sessions.jsonl",
+        "state/review_queue.jsonl",
+        "state/plan.md",
+        "gitswarm/problem.py",
+        "gitswarm/solvers/**",
+        "gitswarm/benchmarks/**",
+        "gitswarm/run_simulation.py",
+        "gitswarm/artifacts/**",
+        "contributions/**",
+        "reports/**",
+        "README.md",
+        "docs/**",
+        "state/NEXT_SESSION.md"
+      ],
+      "may_use_governance_paths_without_proposal": false
+    },
+    "verifier": {
+      "description": "Independently re-executes the verification suite and records reviews. Must not modify the artifacts it is reviewing, the validator, the schemas, the policy, the tests, or CI.",
+      "may_write": [
+        "state/evidence.jsonl",
+        "state/verifications.jsonl",
+        "state/reviews.jsonl",
+        "state/sessions.jsonl",
+        "state/review_queue.jsonl",
+        "state/plan.md",
+        "verifications/**",
+        "reports/independent-verification-report.md",
+        "reports/verification-*.md",
+        "gitswarm/artifacts/readout_snapshot.json",
+        "state/NEXT_SESSION.md"
+      ],
+      "may_use_governance_paths_without_proposal": false
+    },
+    "approver": {
+      "description": "Reads reviews and records a decision. May not write proposals, claims, evidence, or reviews, and may not touch code, schemas, tests, or CI.",
+      "may_write": [
+        "state/approvals.jsonl",
+        "state/sessions.jsonl",
+        "state/review_queue.jsonl",
+        "state/plan.md",
+        "state/NEXT_SESSION.md"
+      ],
+      "may_use_governance_paths_without_proposal": false
+    },
+    "integrator": {
+      "description": "Synthesises reviewed and approved material into reports. Cannot create or promote claims and cannot approve.",
+      "may_write": [
+        "reports/**",
+        "state/sessions.jsonl",
+        "state/review_queue.jsonl",
+        "state/plan.md",
+        "README.md",
+        "docs/**",
+        "state/NEXT_SESSION.md"
+      ],
+      "may_use_governance_paths_without_proposal": false
+    }
+  },
+  "separation": {
+    "review": {
+      "description": "A review must be written by a session that did not propose the change.",
+      "must_differ_from": [
+        "proposer"
+      ]
+    },
+    "approval": {
+      "description": "An approval must be written by a session that neither proposed the change nor reviewed it.",
+      "must_differ_from": [
+        "proposer",
+        "reviewers"
+      ],
+      "requires_passing_review": true
+    }
+  },
+  "claim_promotion": {
+    "description": "A claim created after the governance baseline may only be 'supported' if it is backed by an approved proposal or by a passing verification written by a different session.",
+    "allowed_paths": [
+      "approved_proposal",
+      "independent_verification"
+    ]
+  }
+}
