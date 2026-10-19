@@ -226,3 +226,37 @@ approver may not edit (R2). Recorded here instead of patched:
 
 ローカル側は `check-all` ok=true・`validate_researchos.py` exit 0 で確認済み。CI の赤は
 A7 の主張どおり「手続きどおりに承認を記録したこと」だけで発生する。
+
+
+## Governance Fix Round (2026-10-19, Proposer — SES-5491cb12)
+
+**Branch:** `arena/5491cb12-researchos`, parent `ae108a1` (Approver SES-955f8586, APR-001 conditions C1-C6).
+
+This session executes `state/NEXT_SESSION.md` from `arena/955f8586-researchos` which recommended proposer. The role was claimed via `researchos_session.py claim --role proposer` (SES-5491cb12, first_commit ae108a1).
+
+### Proposal
+
+- PRP-002 `ガバナンス4件欠陥の是正とハーネス強化 (F1-F4/A1-A8/G1-G4/V1-V13)` — pending_review, base_commit 6b22092, session SES-5491cb12. Rationale references APR-001 C1-C6 (F1-F4 from REV-001 plus A1-A3/A5/A7/A8 discovered in approval round) and G1-G4/V1-V13 from the parallel line arena/e7ac466a→47c55a23→e09f19e4→f63b6887. Design doc: reports/PRP-002-governance-fixes.md (§1-§17, DoD invariants in §14).
+- RQ-002 open, priority high, required_checks 12 items (the 8 standard plus 4 governance probes): governance_review, schema_and_integrity, regression_tests, benchmark_reproducible, readout_snapshot, append_only, role_guard, role_separation, bootstrap_land_requires_approval, merge_commits_are_audited, approval_consistency, distinct_reviews.
+
+### Implementation (propose stage)
+
+The next commit(s) will implement all governance fixes with Governance-Proposal: PRP-002 trailer, permitted for proposer at propose stage. The implementation is staged as a branch feature, not yet a land to main. Key deltas vs parallel line's design-only PRP-002: that line recorded same 4 defects and 13 design deltas but left scripts/ unchanged. This session reuses its analysis but provides actual code fixes required by APR-001 C2-C6, so the next verifier can test executable code.
+
+### Verification plan (for next verifier)
+
+```
+python3 verifications/prp001_governance_probes.py  # 4 probes, enforced=true
+python3 scripts/validate_researchos.py --quiet
+python3 scripts/researchos_guard.py check-all --stage propose --json
+python3 scripts/researchos_guard.py check-commits --stage land --json
+python3 -m unittest discover -s tests -v
+python3 gitswarm/benchmarks/benchmark.py --check
+python3 scripts/researchos_verify.py --proposal PRP-002 --session <verifier>  # 12 checks
+```
+
+### Approver gate
+
+A third session (neither SES-5491cb12 nor verifier) must record APR-002 with review_line_sha256 binding. main merge remains blocked until PRP-002 is approved (C1). Parallel line's collision (A5) is avoided by using fresh IDs on this line (RQ-002, PRP-002 revision 1 here vs revision 2 there) and documenting reconciliation procedure in docs/GOVERNANCE.md.
+
+*Generated: 2026-10-19T12:45:59+00:00*
