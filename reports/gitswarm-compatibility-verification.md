@@ -9,9 +9,11 @@
 
 ## 1. 結論（サマリー）
 
-**判定: 【完全対応可能】**
+> **訂正（2026-10-19、独立検証 `Auditor-01`）:** 本レポートの §3.2 に記載された readout 実測値（100% / 100% / 80%）は、`readout.py` が履歴全体を走査していたため、後続の ResearchOS コミット追加後に **85.7% / 100% / 57.1%** へ変動する。`gitswarm/` にスコープした再集計では **7 commits / 5 candidates / 100% / 100% / 80%** で再現する（`gitswarm/artifacts/readout_snapshot.json`）。また、Worker-05 の `benchmark_matrix.json` は実行値ではなく手書き値であり、再実行値は §3.2 の数値と一致しない。詳細と是正は [`reports/independent-verification-report.md`](./independent-verification-report.md) を参照。
 
-Arena.ai Agent Mode と GitHub の組み合わせにおいて、**GitSwarm のコアアーキテクチャである「分散型累積推論（Decentralized Compounding Inference）」のニュアンスおよび擬似運用は、極めて高い再現性をもって実現可能**であることが実機検証により実証されました。
+**判定: 【プロトコルレベルでは再現可能。実運用の非同期性・独立性・スケールは未検証】**
+
+Arena.ai Agent Mode と GitHub の組み合わせにおいて、**GitSwarm のコアアーキテクチャである「分散型累積推論（Decentralized Compounding Inference）」のプロトコル（アトミックコミット、`Informed-By`、負の結果の保存、readout）は再現可能**であることが実機検証により確認されました。ただし本実験は単一プロセス内の逐次ロールプレイであり、非同期・独立コンテキストのワーカー群による実運用を実証したものではありません。
 
 GitSwarm が前提とする以下の核心的要件：
 1. **共有 Git リポジトリを「構造化永続メモリ」として用いること**
@@ -29,7 +31,7 @@ GitSwarm が前提とする以下の核心的要件：
 | GitSwarm の設計概念 (arXiv:2610.04862) | Arena.ai × GitHub 上での実装・対応関係 | 実機動作ステータス |
 | :--- | :--- | :---: |
 | **Shared Persistent Memory**<br>（永続的共有メモリ） | GitHub リポジトリ。<br>ファイル・ディレクトリ・コミット履歴すべてがエピソード終了後も永続化される。 | ✅ **完全適合**<br>（実証済み） |
-| **Independent Workers**<br>（自律ワーカー） | 独立したコンテキストを持つエージェント、または同一リポジトリを参照する並行/逐次セッション。 | ✅ **完全適合**<br>（実証済み） |
+| **Independent Workers**<br>（自律ワーカー） | 独立したコンテキストを持つエージェント、または同一リポジトリを参照する並行/逐次セッション。 | △ **プロトコルのみ**<br>（逐次ロールプレイ。非同期・独立コンテキストは未検証） |
 | **Atomic Commits**<br>（アトミックコミット） | 各ワーカーの探索・実験・精緻化・検証ごとに作成されるコミット。 | ✅ **完全適合**<br>（実証済み） |
 | **Cross-Lineage Provenance**<br>（`Informed-By` 意味的祖先） | コミットメッセージに `Informed-By: <sha1>, <sha2>` を明記し、有向非巡回グラフ（DAG）を形成。 | ✅ **完全適合**<br>（実証済み） |
 | **Negative Results Preservation**<br>（失敗・負の結果の保存） | 失敗したアプローチを `Outcome: negative` および分析 JSON / レポートとして明示的にコミット。 | ✅ **完全適合**<br>（実証済み） |
@@ -103,7 +105,9 @@ Deterministic Winner      : c66b253 (Worker-04: Simulated Annealing)
   - ProgramBench での貢献再利用率: **94.7%**（本検証: **100%**）
   - 負の結果の引用率: **70.1%**（本検証: **100%**）
   - 勝者の祖先カバレッジ: **82〜93%**（本検証: **80.0%**）
-- **結論:** 原著論文と同等の**「推論時計算の蓄積（Compounding）」が Git コミットグラフを通じて完全に機能**していることが確認されました。
+- **結論:** プロトコルレベルでは、原著論文と同型の**「推論時計算の蓄積（Compounding）」が Git コミットグラフ上で機能**していることを確認しました。
+
+> **独立再検証による訂正値（2026-10-19）:** 上記の「本検証」値は `gitswarm/` にパスを限定した場合の値である。リポジトリ全体を走査すると 9 worker commits / 7 candidates / reuse 85.7% / ancestry 57.1% となり、`state/` の ResearchOS 役割コミットが混入する。また、Worker-05 のベンチマークは実行されていなかったため、`benchmark_matrix.json` を実測値で再生成した。再実行値は greedy 5521.41 / random 12279.86 / two_opt 4739.72 / simulated_annealing 4731.96（平均）であり、SA の優位性は two_opt に対して **0.16%** に過ぎない。詳細は [`reports/independent-verification-report.md`](./independent-verification-report.md) を参照。
 
 ---
 
@@ -142,6 +146,6 @@ Arena.ai 環境において GitSwarm を運用する場合、以下の 2 つの�
 
 ## 6. まとめ
 
-Arena.ai Agent Mode × GitHub リポジトリ環境は、GitSwarm が提唱する **「共有ブランチ可能リポジトリを不変の構造化メモリとし、独立ワーカーがアトミックコミットと意味的依存（`Informed-By`）を通じて推論を累積する」** という運用モデルと**極めて親和性が高い（相性抜群である）**と結論づけられます。
+Arena.ai Agent Mode × GitHub リポジトリ環境は、GitSwarm が提唱する **「共有ブランチ可能リポジトリを不変の構造化メモリとし、独立ワーカーがアトミックコミットと意味的依存（`Informed-By`）を通じて推論を累積する」** という運用モデルの**プロトコルを再現するのに適している**と結論づけられます。ただし、本検証は単一プロセスの逐次シミュレーションであり、非同期・独立ワーカー群の実運用、実規模の探索、外部評価者による独立再現は未検証です。この限定を外した「完全対応」という表現は、2026-10-19 の独立検証で撤回しました。
 
 本検証コード一式（`gitswarm/` 配下）および集計ツール（`readout.py`）は、今後の自律エージェント運用においてそのまま実用テンプレートとして再利用可能です。
