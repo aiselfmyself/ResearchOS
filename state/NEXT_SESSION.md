@@ -1,16 +1,16 @@
 # ResearchOS 次セッションへの引き継ぎ
 
-生成日時: 2026-10-19T13:19:04+00:00
-引き継ぎ元ブランチ: `arena/5491cb12-researchos`
-推奨ロール: **verifier**
+生成日時: 2026-10-19T13:31:30+00:00
+引き継ぎ元ブランチ: `arena/f99f5b7f-researchos`
+推奨ロール: **proposer**
 
 ## あなた（次のセッション）が最初にやること
 
 ```bash
 git fetch origin
-git merge origin/arena/5491cb12-researchos -m "merge: ResearchOS の研究状態を引き継ぎ"
+git merge origin/arena/f99f5b7f-researchos -m "merge: ResearchOS の研究状態を引き継ぎ"
 # ブランチ名からセッションIDを自動導出してロールを宣言する
-python3 scripts/researchos_session.py claim --role verifier
+python3 scripts/researchos_session.py claim --role proposer
 python3 scripts/researchos_guard.py status
 ```
 
@@ -29,8 +29,8 @@ python3 scripts/researchos_guard.py status
 
 | Queue | Proposal | Status | 必要な検査 |
 | :--- | :--- | :--- | :--- |
-| RQ-002 | PRP-002 | open | `policy, schema_and_integrity, regression_tests, benchmark_reproducible, readout_snapshot, append_only, role_guard, role_separation, bootstrap_land_requires_approval, merge_commits_are_audited, approval_consistency, distinct_reviews, governance_review` |
 | - | PRP-001 | pending_review | - |
+| - | PRP-002 | pending_review | - |
 
 ## 承認待ち（レビュー済み）
 
@@ -39,13 +39,10 @@ python3 scripts/researchos_guard.py status
 ## 手順
 
 ```bash
-# 1. キューを確認して着手を記録
-python3 scripts/researchos_queue.py list --status open
-python3 scripts/researchos_queue.py claim --queue RQ-001 --session <YOUR_SESSION_ID>
-# 2. 標準検証スイートを実行（合否はあなたの判断ではなく実行結果）
-python3 scripts/researchos_verify.py --proposal PRP-001 --session <YOUR_SESSION_ID> --write
-# 3. 完了を記録
-python3 scripts/researchos_queue.py complete --queue RQ-001 --review REV-001 --session <YOUR_SESSION_ID>
+# 新しい提案を作る
+python3 scripts/researchos_queue.py list
+# state/proposals.jsonl に PRP-YYYY を追記し、レビューキューに登録する
+python3 scripts/researchos_queue.py add --proposal PRP-YYYY --session <YOUR_SESSION_ID>
 ```
 
 ## 現在のセッション一覧
@@ -54,13 +51,6 @@ python3 scripts/researchos_queue.py complete --queue RQ-001 --review REV-001 --s
 - `SES-eb670d1f` active verifier — arena/eb670d1f-researchos
 - `SES-955f8586` active approver — arena/955f8586-researchos
 - `SES-5491cb12` active proposer — arena/5491cb12-researchos
-
-## 他ブランチで Verifier を待っているキュー（優先度順）
-
-| Branch | Queue | Proposal | Created |
-| :--- | :--- | :--- | :--- |
-| `arena/5491cb12-researchos` | RQ-002 | PRP-002 | 2026-10-19T12:45:26+00:00 |
-
-ヒント: `python3 scripts/researchos_next.py --scan-all` で再取得できます。
+- `SES-f99f5b7f` active verifier — arena/f99f5b7f-researchos
 
 > このファイルは `scripts/researchos_next.py` が生成します。手動で編集しないでください。

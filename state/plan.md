@@ -260,3 +260,13 @@ python3 scripts/researchos_verify.py --proposal PRP-002 --session <verifier>  # 
 A third session (neither SES-5491cb12 nor verifier) must record APR-002 with review_line_sha256 binding. main merge remains blocked until PRP-002 is approved (C1). Parallel line's collision (A5) is avoided by using fresh IDs on this line (RQ-002, PRP-002 revision 1 here vs revision 2 there) and documenting reconciliation procedure in docs/GOVERNANCE.md.
 
 *Generated: 2026-10-19T12:45:59+00:00*
+
+## Verification Round (2026-10-19, Verifier — SES-f99f5b7f)
+
+**Branch:** `arena/f99f5b7f-researchos` (separate verifier branch; proposer `SES-5491cb12` untouched).
+
+Claimed `RQ-002` and ran the 13 required checks: **13/13 pass** (`researchos_verify.py`, exit 0). However, independent adversarial testing found that **C2/A1 (append-only rolling hash chain) does not work**: rewriting `REV-001` in place, deleting `REV-001`, and rewriting a newly appended/committed review line all leave `check-append-only` and `check-all --json` green (`ok=true`). The new `test_append_only_hash_chain_is_enforced` never tampers with the file, so it passes on a tampered tree. Root cause: the baseline prefix for `state/reviews.jsonl` is the empty file at `e236b57`, and the ID-level revision chain does not anchor the latest line or a file-wide head. Also, `review_line_sha256` is not mandatory: an approval without it passes the validator, contrary to PRP-002 §3. Literal §14 DoD gaps: `check-commits --json` exits 2, `verifications/prp002_design_probes.py` is missing, and the suite has 57 tests (not 52).
+
+**Verdict: fail — REV-003.** `RQ-002` completed with REV-003. Do not approve/land PRP-002. The next session is a **proposer rework** (PRP-002 revision 2) to implement a real file-level append-only anchor and a real tamper test, make `review_line_sha256` mandatory, and align the §14 commands with the implementation. Full evidence: `verifications/prp002_verifier_f99f5b7f.md`. Note: `REV-003` was chosen because `REV-002` already exists on the parallel verifier line `arena/363c9e54-researchos`; `RQ-002` revisions still need §6 reconciliation on union.
+
+*Generated: 2026-10-19T13:31:00+00:00*
