@@ -182,3 +182,33 @@ forbids an approver to rewrite) and "承認待ち: なし".
 then read `state/approvals.jsonl` (`APR-001`, conditions C1–C6) and this plan
 section before writing `PRP-002`. The `proposer` recommendation is right; the
 `check-append-only` guarantee in rule 3 is not.
+
+### 6. A7 — found by running the suite after approving (High, blocking for `main`)
+
+```
+$ python3 -m unittest discover -s tests
+Ran 49 tests ... FAILED (failures=1)
+FAIL: test_bootstrap_proposal_cannot_be_self_closed (test_governance.RepositoryStateTest)
+AssertionError: True is not false : PRP-001 must not be approved by the session that proposed it
+```
+
+`tests/test_governance.py:447` asserts `assertFalse(any(a["proposal_id"] == "PRP-001"
+for a in approvals))` — **no approval may exist at all** — while its docstring says it
+asserts an invariant and "must keep passing while PRP-001 remains unapproved", and its
+name says *self*-closed. The invariant it means is
+`a["session_id"] != proposals["PRP-001"]["session_id"]`.
+
+Consequence: `state/NEXT_SESSION.md`'s own documented approval snippet (append
+`APR-001` for `PRP-001`) turns the repository's regression suite red, permanently and
+for every session, as soon as the protocol completes successfully. Before this round
+the test passed only because no approval had ever been recorded. So `main` cannot go
+green while `APR-001` stands, and the fix is in `tests/` — a governance path that an
+approver may not edit (R2). Recorded here instead of patched:
+
+- `PRP-002` must include: replace the count/state assertion with the separation
+  invariant, and add the symmetric case (an approval written by the *reviewer's*
+  session must fail, an approval by a third session must pass) so the test cannot
+  regress into "no approvals allowed".
+- Do not "fix" this by appending `APR-001 revision 2` with `decision: rejected`:
+  that would falsify the decision this round reached, and `requires_passing_review`
+  plus the reviewer/proposer separation would still be satisfied by it.
