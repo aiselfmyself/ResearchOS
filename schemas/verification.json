@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ResearchOS Verification",
+  "type": "object",
+  "required": ["verification_id", "target_id", "verifier_type", "result", "rationale"],
+  "properties": {
+    "verification_id": {"type": "string"},
+    "target_id": {"type": "string"},
+    "verifier_type": {"type": "string", "enum": ["deterministic", "source_check", "falsifier_critic", "logical_consistency"]},
+    "result": {"type": "string", "enum": ["pass", "fail", "warn", "falsified"]},
+    "rationale": {"type": "string"},
+    "suggested_actions": {"type": "array", "items": {"type": "string"}}
+  }
+}
