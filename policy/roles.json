@@ -9,7 +9,11 @@
     "session_branch_unique": true,
     "append_only_state": true,
     "governance_requires_approved_proposal": true,
-    "max_bootstrap_sessions": 1
+    "max_bootstrap_sessions": 1,
+    "governance_stages": {
+      "propose": "A proposal must exist (pending_review or approved) and be referenced by a Governance-Proposal trailer. This is what a feature branch does.",
+      "land": "The proposal must be approved by a different session. This is what the merge to main requires."
+    }
   },
   "governance_paths": [
     "scripts/**",
@@ -24,7 +28,8 @@
       "may_write": [
         "**"
       ],
-      "may_use_governance_paths_without_proposal": true
+      "may_use_governance_paths_without_proposal": true,
+      "may_write_governance_with_proposal": true
     },
     "proposer": {
       "description": "Explores sources, records evidence, drafts claims and hypotheses, writes proposals, and implements research code and benchmark artifacts.",
@@ -48,7 +53,8 @@
         "docs/**",
         "state/NEXT_SESSION.md"
       ],
-      "may_use_governance_paths_without_proposal": false
+      "may_use_governance_paths_without_proposal": false,
+      "may_write_governance_with_proposal": true
     },
     "verifier": {
       "description": "Independently re-executes the verification suite and records reviews. Must not modify the artifacts it is reviewing, the validator, the schemas, the policy, the tests, or CI.",
@@ -65,7 +71,8 @@
         "gitswarm/artifacts/readout_snapshot.json",
         "state/NEXT_SESSION.md"
       ],
-      "may_use_governance_paths_without_proposal": false
+      "may_use_governance_paths_without_proposal": false,
+      "may_write_governance_with_proposal": false
     },
     "approver": {
       "description": "Reads reviews and records a decision. May not write proposals, claims, evidence, or reviews, and may not touch code, schemas, tests, or CI.",
@@ -76,7 +83,8 @@
         "state/plan.md",
         "state/NEXT_SESSION.md"
       ],
-      "may_use_governance_paths_without_proposal": false
+      "may_use_governance_paths_without_proposal": false,
+      "may_write_governance_with_proposal": true
     },
     "integrator": {
       "description": "Synthesises reviewed and approved material into reports. Cannot create or promote claims and cannot approve.",
@@ -89,7 +97,8 @@
         "docs/**",
         "state/NEXT_SESSION.md"
       ],
-      "may_use_governance_paths_without_proposal": false
+      "may_use_governance_paths_without_proposal": false,
+      "may_write_governance_with_proposal": false
     }
   },
   "separation": {

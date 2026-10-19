@@ -267,6 +267,59 @@ class SeparationTest(unittest.TestCase):
         self.assertTrue(any("unknown session" in error for error in errors), errors)
 
 
+class GovernanceStageTest(unittest.TestCase):
+    """A governance change may be proposed on a branch but needs approval to land."""
+
+    def setUp(self) -> None:
+        self.spec_proposer = {"may_write_governance_with_proposal": True}
+        self.spec_verifier = {"may_write_governance_with_proposal": False}
+        self.spec_bootstrap = {"may_use_governance_paths_without_proposal": True}
+        self.proposals = {
+            "PRP-001": {"proposal_id": "PRP-001", "session_id": "SES-a",
+                        "status": "pending_review"},
+            "PRP-002": {"proposal_id": "PRP-002", "session_id": "SES-a",
+                        "status": "approved"},
+        }
+        self.approved = {"PRP-002"}
+
+    def decide(self, spec, role, proposal_id, session_id, stage):
+        return guard.check_governance_path(
+            role, spec, "scripts/x.py", proposal_id, self.proposals,
+            self.approved, session_id, stage,
+        )
+
+    def test_proposer_may_change_with_pending_proposal(self) -> None:
+        self.assertEqual(
+            self.decide(self.spec_proposer, "proposer", "PRP-001", "SES-a", "propose"), []
+        )
+
+    def test_proposer_cannot_land_pending_proposal(self) -> None:
+        errors = self.decide(self.spec_proposer, "proposer", "PRP-001", "SES-a", "land")
+        self.assertTrue(any("not approved" in e for e in errors), errors)
+
+    def test_proposer_cannot_land_own_approved_proposal(self) -> None:
+        errors = self.decide(self.spec_proposer, "proposer", "PRP-002", "SES-a", "land")
+        self.assertTrue(any("your own proposal" in e for e in errors), errors)
+
+    def test_other_session_can_land_approved_proposal(self) -> None:
+        self.assertEqual(
+            self.decide(self.spec_proposer, "proposer", "PRP-002", "SES-b", "land"), []
+        )
+
+    def test_verifier_cannot_change_governance_paths(self) -> None:
+        errors = self.decide(self.spec_verifier, "verifier", "PRP-002", "SES-b", "propose")
+        self.assertTrue(any("may not modify" in e for e in errors), errors)
+
+    def test_missing_trailer_is_rejected(self) -> None:
+        errors = self.decide(self.spec_proposer, "proposer", None, "SES-a", "propose")
+        self.assertTrue(any("Governance-Proposal" in e for e in errors), errors)
+
+    def test_bootstrap_is_exempt(self) -> None:
+        self.assertEqual(
+            self.decide(self.spec_bootstrap, "bootstrap", None, "SES-a", "land"), []
+        )
+
+
 class SessionLedgerTest(unittest.TestCase):
     def test_bootstrap_is_capped_at_one(self) -> None:
         sessions = [

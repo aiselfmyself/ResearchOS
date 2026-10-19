@@ -155,8 +155,53 @@ def _find_session(sessions: List[dict], session_id: str) -> Optional[dict]:
     return None
 
 
+def check_governance_path(
+    role: str,
+    spec: dict,
+    path: str,
+    proposal_id: Optional[str],
+    proposals_by_id: Dict[str, dict],
+    approved_ids: set,
+    session_id: str,
+    stage: str,
+) -> List[str]:
+    """Decide whether `role` may change a governance path at `stage`."""
+    if spec.get("may_use_governance_paths_without_proposal"):
+        return []
+    if not spec.get("may_write_governance_with_proposal"):
+        return [f"role '{role}' may not modify governance path '{path}'"]
+    if not proposal_id:
+        return [
+            f"governance path '{path}' changed without a Governance-Proposal trailer"
+        ]
+    proposal = proposals_by_id.get(proposal_id)
+    if proposal is None:
+        return [f"unknown proposal '{proposal_id}'"]
+    errors: List[str] = []
+    if stage == "land":
+        if proposal_id not in approved_ids:
+            errors.append(
+                f"proposal '{proposal_id}' is not approved "
+                f"(status={proposal.get('status')}); cannot land governance change"
+            )
+        if proposal.get("session_id") == session_id:
+            errors.append(
+                f"cannot land your own proposal '{proposal_id}'; "
+                "an approver from another session must do it"
+            )
+    else:
+        if proposal.get("status") not in ("pending_review", "approved"):
+            errors.append(
+                f"proposal '{proposal_id}' is '{proposal.get('status')}', "
+                "not open for changes"
+            )
+    return errors
+
+
 def check_commits(
-    base_commit: Optional[str] = None, branch: Optional[str] = None
+    base_commit: Optional[str] = None,
+    branch: Optional[str] = None,
+    stage: str = "propose",
 ) -> List[str]:
     baseline = load_baseline()
     base_commit = base_commit or baseline.get("base_commit")
@@ -228,32 +273,22 @@ def check_commits(
 
         spec = roles[role]
         for path in commit_paths(sha):
-            if not match_any(spec.get("may_write", []), path):
+            if match_any(governance_paths, path):
+                path_errors = check_governance_path(
+                    role,
+                    spec,
+                    path,
+                    trailers.get("Governance-Proposal"),
+                    proposals_by_id,
+                    approved_ids,
+                    session_id,
+                    stage,
+                )
+                errors.extend(f"{short}: {error}" for error in path_errors)
+            elif not match_any(spec.get("may_write", []), path):
                 errors.append(
                     f"{short}: role '{role}' is not allowed to write '{path}'"
                 )
-            if match_any(governance_paths, path) and not spec.get(
-                "may_use_governance_paths_without_proposal"
-            ):
-                proposal_id = trailers.get("Governance-Proposal")
-                if not proposal_id:
-                    errors.append(
-                        f"{short}: governance path '{path}' changed without a "
-                        "Governance-Proposal trailer"
-                    )
-                    continue
-                proposal = proposals_by_id.get(proposal_id)
-                if proposal is None:
-                    errors.append(f"{short}: unknown proposal '{proposal_id}'")
-                elif proposal_id not in approved_ids:
-                    errors.append(
-                        f"{short}: proposal '{proposal_id}' is not approved "
-                        f"(status={proposal.get('status')})"
-                    )
-                elif proposal.get("session_id") == session_id:
-                    errors.append(
-                        f"{short}: cannot apply your own proposal '{proposal_id}'"
-                    )
     return errors
 
 
@@ -415,7 +450,9 @@ def main(argv=None) -> int:
         results["append_only"] = check_append_only(getattr(args, "base", None))
     if args.command in ("check-commits", "check-all"):
         results["commits"] = check_commits(
-            getattr(args, "base", None), getattr(args, "branch", None)
+            getattr(args, "base", None),
+            getattr(args, "branch", None),
+            getattr(args, "stage", "propose"),
         )
     if args.command in ("check-authorship", "check-all"):
         results["authorship"] = check_record_authorship()

@@ -58,6 +58,13 @@ jobs:
           python3 scripts/researchos_next.py --write > /dev/null
           cat state/NEXT_SESSION.md >> "$GITHUB_STEP_SUMMARY"
 
+      - name: ガバナンス着地ゲート（main のみ）
+        if: github.ref_name == 'main'
+        run: |
+          set -euo pipefail
+          python3 scripts/researchos_guard.py check-commits --branch main --stage land
+          python3 scripts/validate_researchos.py --quiet
+
       - name: 簡単な計算テスト
         run: |
           set -euo pipefail
