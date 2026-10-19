@@ -1,0 +1,1 @@
+{"claim_id": "CLM-001", "statement": "エージェントの研究状態を会話履歴から分離し、呼び出しごとに目的特化のコンテキストを再構成する「Stateless Harness」方式は、文脈埋没と重複作業を防ぎ長期推論性能を維持する。", "evidence_ids": ["EVD-001"], "counterclaim_ids": [], "status": "candidate", "scope": "長期自律研究におけるコンテキスト管理", "limitations": "状態を正しく要約・構造化して保持する外部データモデルの設計精度に依存する。"}
