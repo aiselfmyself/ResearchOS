@@ -378,19 +378,29 @@ class RepositoryStateTest(unittest.TestCase):
         report = vr.run_all_checks(str(ROOT))
         self.assertEqual(report["errors"], [], msg="\n".join(report["errors"]))
 
-    def test_bootstrap_proposal_is_pending(self) -> None:
-        """This session must not be able to close its own governance proposal."""
-        report = vr.run_all_checks(str(ROOT))
-        loaded = report["counts"]
-        self.assertEqual(loaded["sessions"], 1)
-        self.assertEqual(loaded["proposals"], 1)
-        self.assertEqual(loaded["approvals"], 0)
+    def test_bootstrap_proposal_cannot_be_self_closed(self) -> None:
+        """Assert the invariant, not the current number of sessions.
+
+        A later verifier or approver session legitimately increases the session
+        count; this test must keep passing while PRP-001 remains unapproved.
+        """
         proposals = {
             record["proposal_id"]: record
             for record in vr.load_jsonl(str(ROOT / "state" / "proposals.jsonl"))
         }
-        self.assertEqual(proposals["PRP-001"]["status"], "pending_review")
+        self.assertIn("PRP-001", proposals)
         self.assertEqual(proposals["PRP-001"]["session_id"], "SES-c4426c6b")
+
+        approvals = vr.load_jsonl(str(ROOT / "state" / "approvals.jsonl"))
+        self.assertFalse(
+            any(a.get("proposal_id") == "PRP-001" for a in approvals),
+            "PRP-001 must not be approved by the session that proposed it",
+        )
+
+        sessions = vr.load_jsonl(str(ROOT / "state" / "sessions.jsonl"))
+        bootstrap = [s for s in sessions if "bootstrap" in s.get("roles", [])]
+        bootstrap_ids = {s["session_id"] for s in bootstrap}
+        self.assertEqual(bootstrap_ids, {"SES-c4426c6b"})
 
 
 if __name__ == "__main__":

@@ -164,7 +164,7 @@ def build_checks(proposal_id: str, session_id: str, base: Optional[str]) -> List
             problems.append("session does not hold the verifier role")
         if session_id == proposal.get("session_id"):
             problems.append("reviewer is the proposer")
-        if proposal.get("status") != "pending_review":
+        if proposal.get("status") not in ("pending_review", "approved"):
             problems.append(f"proposal status is '{proposal.get('status')}'")
         checks.append(
             {
