@@ -1,0 +1,2 @@
+{"hypothesis_id": "HYP-001", "statement": "外部化された構造化メモリ（Git/State Store）を持つエージェントは、単一セッションの巨大プロンプトより累積探索効率と再現性で優れる。", "subtasks": ["Subtask 1", "Subtask 2"]}
+{"hypothesis_id": "HYP-002", "statement": "同質ワーカーによる多数決ノミネーションは、正解判定が困難な主観的・学術的研究では共通モード障害（誤りの再生産）に脆弱である。", "subtasks": ["Subtask 3"]}
