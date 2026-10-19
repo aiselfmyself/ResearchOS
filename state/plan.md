@@ -162,3 +162,23 @@ PRP-002 draft spec lives here and in `state/NEXT_SESSION.md`.
 - Nothing here enforces the conditions (a `blocking` condition is text plus
   human judgement, not a gate): honest note — the harness cannot even enforce
   what this round says it must enforce, which is the point of `PRP-002`.
+
+### 5. One more, while writing the hand-off (A6)
+
+`state/NEXT_SESSION.md` is generated from the ledger only (`--write`), and there is
+no field in the harness for approval conditions. So the file the next session is
+told to paste reads, among the "rules to obey", rule 3: *"`state/*.jsonl` は追記
+のみ。既存行の編集・削除は `check-append-only` が拒否します"* — which A1 shows is
+**false for the governance ledgers**, and the file is marked "手動で編集しないで
+ください", so a compliant approver cannot correct it. The generated hand-off also
+lists `PRP-001` as `pending_review` (the proposer's own status field, which R3
+forbids an approver to rewrite) and "承認待ち: なし".
+
+| ID | Severity | Finding |
+| :--- | :--- | :--- |
+| **A6** | Medium | The only hand-off channel a session is guaranteed to read is regenerated from data that cannot express conditions or corrections, and is protected from editing. Conditions recorded in `APR-001` are invisible to it. `PRP-002` should give `researchos_next.py` a `--notes` / conditions source (read `state/approvals.jsonl[].conditions`) instead of leaving the prompt purely derived from statuses. |
+
+**Therefore, to whoever opens the next session:** paste `state/NEXT_SESSION.md`,
+then read `state/approvals.jsonl` (`APR-001`, conditions C1–C6) and this plan
+section before writing `PRP-002`. The `proposer` recommendation is right; the
+`check-append-only` guarantee in rule 3 is not.

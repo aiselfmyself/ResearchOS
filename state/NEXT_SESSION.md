@@ -1,16 +1,16 @@
 # ResearchOS 次セッションへの引き継ぎ
 
-生成日時: 2026-10-19T12:16:21+00:00
-引き継ぎ元ブランチ: `arena/eb670d1f-researchos`
-推奨ロール: **approver**
+生成日時: 2026-10-19T12:32:45+00:00
+引き継ぎ元ブランチ: `arena/955f8586-researchos`
+推奨ロール: **proposer**
 
 ## あなた（次のセッション）が最初にやること
 
 ```bash
 git fetch origin
-git merge origin/arena/eb670d1f-researchos -m "merge: ResearchOS の研究状態を引き継ぎ"
+git merge origin/arena/955f8586-researchos -m "merge: ResearchOS の研究状態を引き継ぎ"
 # ブランチ名からセッションIDを自動導出してロールを宣言する
-python3 scripts/researchos_session.py claim --role approver
+python3 scripts/researchos_session.py claim --role proposer
 python3 scripts/researchos_guard.py status
 ```
 
@@ -33,32 +33,21 @@ python3 scripts/researchos_guard.py status
 
 ## 承認待ち（レビュー済み）
 
-- `PRP-001` Adopt the ResearchOS governance harness (roles, append-only state, review queue) (提案: SES-c4426c6b)
+なし。
 
 ## 手順
 
 ```bash
-# レビューを読み、承認記録を追記する（自分でレビューした提案は承認できません）
-python3 scripts/researchos_guard.py status
-python3 - <<'PY'
-from pathlib import Path
-import sys; sys.path.insert(0, 'scripts')
-from researchos_common import append_jsonl, now_utc
-append_jsonl(Path('state/approvals.jsonl'), {
-    'approval_id': 'APR-001',
-    'proposal_id': 'PRP-001',
-    'session_id': '<YOUR_SESSION_ID>',
-    'review_ids': ['REV-001'],
-    'decision': 'approved',
-    'rationale': '...',
-    'created_at': now_utc(),
-})
-PY
+# 新しい提案を作る
+python3 scripts/researchos_queue.py list
+# state/proposals.jsonl に PRP-YYYY を追記し、レビューキューに登録する
+python3 scripts/researchos_queue.py add --proposal PRP-YYYY --session <YOUR_SESSION_ID>
 ```
 
 ## 現在のセッション一覧
 
 - `SES-c4426c6b` active bootstrap+proposer — arena/c4426c6b-researchos
 - `SES-eb670d1f` active verifier — arena/eb670d1f-researchos
+- `SES-955f8586` active approver — arena/955f8586-researchos
 
 > このファイルは `scripts/researchos_next.py` が生成します。手動で編集しないでください。
