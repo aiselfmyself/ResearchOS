@@ -8,6 +8,14 @@
     ],
     "session_branch_unique": true,
     "append_only_state": true,
+    "approval_review_binding": {
+      "description": "PRP-002 rev3 (C3/A2): an 'approved' decision must carry review_line_sha256 with one canonical line hash per cited review_id. A missing or incomplete binding is a validator error; a mismatched hash is always an error.",
+      "required_for_decisions": ["approved"],
+      "mandatory_since": "PRP-002 revision 3",
+      "grandfathered_approvals": ["APR-001"],
+      "grandfather_reason": "APR-001 was recorded by SES-955f8586 before this rule existed. It does carry review_line_sha256 for REV-001, so its binding is still verified; only the absence of the field would be downgraded to a warning. Widening this list is a governance change."
+    },
+    "whole_file_append_only_anchors": "PRP-002 rev3 (C2/A1): state/anchors.jsonl pins the rolling head (content + order) of every state/*.jsonl ledger, including its newest line. check-append-only re-derives each head from the working tree, compares the working tree against HEAD, and audits every commit since the baseline, so an in-place rewrite or a deletion fails even when it is committed.",
     "governance_requires_approved_proposal": true,
     "max_bootstrap_sessions": 1,
     "governance_stages": {
@@ -42,6 +50,7 @@
                 "state/sessions.jsonl",
                 "state/review_queue.jsonl",
                 "state/plan.md",
+                "state/anchors.jsonl",
                 "gitswarm/problem.py",
                 "gitswarm/solvers/**",
                 "gitswarm/benchmarks/**",
@@ -66,6 +75,7 @@
         "state/sessions.jsonl",
         "state/review_queue.jsonl",
         "state/plan.md",
+        "state/anchors.jsonl",
         "verifications/**",
         "reports/independent-verification-report.md",
         "reports/verification-*.md",
@@ -82,6 +92,7 @@
         "state/sessions.jsonl",
         "state/review_queue.jsonl",
         "state/plan.md",
+        "state/anchors.jsonl",
         "state/NEXT_SESSION.md"
       ],
       "may_use_governance_paths_without_proposal": false,
@@ -94,6 +105,7 @@
         "state/sessions.jsonl",
         "state/review_queue.jsonl",
         "state/plan.md",
+        "state/anchors.jsonl",
         "README.md",
         "docs/**",
         "state/NEXT_SESSION.md"

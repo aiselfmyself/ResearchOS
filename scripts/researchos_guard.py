@@ -6,10 +6,21 @@ Checks
 ``check-policy``
     The role policy is well formed.
 ``check-append-only``
-    Every ``state/*.jsonl`` only gained lines since the governance baseline
-    (or, for files created later, since the commit that added them).  Since
-    PRP-002, also verifies the rolling hash chain (each revision's
-    ``supersedes`` matches the previous line's canonical hash).
+    Every ``state/*.jsonl`` only gained lines.  Since PRP-002 rev3 four
+    independent layers are checked, so that rewriting or deleting an *existing*
+    line fails even when the rewrite is committed and even for ledgers that were
+    empty at the baseline (the hole REV-003 §3 exploited):
+
+    1. baseline prefix — the lines recorded at ``base_commit`` (or at the commit
+       that created the file) are still there, unchanged and in order;
+    2. HEAD prefix — the committed lines are still there in the working tree, so
+       an *uncommitted* in-place rewrite or deletion fails immediately;
+    3. per-commit audit — every commit in ``base..HEAD`` only appended (a
+       committed rewrite fails at the commit that made it; merge commits must
+       preserve every line of every parent);
+    4. whole-file anchors — ``state/anchors.jsonl`` pins the rolling head of each
+       ledger, so the newest line is pinned too, and the revision chain
+       (``supersedes``) is verified as before.
 ``check-commits``
     Every commit after the baseline carries ``Session-Id`` / ``Session-Role``
     trailers, the session exists and owns the current branch (with inheritance
@@ -44,10 +55,15 @@ GRANDFATHER_BOOTSTRAP_SHORTS = {
 }
 
 from researchos_common import (  # noqa: E402
+    ANCHORS_RELATIVE_PATH,
     COLLECTION_ID_KEYS,
     ROOT,
     STATE_BASELINE,
     STATE_FILES,
+    anchored_ledgers,
+    anchor_errors,
+    git_show_many,
+    ledger_lines,
     commit_parents,
     commit_paths,
     commit_trailers,
@@ -102,20 +118,51 @@ def _historical_text(relative_path: str, base_commit: str) -> Tuple[Optional[str
     return git_show(first, relative_path), first
 
 
-def prefix_violations(relative_path: str, historical: str, current: str) -> List[str]:
+def prefix_violations(
+    relative_path: str, historical: str, current: str, origin: str = "baseline"
+) -> List[str]:
     """Return append-only violations between two versions of a JSONL file."""
     old_lines = [line for line in historical.splitlines() if line.strip()]
     new_lines = [line for line in current.splitlines() if line.strip()]
     if len(new_lines) < len(old_lines):
         return [
-            f"{relative_path}: {len(old_lines)} lines at baseline but only "
+            f"{relative_path}: {len(old_lines)} lines at {origin} but only "
             f"{len(new_lines)} now (append-only violation)"
         ]
     for index, old_line in enumerate(old_lines):
         if new_lines[index] != old_line:
             return [
                 f"{relative_path}: line {index + 1} was modified or reordered "
-                f"(append-only violation; append a new revision instead)"
+                f"against {origin} (append-only violation; append a new revision instead)"
+            ]
+    return []
+
+
+def subsequence_violations(
+    relative_path: str, historical: str, current: str, origin: str = "parent"
+) -> List[str]:
+    """Append-only check for a *merge* result.
+
+    A union merge may interleave lines from both parents, so a strict prefix is
+    the wrong rule there.  The invariant a merge must keep is weaker but still
+    sufficient: every line of every parent survives **verbatim and in order**.
+    A modified or dropped line is reported.
+    """
+    old_lines = ledger_lines(historical)
+    new_lines = ledger_lines(current)
+    cursor = 0
+    for position, line in enumerate(old_lines, 1):
+        found = False
+        while cursor < len(new_lines):
+            candidate = new_lines[cursor]
+            cursor += 1
+            if candidate == line:
+                found = True
+                break
+        if not found:
+            return [
+                f"{relative_path}: line {position} from {origin} is missing or was "
+                "modified in the merge result (append-only violation)"
             ]
     return []
 
@@ -149,7 +196,136 @@ def _check_hash_chain_for_file(relative_path: str) -> List[str]:
     return errors
 
 
-def check_append_only(base_commit: Optional[str] = None, root: Path = ROOT) -> List[str]:
+def check_working_tree_against_head(root: Path = ROOT) -> List[str]:
+    """Layer 2: the working tree may only *append* to what HEAD already committed.
+
+    This is the layer REV-003 §3.1/§3.2 was missing: an in-place rewrite or a
+    deletion of a committed line was invisible as long as the baseline prefix
+    (an empty file, for ledgers created after the baseline) still matched.
+    """
+    errors: List[str] = []
+    for relative_path in sorted(set(STATE_FILES.values())):
+        committed = git_show("HEAD", relative_path, cwd=root)
+        if committed is None:
+            continue  # not committed yet: nothing to protect
+        path = root / relative_path
+        if not path.exists():
+            errors.append(
+                f"{relative_path}: committed at HEAD but missing from the working "
+                "tree (append-only violation: lines were deleted)"
+            )
+            continue
+        errors.extend(
+            prefix_violations(
+                relative_path,
+                committed,
+                path.read_text(encoding="utf-8"),
+                origin="HEAD",
+            )
+        )
+    return errors
+
+
+def _state_commit_log(base_commit: str, root: Path = ROOT) -> List[Tuple[str, List[str], List[str]]]:
+    """``(sha, parents, changed state ledgers)`` for every commit in base..HEAD.
+
+    Side-branch commits are included (no ``--first-parent``), which is what makes
+    a trailerless governance change smuggled in through a merge visible.
+    """
+    # A printable marker: git strips a leading control byte from --format output,
+    # which would corrupt the first entry.
+    marker = "@@COMMIT@@\x1f"
+    try:
+        output = git(
+            "log",
+            "--reverse",
+            f"--format={marker}%H%x1f%P",
+            "--name-only",
+            f"{base_commit}..HEAD",
+            cwd=root,
+        )
+    except RuntimeError:
+        return []
+    state_paths = set(STATE_FILES.values())
+    entries: List[Tuple[str, List[str], List[str]]] = []
+    for chunk in output.split(marker):
+        chunk = chunk.strip("\n")
+        if not chunk:
+            continue
+        lines = chunk.split("\n")
+        header = lines[0].split("\x1f")
+        sha = header[0].strip()
+        parents = header[1].split() if len(header) > 1 and header[1].strip() else []
+        if not sha:
+            continue
+        names = [line.strip() for line in lines[1:] if line.strip()]
+        touched = [name for name in names if name in state_paths]
+        if not touched and len(parents) > 1:
+            # git shows no diff for a merge by default; derive it per parent.
+            derived = set()
+            for parent in parents:
+                try:
+                    diff = git("diff", "--name-only", parent, sha, cwd=root)
+                except RuntimeError:
+                    continue
+                derived.update(line.strip() for line in diff.splitlines() if line.strip())
+            touched = sorted(name for name in derived if name in state_paths)
+        entries.append((sha, parents, touched))
+    return entries
+
+
+def check_state_history(base_commit: str, root: Path = ROOT) -> List[str]:
+    """Layer 3: no commit since the baseline modified or dropped a ledger line.
+
+    A rewrite that *is* committed is caught here, at the commit that made it —
+    including a rewrite of a line that was appended after the baseline (REV-003
+    §3.3), which the baseline prefix check can never see.
+    """
+    entries = _state_commit_log(base_commit, root)
+    requests: List[Tuple[str, str]] = []
+    for sha, parents, touched in entries:
+        for relative_path in touched:
+            requests.append((sha, relative_path))
+            for parent in parents:
+                requests.append((parent, relative_path))
+    blobs = git_show_many(requests, cwd=root) if requests else {}
+
+    errors: List[str] = []
+    for sha, parents, touched in entries:
+        short = sha[:7]
+        for relative_path in touched:
+            new_text = blobs.get((sha, relative_path)) or ""
+            if len(parents) <= 1:
+                if not parents:
+                    continue  # root commit: every line is new by definition
+                old_text = blobs.get((parents[0], relative_path))
+                if old_text is None:
+                    continue  # ledger created by this commit
+                errors.extend(
+                    f"{short}: {error}"
+                    for error in prefix_violations(
+                        relative_path, old_text, new_text, origin=f"{parents[0][:7]}"
+                    )
+                )
+                continue
+            for parent in parents:
+                old_text = blobs.get((parent, relative_path))
+                if old_text is None:
+                    continue
+                errors.extend(
+                    f"{short}: {error}"
+                    for error in subsequence_violations(
+                        relative_path, old_text, new_text, origin=f"parent {parent[:7]}"
+                    )
+                )
+    return errors
+
+
+def check_append_only(
+    base_commit: Optional[str] = None,
+    root: Path = ROOT,
+    audit_history: bool = True,
+) -> List[str]:
     baseline = load_baseline()
     base_commit = base_commit or baseline.get("base_commit")
     if not base_commit:
@@ -178,6 +354,14 @@ def check_append_only(base_commit: Optional[str] = None, root: Path = ROOT) -> L
     for rel in STATE_FILES.values():
         if rel not in candidates:
             errors.extend(_check_hash_chain_for_file(rel))
+
+    # PRP-002 rev3 (C2/A1): layers 2-4.  The baseline prefix above is kept for
+    # backward compatibility, but on its own it protects nothing for a ledger
+    # that was empty at the baseline.
+    errors.extend(check_working_tree_against_head(root))
+    if audit_history:
+        errors.extend(check_state_history(base_commit, root))
+    errors.extend(anchor_errors(root))
     return errors
 
 
@@ -509,6 +693,9 @@ RECORD_FILES = [
     ("state/reviews.jsonl", ["session_id"]),
     ("state/approvals.jsonl", ["session_id"]),
     ("state/review_queue.jsonl", ["claimed_by_session", "created_by_session"]),
+    # PRP-002 rev3: an anchor pin is authored by the session that wrote it, so
+    # re-pinning a tampered ledger needs a commit from that session's branch.
+    (ANCHORS_RELATIVE_PATH, ["session_id"]),
     ("state/claims.jsonl", ["session_id"]),
     ("state/evidence.jsonl", ["session_id"]),
     ("state/verifications.jsonl", ["session_id"]),
@@ -622,23 +809,36 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="ResearchOS role / append-only guard")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    sub.add_parser("check-policy")
+    # PRP-002 rev3 (§14 alignment): every check sub-command accepts --json, so
+    # the documented acceptance commands exist and never exit 2 on argument
+    # parsing.  Exit codes stay 0 = pass, 1 = fail.
+    policy_parser = sub.add_parser("check-policy")
+    policy_parser.add_argument("--json", action="store_true")
 
     append_parser = sub.add_parser("check-append-only")
     append_parser.add_argument("--base", default=None)
+    append_parser.add_argument("--json", action="store_true")
 
     commits_parser = sub.add_parser("check-commits")
     commits_parser.add_argument("--base", default=None)
     commits_parser.add_argument("--branch", default=None)
     commits_parser.add_argument("--stage", default="propose", choices=["propose", "land"], help="governance stage: propose (feature branch) or land (merge to main)")
+    commits_parser.add_argument("--json", action="store_true")
 
-    sub.add_parser("check-authorship")
+    authorship_parser = sub.add_parser("check-authorship")
+    authorship_parser.add_argument("--json", action="store_true")
 
     all_parser = sub.add_parser("check-all")
     all_parser.add_argument("--base", default=None)
     all_parser.add_argument("--branch", default=None)
     all_parser.add_argument("--stage", default="propose", choices=["propose", "land"])
     all_parser.add_argument("--json", action="store_true")
+
+    anchors_parser = sub.add_parser(
+        "check-anchors",
+        help="verify the whole-file append-only anchors (state/anchors.jsonl)",
+    )
+    anchors_parser.add_argument("--json", action="store_true")
 
     sub.add_parser("status")
 
@@ -649,6 +849,8 @@ def main(argv=None) -> int:
         return 0
 
     results: Dict[str, List[str]] = {}
+    if args.command == "check-anchors":
+        results["anchors"] = anchor_errors(ROOT)
     if args.command in ("check-policy", "check-all"):
         results["policy"] = check_policy()
     if args.command in ("check-append-only", "check-all"):
@@ -659,8 +861,12 @@ def main(argv=None) -> int:
             getattr(args, "branch", None),
             getattr(args, "stage", "propose"),
         )
+    if args.command in ("check-append-only", "check-all"):
+        results.setdefault("append_only", check_append_only(getattr(args, "base", None)))
     if args.command in ("check-authorship", "check-all"):
         results["authorship"] = check_record_authorship()
+    if args.command == "check-all":
+        results["anchors"] = anchor_errors(ROOT)
 
     failed = {name: errors for name, errors in results.items() if errors}
     if getattr(args, "json", False):

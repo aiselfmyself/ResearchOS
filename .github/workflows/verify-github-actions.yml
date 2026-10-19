@@ -49,6 +49,10 @@ jobs:
         run: |
           python3 verifications/prp001_governance_probes.py
 
+      - name: 追記専用の実改竄テスト（PRP-002 rev3 / C2・A1）
+        run: |
+          python3 -m unittest tests.test_append_only_tamper -v
+
       - name: ジョブサマリ（test）
         if: always()
         run: |
@@ -76,16 +80,29 @@ jobs:
       - name: ResearchOS ガバナンス検査（propose ステージ）
         run: |
           set -euo pipefail
-          python3 scripts/researchos_guard.py check-policy
-          python3 scripts/researchos_guard.py check-append-only
-          python3 scripts/researchos_guard.py check-commits --branch "${GITHUB_REF_NAME}" --stage propose
-          python3 scripts/researchos_guard.py check-authorship
+          # PRP-002 rev3 (§14): every sub-command takes --json and exits 0/1, never 2.
+          python3 scripts/researchos_guard.py check-policy --json
+          python3 scripts/researchos_guard.py check-append-only --json
+          python3 scripts/researchos_guard.py check-anchors --json
+          python3 scripts/researchos_guard.py check-commits --branch "${GITHUB_REF_NAME}" --stage propose --json
+          python3 scripts/researchos_guard.py check-authorship --json
+
+      - name: 追記専用アンカーの検証（PRP-002 rev3 / C2・A1）
+        run: |
+          set -euo pipefail
+          python3 scripts/researchos_anchor.py verify
+
+      - name: PRP-002 rev3 受入プローブ（§14 DoD ランナ）
+        run: |
+          set -euo pipefail
+          python3 verifications/prp002_rev2_acceptance_probes.py
 
       - name: ガバナンス着地ゲート（main のみ）
         if: github.ref_name == 'main'
         run: |
           set -euo pipefail
-          python3 scripts/researchos_guard.py check-commits --branch main --stage land
+          python3 scripts/researchos_guard.py check-commits --branch main --stage land --json
+          python3 scripts/researchos_guard.py check-all --branch main --stage land --json
           python3 scripts/validate_researchos.py --quiet
           echo "land gate PASS for main"
 

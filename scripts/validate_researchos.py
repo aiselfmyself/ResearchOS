@@ -34,16 +34,36 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from researchos_common import (  # noqa: E402
     COLLECTION_ID_KEYS,
+    IDEMPOTENT_COLLECTIONS,
     LEGACY_STATE_FILES,
     STATE_FILES,
+    anchor_errors,
+    canonical_json,
     is_legacy,
     line_hash,
     load_baseline,
+    load_policy,
     read_jsonl,
     resolve_effective,
 )
 
 LEGACY_RELATIVES = set(LEGACY_STATE_FILES)
+
+
+def grandfathered_approvals() -> List[str]:
+    """Approvals recorded before the review binding became mandatory.
+
+    PRP-002 rev3 (C3/A2) makes ``review_line_sha256`` mandatory for an
+    ``approved`` decision.  ``APR-001`` predates that rule, so it is listed here
+    and downgraded to a warning; the exemption is data, not code, and lives in
+    ``policy/roles.json`` where a governance change is needed to widen it.
+    """
+    try:
+        policy = load_policy()
+    except (OSError, json.JSONDecodeError):
+        return []
+    binding = (policy.get("enforcement") or {}).get("approval_review_binding") or {}
+    return [str(item) for item in binding.get("grandfathered_approvals", [])]
 
 
 # --------------------------------------------------------------------------
@@ -248,6 +268,7 @@ def validate_governance(
     sessions_by = {s["session_id"]: s for s in sessions if "session_id" in s}
     proposals_by = {p["proposal_id"]: p for p in proposals if "proposal_id" in p}
     reviews_by = {r["review_id"]: r for r in reviews if "review_id" in r}
+    grandfathered = set(grandfathered_approvals())
 
     # Bootstrap is a one-time installation role.
     boot = [s for s in sessions if "bootstrap" in s.get("roles", [])]
@@ -418,26 +439,65 @@ def validate_governance(
                             errors.append(
                                 f"Approval '{approval.get('approval_id')}' cites review '{review.get('review_id')}' missing required checks: {', '.join(sorted(missing))} (queue {q.get('queue_id')})"
                             )
-                # PRP-002 C3/A2: review_line_sha256 binding (if present, must match)
-                expected_hashes = approval.get("review_line_sha256") or approval.get("review_sha256")
-                if expected_hashes:
-                    # Support both dict {review_id: hash} and single string
-                    if isinstance(expected_hashes, dict):
-                        expected = expected_hashes.get(review.get("review_id"))
-                        if expected:
-                            from researchos_common import line_hash as _lh
-                            actual = _lh(review)
-                            if actual != expected:
-                                errors.append(
-                                    f"Approval '{approval.get('approval_id')}' review_line_sha256 mismatch for {review.get('review_id')}: expected {expected[:12]}..., got {actual[:12]}..."
-                                )
-                    elif isinstance(expected_hashes, str):
-                        from researchos_common import line_hash as _lh2
-                        actual = _lh2(review)
-                        if actual != expected_hashes:
-                            errors.append(
-                                f"Approval '{approval.get('approval_id')}' review_line_sha256 mismatch: expected {expected_hashes[:12]}..., got {actual[:12]}..."
-                            )
+                # PRP-002 rev3 (C3/A2): the binding is MANDATORY, not optional.
+                # Before this revision the check ran only "if present", so an
+                # approver could simply omit review_line_sha256 and the approval
+                # would not be bound to the reviewed content at all (REV-003 §4:
+                # a fixture APR-910 without the field passed with exit 0).
+                # A missing or incomplete binding is now an error; only the
+                # approvals grandfathered in policy/roles.json get a warning.
+                # A wrong hash is always an error, grandfathered or not.
+                approval_id = approval.get("approval_id")
+                review_id = review.get("review_id")
+                actual = line_hash(review)
+                expected_hashes = approval.get("review_line_sha256") or approval.get(
+                    "review_sha256"
+                )
+
+                def _binding_problem(message: str) -> None:
+                    if approval_id in grandfathered:
+                        warnings.append(
+                            f"Approval '{approval_id}' is grandfathered "
+                            f"(pre-PRP-002 rev3) but {message}"
+                        )
+                    else:
+                        errors.append(f"Approval '{approval_id}' {message}")
+
+                if not expected_hashes:
+                    _binding_problem(
+                        "has no review_line_sha256: an 'approved' decision must bind "
+                        "the canonical line hash of every review it cites "
+                        "(mandatory since PRP-002 rev3)"
+                    )
+                elif isinstance(expected_hashes, dict):
+                    expected = expected_hashes.get(review_id)
+                    if not expected:
+                        _binding_problem(
+                            f"review_line_sha256 has no entry for the cited review "
+                            f"'{review_id}'"
+                        )
+                    elif expected != actual:
+                        errors.append(
+                            f"Approval '{approval_id}' review_line_sha256 mismatch for "
+                            f"{review_id}: expected {expected[:12]}..., got {actual[:12]}..."
+                        )
+                elif isinstance(expected_hashes, str):
+                    if len(referenced) > 1:
+                        _binding_problem(
+                            f"cites {len(referenced)} reviews but binds one "
+                            "review_sha256 string; use the review_line_sha256 map so "
+                            "every cited review is bound"
+                        )
+                    elif expected_hashes != actual:
+                        errors.append(
+                            f"Approval '{approval_id}' review_line_sha256 mismatch: "
+                            f"expected {expected_hashes[:12]}..., got {actual[:12]}..."
+                        )
+                else:
+                    _binding_problem(
+                        "review_line_sha256 must be an object mapping review_id to a "
+                        "sha256 hex digest (or a single review_sha256 string)"
+                    )
         elif approval.get("decision") == "rejected":
             if not referenced:
                 errors.append(
@@ -699,6 +759,7 @@ def run_all_checks(root: str = ".") -> Dict[str, Any]:
             "review",
             "approval",
             "review_queue",
+            "anchor",
         ]
         schemas = {
             name: load_json(str(schema_dir / f"{name}.json")) for name in schema_files
@@ -712,7 +773,9 @@ def run_all_checks(root: str = ".") -> Dict[str, Any]:
         for name in STATE_FILES:
             raw[name] = load_jsonl(str(state_dir / f"{Path(STATE_FILES[name]).name}"))
             effective, revision_errors, revision_warnings = resolve_effective(
-                raw[name], COLLECTION_ID_KEYS[name]
+                raw[name],
+                COLLECTION_ID_KEYS[name],
+                allow_identical_duplicates=name in IDEMPOTENT_COLLECTIONS,
             )
             errors.extend(f"{STATE_FILES[name]}: {err}" for err in revision_errors)
             warnings.extend(f"{STATE_FILES[name]}: {warn}" for warn in revision_warnings)
@@ -729,6 +792,7 @@ def run_all_checks(root: str = ".") -> Dict[str, Any]:
             "reviews": "review",
             "approvals": "approval",
             "review_queue": "review_queue",
+            "anchors": "anchor",
         }
         schema_label = {
             "sources": "Source",
@@ -741,12 +805,30 @@ def run_all_checks(root: str = ".") -> Dict[str, Any]:
             "reviews": "Review",
             "approvals": "Approval",
             "review_queue": "QueueItem",
+            "anchors": "Anchor",
         }
+        exempt_approvals = set(grandfathered_approvals())
         for name, schema_name in schema_map.items():
             for record in collections[name]:
-                errors.extend(
-                    validate_record(record, schemas[schema_name], schema_label[name])
+                record_errors = validate_record(
+                    record, schemas[schema_name], schema_label[name]
                 )
+                # PRP-002 rev3 (C3/A2): the binding is mandatory, except for the
+                # approvals explicitly grandfathered in policy/roles.json.
+                if name == "approvals" and record.get("approval_id") in exempt_approvals:
+                    binding_errors = [
+                        err for err in record_errors if "review_line_sha256" in err
+                    ]
+                    if binding_errors:
+                        warnings.extend(
+                            f"Approval '{record.get('approval_id')}' is grandfathered "
+                            f"(pre-PRP-002 rev3): {err}"
+                            for err in binding_errors
+                        )
+                    record_errors = [
+                        err for err in record_errors if err not in binding_errors
+                    ]
+                errors.extend(record_errors)
 
         id_keys = {
             "Source": (collections["sources"], "source_id"),
@@ -759,8 +841,24 @@ def run_all_checks(root: str = ".") -> Dict[str, Any]:
             "Review": (collections["reviews"], "review_id"),
             "Approval": (collections["approvals"], "approval_id"),
             "Queue": (collections["review_queue"], "queue_id"),
+            "Anchor": (collections["anchors"], "anchor_id"),
         }
-        errors.extend(validate_unique_ids(id_keys))
+        # Anchors are content-addressed facts: an identical line appended twice
+        # (a union merge of two parallel tracks) is idempotent, not a conflict.
+        deduped: Dict[str, Tuple[List[Dict[str, Any]], str]] = {}
+        for label, (records, key) in id_keys.items():
+            if label == "Anchor":
+                seen_lines = set()
+                unique_records = []
+                for record in records:
+                    digest = canonical_json(record)
+                    if digest in seen_lines:
+                        continue
+                    seen_lines.add(digest)
+                    unique_records.append(record)
+                records = unique_records
+            deduped[label] = (records, key)
+        errors.extend(validate_unique_ids(deduped))
 
         errors.extend(
             validate_referential_integrity(
@@ -800,6 +898,11 @@ def run_all_checks(root: str = ".") -> Dict[str, Any]:
                 errors,
                 warnings,
             )
+
+        # PRP-002 rev3 (C2/A1): the whole-file append-only anchors must hold, so
+        # the deterministic validator fails on a tampered ledger too — not only
+        # the guard.
+        errors.extend(anchor_errors(root_path))
 
         errors.extend(validate_git_provenance(str(root_path)))
 
@@ -843,6 +946,7 @@ def run_all_checks(root: str = ".") -> Dict[str, Any]:
                 "reviews": len(collections["reviews"]),
                 "approvals": len(collections["approvals"]),
                 "queue": len(collections["review_queue"]),
+                "anchors": len(collections["anchors"]),
             },
             "errors": errors,
             "warnings": warnings,

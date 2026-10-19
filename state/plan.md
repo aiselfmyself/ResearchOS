@@ -332,7 +332,7 @@ suite that cannot fail when the guard is broken proves nothing, which is what RE
 
 ```
 python3 verifications/prp002_rev2_acceptance_probes.py --json   -> 26/26 ok, exit 0
-python3 -m unittest discover -s tests                           -> Ran 82 tests ... OK  (rev2: 57)
+python3 -m unittest discover -s tests                           -> Ran 86 tests ... OK  (rev2: 57)
 python3 scripts/researchos_guard.py check-all --json            -> ok=true (policy/append_only/commits/authorship/anchors all 0)
 python3 scripts/validate_researchos.py --quiet                  -> exit 0
 python3 scripts/researchos_anchor.py verify                     -> ok=true (10 ledgers pinned)
@@ -345,6 +345,29 @@ attack 3  append REV-9001 -> commit (exit 0) -> rewrite         -> exit 1 uncomm
 
 All attacks were run in throwaway copies (`/tmp` and `tempfile`); no protected file in this repository
 was modified to produce them.
+
+### Found while implementing (self-report, see PRP-002 §18.4)
+
+Adding a layer turns other checks red, and the verifier should know which ones this cost:
+
+1. **`check-authorship` vs. auto-pinned anchors.** `append_jsonl` only read a record's
+   `session_id`, but `state/review_queue.jsonl` rows carry `created_by_session` /
+   `claimed_by_session`, so the pin for `RQ-003` was written as `session_id: "unknown"` and
+   `check-all --branch arena/86da9dab-researchos --stage propose --json` returned `ok=false`
+   (exit 1) *after* the implementation commit. Fixed with `record_session_hint()` plus a
+   `session_from_branch(root=root)` fallback — `check-authorship` itself was **not** weakened.
+   Because the anchor ledger is append-only and the bad line was already committed, the
+   unpublished commit was rebuilt with correct pins rather than corrected by a new row; it had
+   not been pushed, so no shared history was rewritten.
+2. **Unborn branches.** `git rev-parse --abbrev-ref HEAD` prints `HEAD` in a repository with no
+   commit, so branch-derived attribution silently became `unknown`. `current_branch()` now falls
+   back to `git symbolic-ref --short HEAD` (detached HEAD behaviour unchanged).
+3. **The hand-off template contradicted the new rule.** `researchos_next.py` showed approvers an
+   `append_jsonl` call *without* `review_line_sha256`, which rev3 makes a validator error. The
+   template now derives the binding with `line_hash` and asserts it covers every cited review.
+
+Regression tests: `AnchorAuthorshipTest` (4 cases) — `tests/test_append_only_tamper.py` is now
+20 tests, total suite 86.
 
 ### Ledger
 

@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ResearchOS Whole-File Append-Only Anchor",
+  "description": "PRP-002 rev3 (C2/A1). One entry pins the tip of one state/*.jsonl ledger: head_sha256 is the rolling hash of the first `lines` lines, so rewriting or deleting ANY anchored line (including the newest one) breaks the pin. prev_head_sha256/prev_lines chain the entries of one ledger; prev_anchor_head_sha256/prev_anchor_lines chain the anchor ledger itself, so rewriting an earlier anchor line breaks a later one. Entries are facts, never revised: a new tip is a new entry.",
+  "type": "object",
+  "required": [
+    "anchor_id",
+    "file",
+    "lines",
+    "head_sha256",
+    "prev_head_sha256",
+    "prev_lines",
+    "prev_anchor_head_sha256",
+    "prev_anchor_lines",
+    "session_id",
+    "created_at"
+  ],
+  "properties": {
+    "anchor_id": {"type": "string", "pattern": "^ANC-[0-9a-f]{16}$"},
+    "file": {"type": "string", "pattern": "^state/[a-z_]+\\.jsonl$"},
+    "lines": {"type": "integer", "minimum": 0},
+    "head_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "prev_head_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "prev_lines": {"type": "integer", "minimum": 0},
+    "prev_anchor_head_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "prev_anchor_lines": {"type": "integer", "minimum": 0},
+    "session_id": {"type": "string", "pattern": "^SES-[a-z0-9][a-z0-9-]*$|^unknown$"},
+    "created_at": {"type": "string"},
+    "notes": {"type": "string"}
+  }
+}

@@ -8,6 +8,7 @@
     "session_id",
     "review_ids",
     "decision",
+    "review_line_sha256",
     "created_at"
   ],
   "properties": {
@@ -19,7 +20,7 @@
     "rationale": {"type": "string"},
     "review_line_sha256": {
       "type": "object",
-      "description": "PRP-002 C3/A2: binds approval to reviewed content hash (canonical line hash of each cited review)",
+      "description": "PRP-002 rev3 (C3/A2): MANDATORY. Binds the approval to the reviewed content: one entry per cited review_id holding that review line's canonical sha256. Without it an approver can be handed a different review after the fact. Approvals recorded before PRP-002 rev3 are grandfathered in policy/roles.json (enforcement.approval_review_binding) and only warn.",
       "additionalProperties": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
     },
     "review_sha256": {

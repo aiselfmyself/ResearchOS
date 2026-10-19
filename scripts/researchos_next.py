@@ -193,6 +193,14 @@ def build_prompt(role: str, branch: str, scan_all: bool = False, global_open: Op
     lines.append("   訂正は同じ ID で `revision` を上げた新しい行を追記してください。")
     lines.append("4. **すべてのコミットに `Session-Id:` と `Session-Role:` を付ける。**")
     lines.append("   付け忘れると CI の `check-commits` が失敗します。")
+    lines.append("5. **手で `state/*.jsonl` に追記したら、アンカーも更新する（PRP-002 rev3 / R4）。**")
+    lines.append("   `python3 scripts/researchos_anchor.py update` を実行してコミットしてください。")
+    lines.append("   `append_jsonl()`（＝ `researchos_session.py` / `researchos_queue.py` / `researchos_verify.py`）")
+    lines.append("   経由の追記は自動的に pin されるので、この手順が要るのは手書きの追記だけです。")
+    lines.append("   既存行を書き換えてから `update` しても隠せません（古いアンカーが元の接頭辞を固定し続けます）。")
+    lines.append("6. **承認には `review_line_sha256` が必須（PRP-002 rev3 / R3）。**")
+    lines.append("   `approved` を記録するとき、参照する各レビューの正規化行ハッシュを")
+    lines.append("   `{\"review_id\": \"<sha256>\"}` の形で付けてください。欠落・一部欠落は validator が error にします。")
     lines.append("")
     lines.append("## 現在のレビュー待ち")
     lines.append("")
@@ -232,15 +240,41 @@ def build_prompt(role: str, branch: str, scan_all: bool = False, global_open: Op
     lines.append("")
     lines.append("## 手順")
     lines.append("")
+    # PRP-002 rev3 (§14/V11): the hand-off must name the queue item that is
+    # actually open, not a hard-coded RQ-001/PRP-001 from the install round.
+    first_open = open_items[0] if open_items else {}
+    open_queue = first_open.get("queue_id", "RQ-XXX")
+    open_proposal = first_open.get("proposal_id", "PRP-XXX")
+    awaiting = [
+        proposal.get("proposal_id")
+        for proposal in proposals
+        if proposal.get("proposal_id") in passing
+        and proposal.get("proposal_id") not in approved
+        and proposal.get("status") == "pending_review"
+    ]
+    approval_target = awaiting[0] if awaiting else "PRP-XXX"
+    approval_reviews = sorted(
+        {
+            review.get("review_id")
+            for review in reviews
+            if review.get("proposal_id") == approval_target
+            and review.get("result") in ("pass", "partial")
+        }
+    )
     if role == "verifier":
         lines.append("```bash")
         lines.append("# 1. キューを確認して着手を記録")
         lines.append("python3 scripts/researchos_queue.py list --status open")
-        lines.append("python3 scripts/researchos_queue.py claim --queue RQ-001 --session <YOUR_SESSION_ID>")
+        lines.append(f"python3 scripts/researchos_queue.py claim --queue {open_queue} --session <YOUR_SESSION_ID>")
         lines.append("# 2. 標準検証スイートを実行（合否はあなたの判断ではなく実行結果）")
-        lines.append("python3 scripts/researchos_verify.py --proposal PRP-001 --session <YOUR_SESSION_ID> --write")
+        lines.append(f"#    {open_queue} の required_checks は {len(first_open.get('required_checks', []))} 項目。REV-* は --write が自動採番します。")
+        lines.append(f"python3 scripts/researchos_verify.py --proposal {open_proposal} --session <YOUR_SESSION_ID> --write")
         lines.append("# 3. 完了を記録")
-        lines.append("python3 scripts/researchos_queue.py complete --queue RQ-001 --review REV-001 --session <YOUR_SESSION_ID>")
+        lines.append(f"python3 scripts/researchos_queue.py complete --queue {open_queue} --review <REV-XXXX> --session <YOUR_SESSION_ID>")
+        lines.append("# 4. 追記専用の確認（PRP-002 rev3）。クリーンな木で緑になること、そして")
+        lines.append("#    改竄した使い捨てコピーで赤になることを自分の目で確かめてください。")
+        lines.append("python3 scripts/researchos_guard.py check-append-only --json")
+        lines.append("python3 scripts/researchos_anchor.py verify")
         lines.append("```")
     elif role == "approver":
         lines.append("```bash")
@@ -249,24 +283,39 @@ def build_prompt(role: str, branch: str, scan_all: bool = False, global_open: Op
         lines.append("python3 - <<'PY'")
         lines.append("from pathlib import Path")
         lines.append("import sys; sys.path.insert(0, 'scripts')")
-        lines.append("from researchos_common import append_jsonl, now_utc")
+        lines.append("from researchos_common import append_jsonl, line_hash, now_utc, read_jsonl")
+        lines.append("")
+        lines.append("# PRP-002 rev3 (R3/C3・A2): review_line_sha256 は **必須**。")
+        lines.append("# 参照するレビューの正規化行ハッシュを束縛しないと validator が error になります。")
+        review_list = ", ".join(f"'{item}'" for item in approval_reviews) or "'REV-XXXX'"
+        lines.append(f"REVIEWS = [{review_list}]   # {approval_target} の passing review（result: pass が最低1件）")
+        lines.append("reviews = {r['review_id']: r for r in read_jsonl(Path('state/reviews.jsonl'))}")
+        lines.append("binding = {rid: line_hash(reviews[rid]) for rid in REVIEWS if rid in reviews}")
+        lines.append("assert set(binding) == set(REVIEWS), f'unknown review: {set(REVIEWS) - set(binding)}'")
+        lines.append("")
         lines.append("append_jsonl(Path('state/approvals.jsonl'), {")
-        lines.append("    'approval_id': 'APR-001',")
-        lines.append("    'proposal_id': 'PRP-001',")
+        lines.append("    'approval_id': 'APR-XXX',")
+        lines.append(f"    'proposal_id': '{approval_target}',")
         lines.append("    'session_id': '<YOUR_SESSION_ID>',")
-        lines.append("    'review_ids': ['REV-001'],")
+        lines.append("    'review_ids': REVIEWS,")
+        lines.append("    'review_line_sha256': binding,")
         lines.append("    'decision': 'approved',")
         lines.append("    'rationale': '...',")
         lines.append("    'created_at': now_utc(),")
         lines.append("})")
         lines.append("PY")
+        lines.append("# append_jsonl はアンカーも自動更新します。手で追記した場合は次を実行:")
+        lines.append("python3 scripts/researchos_anchor.py verify")
         lines.append("```")
     else:
         lines.append("```bash")
         lines.append("# 新しい提案を作る")
         lines.append("python3 scripts/researchos_queue.py list")
         lines.append("# state/proposals.jsonl に PRP-YYYY を追記し、レビューキューに登録する")
+        lines.append("# （append_jsonl を使えばアンカーは自動更新されます）")
         lines.append("python3 scripts/researchos_queue.py add --proposal PRP-YYYY --session <YOUR_SESSION_ID>")
+        lines.append("# 手で state/*.jsonl に追記した場合のみ必要（PRP-002 rev3 / R4）")
+        lines.append("python3 scripts/researchos_anchor.py update")
         lines.append("```")
     lines.append("")
     lines.append("## 現在のセッション一覧")

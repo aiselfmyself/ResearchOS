@@ -58,6 +58,7 @@ Arena.ai の 1 チャット = 1 セッション = 1 ブランチ
 | `state/reviews.jsonl` | – | ✅ | – | – |
 | `state/approvals.jsonl` | – | – | ✅ | – |
 | `state/review_queue.jsonl` | ✅ | ✅ | ✅ | ✅ |
+| `state/anchors.jsonl`（追記専用アンカー） | ✅ | ✅ | ✅ | ✅ |
 | `state/sessions.jsonl` | ✅（自分のみ） | ✅（自分のみ） | ✅（自分のみ） | ✅（自分のみ） |
 | `gitswarm/solvers/**`, `gitswarm/benchmarks/**` | ✅ | – | – | – |
 | `verifications/**`, 独立検証レポート | – | ✅ | – | – |
@@ -95,9 +96,16 @@ Informed-By: <ancestor sha>
 | 提案 → 承認 | `approval.session_id != proposal.session_id` |
 | レビュー → 承認 | `approval.session_id ∉ review.session_id` |
 | 承認の前提 | 参照するレビューに `result: pass` が最低 1 件 |
+| 承認の内容束縛 | **`review_line_sha256` が必須**（PRP-002 rev3 / C3・A2）。`approved` は参照する各レビューの正規化行ハッシュを `review_id → sha256` の map で持つ。欠落・一部欠落は error、不一致は常に error |
 | 承認の効果 | **approval レジャーが正**。提案の `status` は書き換え不要 |
 
-### R4. 追記専用（PRP-002 で強化: ローリングハッシュ鎖）
+`review_line_sha256` を省略できた頃は、承認後にレビュー行を差し替えても束縛が残らなかった
+（REV-003 §4 が fixture `APR-910` で再現）。規則自体は `schemas/approval.json` の `required` と
+`validate_governance` の両方で強制し、**適用前の `APR-001` だけの免除を
+`policy/roles.json` の `enforcement.approval_review_binding.grandfathered_approvals` に
+データとして置く**（免除を広げるのもガバナンス変更）。免除された承認でも、ハッシュが存在すれば照合される。
+
+### R4. 追記専用（PRP-002 rev3 で強化: ファイル全体のアンカー）
 
 `state/*.jsonl` は行の追加のみ。既存行の編集・削除・並べ替えは `check-append-only` が拒否する。
 訂正は同じ ID で新しい行を追記する:
@@ -109,7 +117,63 @@ Informed-By: <ancestor sha>
 基準点は `policy/state_baseline.json`（`base_commit: 066b937`）。
 それ以前の行は**祖父条項**で免除され、行ハッシュで識別される。
 
-**PRP-002 以降の追加保証 (C2/A1):** 各ファイルの全行は `revision` と `supersedes` によるローリングハッシュ鎖で検証される。`state/reviews.jsonl` 等の base 後に作成された台帳も、接頭辞だけでなく各追記行の `supersedes == line_hash(prev)` が `check-append-only` で検証される。単なる前方一致では保護されない追記行の書き換え (A1) はハッシュ鎖で検出される。静的 baseline は段階的にハッシュ鎖のみへ移行する。
+**なぜ rev2 の「ハッシュ鎖」では足りなかったか。** `supersedes` の鎖は *同一 ID の revision 間*
+だけを繋ぐので、**最新行**（revision 1 の行、まだ supersede されていない行）はどこからも固定されない。
+さらに `state/reviews.jsonl` は baseline 後に**空ファイル**として作られたため、接頭辞検査の対象行が
+1 行も存在しなかった。結果として REV-003 §3 の 3 つの攻撃（REV-001 の書き換え・削除・追記済み行の
+書き換え）がすべて `check-append-only` と `check-all --json` を通過した。
+
+**rev3 は 4 層で検査する。** どの層も「行を追記するだけ」なら緑のまま、既存行の書き換え・削除だけを選ぶ。
+
+| 層 | 検査 | 捕まえる改竄 |
+| :--- | :--- | :--- |
+| 1. baseline 接頭辞 | `base_commit`（無ければ作成コミット）時点の行が残っているか | baseline 以前からある行の書き換え |
+| 2. **HEAD 接頭辞** | 作業ツリーが HEAD の行を全てそのまま保持しているか | **未コミット**の書き換え・削除 |
+| 3. **コミット単位監査** | `base..HEAD` の各コミット（side branch 込み）が既存行を変更していないか。merge は「各親の行が全てそのまま・同じ順序で残る」ことを要求 | **コミット済み**の書き換え・削除（どのコミットが行ったかまで特定） |
+| 4. **ファイル全体アンカー** | `state/anchors.jsonl` の各エントリが「先頭 N 行の rolling head」を固定し、それが現在のファイルと一致するか | アンカー済み行（**最新行を含む**）の書き換え・削除。履歴を辿れない場合でも検出 |
+
+**rolling head** は生の各行を順番に SHA-256 で連結して得る 1 個のハッシュで、ファイル全体の
+内容と順序に束縛される（`researchos_common.rolling_head` / `prefix_heads`）。空ファイルは
+`GENESIS_HASH = 0×64`。アンカー 1 エントリ = 「このファイルの先頭 N 行の head はこれ」という事実で、
+次のフィールドを持つ:
+
+```json
+{"anchor_id":"ANC-<16hex>","file":"state/reviews.jsonl","lines":2,
+ "head_sha256":"<先頭2行のrolling head>","prev_head_sha256":"<直前アンカーのhead>",
+ "prev_lines":1,"prev_anchor_head_sha256":"<この行より前の anchors.jsonl 全体のhead>",
+ "prev_anchor_lines":7,"session_id":"SES-xxxx","created_at":"..."}
+```
+
+* `head_sha256` / `lines` — 台帳の接頭辞の固定（**全エントリを現在のファイルと照合**するので、
+  古いエントリほど強い制約になる）。
+* `prev_head_sha256` / `prev_lines` — 同じ台帳のアンカー鎖。
+* `prev_anchor_head_sha256` / `prev_anchor_lines` — **アンカー台帳自身の自己鎖**。
+  過去のアンカー行を 1 行書き換えると、それ以降のエントリがこの値で不一致になる。
+* 最新エントリは台帳の現在の行数・head と一致しなければならない（**tip pin**）。
+  追記したらアンカーも更新する、が規則。
+
+**改竄後にアンカーを更新しても隠せない。** 追記された新エントリは検査を通っても、
+古いエントリが「先頭 N 行の head」を固定し続けているため、書き換えた行がその N 行に含まれる限り
+不一致が残る（`tests/test_append_only_tamper.py::test_re_anchoring_does_not_hide_a_rewrite`）。
+
+運用:
+
+```bash
+python3 scripts/researchos_anchor.py verify    # 全台帳が pin されているか（exit 1 = 未 pin / 破損）
+python3 scripts/researchos_anchor.py update    # 追記した台帳の tip を pin（追記のみ、幂等）
+python3 scripts/researchos_anchor.py list
+python3 scripts/researchos_guard.py check-anchors --json
+```
+
+`append_jsonl()` は対象が本リポジトリの被アンカー台帳なら**自動的に pin を更新する**ので、
+`researchos_session.py` / `researchos_queue.py` / `researchos_verify.py` 経由の追記で
+アンカーが古くなることはない。手で追記した場合だけ `update` が必要で、忘れると
+`check-append-only` がコマンド名つきのエラーで止まる。
+
+**アンカーの authorship:** `state/anchors.jsonl` の各行も R5 の対象なので、pin の書き換えには
+そのセッションを名乗るコミットが必要になる。
+
+静的 baseline（層 1）は後方互換のために残す。段階的な撤廃は PRP-003 の検討事項。
 
 ### R5. レコード authorship 束縛
 
@@ -226,8 +290,15 @@ python3 scripts/researchos_queue.py complete --queue RQ-xxx --review REV-xxx --s
 # 検証
 python3 scripts/researchos_verify.py --proposal PRP-xxx --session SES-xxxx --write
 
+# 追記専用アンカー（PRP-002 rev3）
+python3 scripts/researchos_anchor.py verify
+python3 scripts/researchos_anchor.py update   # 手で state/*.jsonl に追記したあと
+python3 scripts/researchos_anchor.py list
+
 # 監査
-python3 scripts/researchos_guard.py check-all
+python3 scripts/researchos_guard.py check-all --json
+python3 scripts/researchos_guard.py check-append-only --json
+python3 scripts/researchos_guard.py check-anchors --json
 python3 scripts/researchos_guard.py status
 python3 scripts/validate_researchos.py
 
@@ -241,7 +312,10 @@ python3 scripts/researchos_next.py --write
 
 | 症状 | 原因 | 対処 |
 | :--- | :--- | :--- |
-| `check-append-only` が失敗 | 過去の行を編集した | `git checkout` で戻し、訂正行を追記する |
+| `check-append-only` が失敗（`against HEAD` / `was modified`） | 過去の行を編集・削除した | `git checkout` で戻し、訂正行を追記する |
+| `anchor is stale` / `not anchored` | 追記後にアンカーを更新していない | `python3 scripts/researchos_anchor.py update` を実行してコミットする |
+| `anchor ... pins N lines ... but they now roll up to ...` | アンカー済みの行が書き換わっている | 書き換えを取り消し、訂正は新しい行として追記する（アンカー更新では隠せない） |
+| `prev_anchor_head_sha256 does not match` | `state/anchors.jsonl` の過去の行が書き換わっている | 同上。アンカー台帳も追記専用 |
 | `check-authorship` が失敗 | レコードとコミットのセッションが不一致 | 正しいセッションで claim し直し、そのセッション名義でコミットする |
 | `self-review` エラー | 提案者とレビュアーが同一 | 別チャットを開き、verifier を claim する |
 | `governance path ... without a Governance-Proposal` | 提案なしでガバナンスを変更 | まず `PRP-*` を提案し、`Governance-Proposal` トレーラーを付ける |
@@ -268,6 +342,13 @@ python3 scripts/researchos_next.py --write
    一次資料の逐語引用と再実行でしか対抗できない。
 5. **起動は手動。** セッションが誰にも開かれなければ、キューは滞留する。
    `state/NEXT_SESSION.md` と CI のサマリが唯一の通知手段。
+6. **アンカーの根は Git 履歴にある。** `state/anchors.jsonl` の**最終行**だけは、それ以降の
+   エントリが存在しないため自己鎖で固定できない。層 2（HEAD 接頭辞）と層 3（コミット単位監査）が
+   その書き換えを捕まえるが、**履歴そのものを書き換える**攻撃（`git filter-branch` 等）は
+   リポジトリ内のコードでは防げない。最終ゲートが `main` への人間のマージである理由はこれである。
+   署名付きコミットや外部アンカー（例: 承認記録への head 固定）は PRP-003 以降の検討事項。
+7. **アンカーは「追記専用であること」を証明するが、「内容が正しいこと」は証明しない。**
+   誤った内容の行を追記し、そのまま pin することはできる。内容の妥当性は独立レビューの役割。
 
 ---
 
@@ -282,6 +363,9 @@ python3 scripts/researchos_next.py --write
 | `propose` / `land` を分ける | 機能ブランチでの試行を許しつつ、main では承認を必須にするため |
 | bootstrap を 1 セッションに限定する | インストール時の抜け道を恒久化しないため |
 | 起動だけ自動化しない | Arena.ai のチャットは人間が開く。そこを偽装すると監査不能になる |
+| 追記専用を 4 層（baseline / HEAD / コミット単位 / ファイル全体アンカー）で検査する | どの 1 層にも単独では抜け道があった（REV-003 §3）。層を増やすほど「緑の意味」が強くなる |
+| アンカーを `policy/` ではなく `state/anchors.jsonl` に置く | pin は追記ごとに更新される事実であり、全ロールが追記でき、かつ追記専用と authorship (R5) の対象になる必要がある。`policy/**` だと verifier が pin を更新できない |
+| アンカー ID を内容から導出する | 並行線路が同じ tip を pin しても union マージで衝突しない（A5 の緩和） |
 
 ---
 

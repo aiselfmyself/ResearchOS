@@ -11,6 +11,7 @@ These tests encode the *rules*, not just the happy path:
 """
 from __future__ import annotations
 
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -64,8 +65,22 @@ def review(review_id, proposal_id, session_id, result="pass"):
     }
 
 
-def approval(approval_id, proposal_id, session_id, review_ids, decision="approved"):
-    return {
+def approval(
+    approval_id,
+    proposal_id,
+    session_id,
+    review_ids,
+    decision="approved",
+    review_line_sha256=None,
+):
+    """An approval record.
+
+    PRP-002 rev3 (C3/A2): ``review_line_sha256`` is mandatory for an 'approved'
+    decision, so a fixture that expects a clean result must pass the binding via
+    ``bind(*reviews)``.  Leaving it out is itself a test case — see
+    ``ApprovalBindingTest``.
+    """
+    record = {
         "approval_id": approval_id,
         "proposal_id": proposal_id,
         "session_id": session_id,
@@ -73,6 +88,14 @@ def approval(approval_id, proposal_id, session_id, review_ids, decision="approve
         "decision": decision,
         "created_at": "2026-10-19T00:00:00+00:00",
     }
+    if review_line_sha256 is not None:
+        record["review_line_sha256"] = review_line_sha256
+    return record
+
+
+def bind(*reviews):
+    """The ``review_line_sha256`` map an approver must record for these reviews."""
+    return {record["review_id"]: line_hash(record) for record in reviews}
 
 
 def govern(sessions, proposals, reviews, approvals, queue=None, raw_sessions=None):
@@ -198,11 +221,12 @@ class SeparationTest(unittest.TestCase):
         ]
 
     def test_clean_separation_passes(self) -> None:
+        cited = review("REV-001", "PRP-001", "SES-b")
         errors, _warnings = govern(
             self.sessions,
             [proposal()],
-            [review("REV-001", "PRP-001", "SES-b")],
-            [approval("APR-001", "PRP-001", "SES-c", ["REV-001"])],
+            [cited],
+            [approval("APR-001", "PRP-001", "SES-c", ["REV-001"], review_line_sha256=bind(cited))],
         )
         self.assertEqual(errors, [])
 
@@ -489,28 +513,82 @@ class RepositoryStateTest(unittest.TestCase):
     def test_third_session_can_approve(self) -> None:
         """A third session (neither proposer nor reviewer) can approve."""
         sessions = [session("SES-a", "arena/a", ["proposer"]), session("SES-b", "arena/b", ["verifier"]), session("SES-c", "arena/c", ["approver"])]
+        cited = review("REV-001", "PRP-001", "SES-b")
         errors, _ = govern(sessions,
-            [proposal()], [review("REV-001", "PRP-001", "SES-b")],
-            [approval("APR-001", "PRP-001", "SES-c", ["REV-001"])])
+            [proposal()], [cited],
+            [approval("APR-001", "PRP-001", "SES-c", ["REV-001"], review_line_sha256=bind(cited))])
         self.assertEqual(errors, [])
 
     def test_append_only_hash_chain_is_enforced(self) -> None:
-        """PRP-002 C2/A1: rewriting a review line must be caught by hash chain."""
-        from researchos_common import line_hash, canonical_json
-        import json, pathlib
-        # Simulate tampering: read reviews.jsonl and modify one char
-        path = pathlib.Path("state/reviews.jsonl")
-        lines = path.read_text().splitlines()
-        if not lines:
-            self.skipTest("no reviews to test")
-        # Hash chain check is via guard's check_append_only, which now includes hash chain
-        # Here we directly test the guard helper: modifying a line should break the chain
-        # We'll verify that a tampered file would fail resolve_effective
-        from researchos_common import resolve_effective, read_jsonl
-        # Load via collection-specific id_key (should pass clean)
-        recs = read_jsonl(path)
-        eff, errs, _ = resolve_effective(recs, "review_id")
-        self.assertEqual(errs, [], msg="clean file should have no hash chain errors")
+        """PRP-002 rev3 (C2/A1): a *real* tamper test.
+
+        REV-003 §3.4 rejected the previous version of this test: it never
+        modified anything, it only asserted that a clean ``state/reviews.jsonl``
+        resolves without errors, so it also passed on a tampered tree.  This
+        version rewrites a line and asserts the whole-file anchor rejects it.
+        The end-to-end attacks (in-place rewrite, deletion, and a committed
+        rewrite of a freshly appended line) live in
+        ``tests/test_append_only_tamper.py``.
+        """
+        import shutil
+        import tempfile
+
+        from researchos_common import (
+            anchored_ledgers,
+            anchor_errors,
+            append_jsonl,
+            build_anchor_updates,
+            now_utc,
+        )
+
+        tmp = Path(tempfile.mkdtemp(prefix="researchos-chain-"))
+        self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
+        (tmp / "state").mkdir(parents=True)
+        for relative_path in anchored_ledgers():
+            (tmp / relative_path).write_text("", encoding="utf-8")
+
+        append_jsonl(
+            tmp / "state" / "reviews.jsonl",
+            {
+                "review_id": "REV-001",
+                "proposal_id": "PRP-001",
+                "session_id": "SES-b",
+                "result": "pass",
+                "summary": "original",
+                "created_at": now_utc(),
+            },
+            anchor=False,
+        )
+        for entry in build_anchor_updates(tmp, session_id="SES-test"):
+            append_jsonl(tmp / "state" / "anchors.jsonl", entry, anchor=False)
+        self.assertEqual(anchor_errors(tmp), [])
+
+        # Tamper for real: rewrite the newest (and only) review line.
+        target = tmp / "state" / "reviews.jsonl"
+        record = json.loads(target.read_text(encoding="utf-8").strip())
+        record["summary"] = "TAMPERED"
+        target.write_text(
+            json.dumps(record, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+            + "\n",
+            encoding="utf-8",
+        )
+        errors = anchor_errors(tmp)
+        self.assertTrue(
+            any("was modified" in error for error in errors),
+            f"a rewritten line must break the whole-file anchor: {errors}",
+        )
+
+        # Re-anchoring the tampered content must not clean it either.
+        for entry in build_anchor_updates(tmp, session_id="SES-test"):
+            append_jsonl(tmp / "state" / "anchors.jsonl", entry, anchor=False)
+        errors = anchor_errors(tmp)
+        self.assertTrue(
+            any("was modified" in error for error in errors),
+            f"re-anchoring must not hide the rewrite: {errors}",
+        )
+
+        # The repository's own committed ledgers stay consistent.
+        self.assertEqual(guard.check_append_only(), [])
 
     def test_pass_review_with_failing_check_is_rejected(self) -> None:
         """PRP-002 G3: pass review containing fail check must be rejected."""
@@ -548,6 +626,179 @@ class RepositoryStateTest(unittest.TestCase):
         # Untyped would group by session_id and error, typed must not
         _, typed_errs, _ = resolve_effective([rev1, rev2], "review_id")
         self.assertEqual(typed_errs, [])
+
+
+class ApprovalBindingTest(unittest.TestCase):
+    """PRP-002 rev3 (C3/A2): ``review_line_sha256`` is mandatory.
+
+    REV-003 §4 reproduced the gap: a fixture approval ``APR-910`` with no
+    binding passed ``validate_researchos.py --quiet`` with exit 0, because the
+    check only ran "if present".  An approver could therefore be handed a
+    different review after the fact.
+    """
+
+    def setUp(self) -> None:
+        self.sessions = [
+            session("SES-a", "arena/a", ["proposer"]),
+            session("SES-b", "arena/b", ["verifier"]),
+            session("SES-c", "arena/c", ["approver"]),
+        ]
+        self.proposal = proposal()
+        self.review = review("REV-001", "PRP-001", "SES-b")
+        self.second = review("REV-002", "PRP-001", "SES-b")
+
+    def test_approval_without_binding_is_rejected(self) -> None:
+        errors, _warnings = govern(
+            self.sessions,
+            [self.proposal],
+            [self.review],
+            [approval("APR-002", "PRP-001", "SES-c", ["REV-001"])],
+        )
+        self.assertTrue(
+            any("has no review_line_sha256" in error for error in errors), errors
+        )
+
+    def test_incomplete_binding_is_rejected(self) -> None:
+        errors, _warnings = govern(
+            self.sessions,
+            [self.proposal],
+            [self.review, self.second],
+            [
+                approval(
+                    "APR-002",
+                    "PRP-001",
+                    "SES-c",
+                    ["REV-001", "REV-002"],
+                    review_line_sha256=bind(self.review),
+                )
+            ],
+        )
+        self.assertTrue(
+            any("no entry for the cited review 'REV-002'" in error for error in errors),
+            errors,
+        )
+
+    def test_wrong_hash_is_rejected(self) -> None:
+        errors, _warnings = govern(
+            self.sessions,
+            [self.proposal],
+            [self.review],
+            [
+                approval(
+                    "APR-002",
+                    "PRP-001",
+                    "SES-c",
+                    ["REV-001"],
+                    review_line_sha256={"REV-001": "0" * 64},
+                )
+            ],
+        )
+        self.assertTrue(
+            any("review_line_sha256 mismatch" in error for error in errors), errors
+        )
+
+    def test_single_string_binding_for_two_reviews_is_rejected(self) -> None:
+        errors, _warnings = govern(
+            self.sessions,
+            [self.proposal],
+            [self.review, self.second],
+            [
+                approval(
+                    "APR-002",
+                    "PRP-001",
+                    "SES-c",
+                    ["REV-001", "REV-002"],
+                )
+                | {"review_sha256": line_hash(self.review)}
+            ],
+        )
+        self.assertTrue(
+            any("binds one review_sha256 string" in error for error in errors), errors
+        )
+
+    def test_correct_binding_passes(self) -> None:
+        errors, _warnings = govern(
+            self.sessions,
+            [self.proposal],
+            [self.review, self.second],
+            [
+                approval(
+                    "APR-002",
+                    "PRP-001",
+                    "SES-c",
+                    ["REV-001", "REV-002"],
+                    review_line_sha256=bind(self.review, self.second),
+                )
+            ],
+        )
+        self.assertEqual(errors, [])
+
+    def test_rejected_decision_does_not_need_a_binding(self) -> None:
+        errors, _warnings = govern(
+            self.sessions,
+            [self.proposal],
+            [self.review],
+            [approval("APR-002", "PRP-001", "SES-c", ["REV-001"], decision="rejected")],
+        )
+        self.assertFalse(
+            any("review_line_sha256" in error for error in errors), errors
+        )
+
+    def test_grandfathered_approval_only_warns(self) -> None:
+        """APR-001 predates the rule; the exemption is data in policy/roles.json."""
+        grandfathered = vr.grandfathered_approvals()
+        self.assertIn("APR-001", grandfathered)
+        errors, warnings = govern(
+            self.sessions,
+            [self.proposal],
+            [self.review],
+            [approval("APR-001", "PRP-001", "SES-c", ["REV-001"])],
+        )
+        self.assertFalse(
+            any("review_line_sha256" in error for error in errors), errors
+        )
+        self.assertTrue(
+            any("grandfathered" in warning for warning in warnings), warnings
+        )
+
+    def test_schema_requires_the_binding(self) -> None:
+        schema = json.loads((ROOT / "schemas" / "approval.json").read_text(encoding="utf-8"))
+        self.assertIn("review_line_sha256", schema["required"])
+        self.assertEqual(
+            schema["properties"]["review_line_sha256"]["additionalProperties"]["pattern"],
+            "^[0-9a-f]{64}$",
+        )
+
+    def test_repository_approvals_are_bound_to_the_reviews_they_cite(self) -> None:
+        approvals, approval_errors, _ = resolve_effective(
+            vr.load_jsonl(str(ROOT / "state" / "approvals.jsonl")), "approval_id"
+        )
+        self.assertEqual(approval_errors, [])
+        reviews, review_errors, _ = resolve_effective(
+            vr.load_jsonl(str(ROOT / "state" / "reviews.jsonl")), "review_id"
+        )
+        self.assertEqual(review_errors, [])
+        reviews_by_id = {record["review_id"]: record for record in reviews}
+        bound = 0
+        for record in approvals:
+            if record.get("decision") != "approved":
+                continue
+            binding = record.get("review_line_sha256") or {}
+            for review_id in record.get("review_ids", []):
+                if review_id not in reviews_by_id:
+                    continue
+                self.assertIn(
+                    review_id,
+                    binding,
+                    f"{record['approval_id']} cites {review_id} without binding it",
+                )
+                self.assertEqual(
+                    binding[review_id],
+                    line_hash(reviews_by_id[review_id]),
+                    f"{record['approval_id']} binds a stale hash for {review_id}",
+                )
+                bound += 1
+        self.assertGreater(bound, 0, "no approval in the repository is bound")
 
 
 if __name__ == "__main__":

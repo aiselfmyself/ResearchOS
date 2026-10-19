@@ -14,10 +14,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -102,6 +104,222 @@ def check_readout_snapshot() -> tuple:
     return True, "readout matches the committed snapshot"
 
 
+
+# ---------------------------------------------------------------------------
+# Adversarial probes (PRP-002 rev3)
+# ---------------------------------------------------------------------------
+#
+# REV-003 §2 made the point that cannot be repeated often enough: "13/13 pass"
+# was measured on a *clean* tree, so the append-only check proved nothing.  A
+# suite that only runs on untampered state cannot falsify its own DoD.  The two
+# probes below therefore attack a throwaway copy of this repository and require
+# the harness to reject the attack — and they also run the positive control, so
+# "everything is red" cannot pass as a green probe.
+
+
+def _throwaway_copy() -> Tuple[Path, Path]:
+    """Copy this repository (working tree + ``.git``) into a temp directory."""
+    workspace = Path(tempfile.mkdtemp(prefix="researchos-probe-"))
+    repo = workspace / "repo"
+    shutil.copytree(
+        ROOT, repo, symlinks=True, ignore=shutil.ignore_patterns("__pycache__")
+    )
+    return workspace, repo
+
+
+def _probe_run(repo: Path, *command: str, timeout: int = 300) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        list(command),
+        cwd=str(repo),
+        text=True,
+        capture_output=True,
+        timeout=timeout,
+    )
+
+
+def _tamper_line(repo: Path, relative_path: str, index: int, field: str, value) -> None:
+    path = repo / relative_path
+    lines = [line for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    record = json.loads(lines[index])
+    record[field] = value
+    lines[index] = json.dumps(
+        record, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    )
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def _delete_line(repo: Path, relative_path: str, index: int) -> None:
+    path = repo / relative_path
+    lines = [line for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    del lines[index]
+    path.write_text(
+        ("\n".join(lines) + "\n") if lines else "", encoding="utf-8"
+    )
+
+
+def check_append_only_adversarial() -> tuple:
+    """Attack the append-only guard in a throwaway copy; it must reject all three.
+
+    These are the attacks REV-003 §3.1-§3.3 ran by hand and which the harness
+    accepted at the time.
+    """
+    workspace, repo = _throwaway_copy()
+    observations: List[dict] = []
+    try:
+        reviews = "state/reviews.jsonl"
+
+        # Positive control: an untampered copy must be green, otherwise the
+        # attack assertions below would be satisfied by a guard that always fails.
+        control = _probe_run(repo, sys.executable, "scripts/researchos_guard.py", "check-append-only")
+        observations.append(
+            {"attack": "control_pristine_tree", "rejected": control.returncode == 0,
+             "expected": "exit 0", "exit": control.returncode}
+        )
+
+        # Attack 1: rewrite a committed line in place.
+        attack1 = _throwaway_copy()
+        _tamper_line(attack1[1], reviews, 0, "summary", "TAMPERED by probe")
+        result1 = _probe_run(attack1[1], sys.executable, "scripts/researchos_guard.py", "check-append-only")
+        observations.append(
+            {"attack": "rewrite_committed_line_in_place", "rejected": result1.returncode == 1,
+             "expected": "exit 1", "exit": result1.returncode,
+             "detail": (result1.stdout or result1.stderr).strip().splitlines()[0:1]}
+        )
+        shutil.rmtree(attack1[0], ignore_errors=True)
+
+        # Attack 2: delete a committed line.
+        attack2 = _throwaway_copy()
+        _delete_line(attack2[1], reviews, 0)
+        result2 = _probe_run(attack2[1], sys.executable, "scripts/researchos_guard.py", "check-all", "--json")
+        rejected2 = result2.returncode == 1
+        if result2.returncode == 0:
+            try:
+                rejected2 = json.loads(result2.stdout).get("ok") is False
+            except (ValueError, AttributeError):
+                rejected2 = False
+        observations.append(
+            {"attack": "delete_committed_line", "rejected": rejected2,
+             "expected": "check-all ok=false", "exit": result2.returncode}
+        )
+        shutil.rmtree(attack2[0], ignore_errors=True)
+
+        # Attack 3: append a line, commit it, then rewrite the committed line —
+        # the A1 hole the baseline prefix can never see.
+        attack3 = _throwaway_copy()
+        repo3 = attack3[1]
+        appended = _probe_run(
+            repo3, sys.executable, "-c",
+            "import sys; sys.path.insert(0, 'scripts');"
+            "from pathlib import Path;"
+            "from researchos_common import append_jsonl, now_utc;"
+            "append_jsonl(Path('state/reviews.jsonl'), {"
+            "'review_id': 'REV-9001', 'proposal_id': 'PRP-002',"
+            "'session_id': 'SES-f99f5b7f',"
+            "'checks': [{'name': 'policy', 'result': 'pass'}],"
+            "'result': 'pass', 'summary': 'original',"
+            "'environment': 'probe', 'created_at': now_utc()})",
+        )
+        _probe_run(repo3, "git", "add", "-A")
+        _probe_run(
+            repo3, "git", "-c", "user.name=probe", "-c", "user.email=probe@example.invalid",
+            "commit", "-q", "-m",
+            "[Verifier] review: append REV-9001\n\nSession-Id: SES-f99f5b7f\n"
+            "Session-Role: verifier\nPolicy-Version: 1",
+        )
+        clean3 = _probe_run(repo3, sys.executable, "scripts/researchos_guard.py", "check-append-only")
+        lines = [line for line in (repo3 / reviews).read_text(encoding="utf-8").splitlines() if line.strip()]
+        _tamper_line(repo3, reviews, len(lines) - 1, "summary", "TAMPERED after commit")
+        result3a = _probe_run(repo3, sys.executable, "scripts/researchos_guard.py", "check-append-only")
+        _probe_run(repo3, sys.executable, "scripts/researchos_anchor.py", "update")
+        _probe_run(repo3, "git", "add", "-A")
+        _probe_run(
+            repo3, "git", "-c", "user.name=probe", "-c", "user.email=probe@example.invalid",
+            "commit", "-q", "-m",
+            "[Verifier] review: rewrite REV-9001\n\nSession-Id: SES-f99f5b7f\n"
+            "Session-Role: verifier\nPolicy-Version: 1",
+        )
+        result3b = _probe_run(repo3, sys.executable, "scripts/researchos_guard.py", "check-append-only")
+        observations.append(
+            {"attack": "rewrite_freshly_appended_committed_line",
+             "rejected": appended.returncode == 0 and clean3.returncode == 0
+             and result3a.returncode == 1 and result3b.returncode == 1,
+             "expected": "append+commit exit 0, then rewrite exit 1 (uncommitted and committed)",
+             "exit": {"append": appended.returncode, "clean_after_append": clean3.returncode,
+                      "rewrite_uncommitted": result3a.returncode,
+                      "rewrite_committed": result3b.returncode}}
+        )
+        shutil.rmtree(attack3[0], ignore_errors=True)
+    finally:
+        shutil.rmtree(workspace, ignore_errors=True)
+
+    ok = all(bool(obs.get("rejected")) for obs in observations) and len(observations) == 4
+    return ok, json.dumps(observations, ensure_ascii=False)[:1200]
+
+
+def check_approval_binding() -> tuple:
+    """An 'approved' decision without review_line_sha256 must fail the validator.
+
+    REV-003 §4 appended a fixture ``APR-910`` with no binding and got exit 0.
+    The probe repeats that, plus the positive control (the same approval *with*
+    a correct binding must be accepted), so a validator that always fails cannot
+    pass the probe.
+    """
+    workspace, repo = _throwaway_copy()
+    observations: List[dict] = []
+    try:
+        fixture = (
+            "import sys; sys.path.insert(0, 'scripts');"
+            "from pathlib import Path;"
+            "from researchos_common import append_jsonl, line_hash, now_utc;"
+            "bound = sys.argv[1] == 'bound';"
+            "append_jsonl(Path('state/sessions.jsonl'), {'session_id': 'SES-probe-p',"
+            " 'branch': 'arena/probe-p-researchos', 'roles': ['proposer'], 'kind': 'agent',"
+            " 'started_at': now_utc(), 'status': 'active', 'policy_version': 1});"
+            "append_jsonl(Path('state/sessions.jsonl'), {'session_id': 'SES-probe-v',"
+            " 'branch': 'arena/probe-v-researchos', 'roles': ['verifier'], 'kind': 'agent',"
+            " 'started_at': now_utc(), 'status': 'active', 'policy_version': 1});"
+            "append_jsonl(Path('state/sessions.jsonl'), {'session_id': 'SES-probe-a',"
+            " 'branch': 'arena/probe-a-researchos', 'roles': ['approver'], 'kind': 'agent',"
+            " 'started_at': now_utc(), 'status': 'active', 'policy_version': 1});"
+            "append_jsonl(Path('state/proposals.jsonl'), {'proposal_id': 'PRP-901',"
+            " 'title': 'probe', 'kind': 'research', 'summary': 'probe', 'changes': [],"
+            " 'session_id': 'SES-probe-p', 'status': 'pending_review', 'created_at': now_utc()});"
+            "rev = {'review_id': 'REV-901', 'proposal_id': 'PRP-901', 'session_id': 'SES-probe-v',"
+            " 'checks': [{'name': 'policy', 'result': 'pass'}], 'result': 'pass',"
+            " 'created_at': now_utc()};"
+            "append_jsonl(Path('state/reviews.jsonl'), rev);"
+            "apr = {'approval_id': 'APR-901', 'proposal_id': 'PRP-901',"
+            " 'session_id': 'SES-probe-a', 'review_ids': ['REV-901'], 'decision': 'approved',"
+            " 'created_at': now_utc()};"
+            "apr['review_line_sha256'] = {'REV-901': line_hash(rev)} if bound else None;"
+            "apr = {k: v for k, v in apr.items() if v is not None};"
+            "append_jsonl(Path('state/approvals.jsonl'), apr)"
+        )
+        for variant, expected_exit in (("unbound", 1), ("bound", 0)):
+            case = _throwaway_copy()
+            appended = _probe_run(case[1], sys.executable, "-c", fixture, variant)
+            # Refresh the anchors so the probe measures the binding rule only.
+            _probe_run(case[1], sys.executable, "scripts/researchos_anchor.py", "update")
+            result = _probe_run(case[1], sys.executable, "scripts/validate_researchos.py", "--quiet")
+            output = (result.stdout or "") + (result.stderr or "")
+            # The unbound case must fail *because of the binding*, not for some
+            # unrelated reason, so the error text is asserted too.
+            matched = appended.returncode == 0 and result.returncode == expected_exit
+            if variant == "unbound":
+                matched = matched and "review_line_sha256" in output
+            observations.append(
+                {"case": f"approval_{variant}", "exit": result.returncode,
+                 "expected_exit": expected_exit, "matched": matched,
+                 "detail": [line for line in output.splitlines() if line.strip()][0:2]}
+            )
+            shutil.rmtree(case[0], ignore_errors=True)
+    finally:
+        shutil.rmtree(workspace, ignore_errors=True)
+
+    ok = bool(observations) and all(obs["matched"] for obs in observations)
+    return ok, json.dumps(observations, ensure_ascii=False)[:900]
+
+
 def build_checks(proposal_id: str, session_id: str, base: Optional[str]) -> List[dict]:
     checks: List[dict] = []
 
@@ -138,6 +356,26 @@ def build_checks(proposal_id: str, session_id: str, base: Optional[str]) -> List
     ok, detail = _run(append_command)
     checks.append(
         {"name": "append_only", "result": "pass" if ok else "fail", "detail": detail}
+    )
+
+    # PRP-002 rev3: append-only is only a real invariant if a tamper is rejected.
+    ok, detail = check_append_only_adversarial()
+    checks.append(
+        {
+            "name": "append_only_adversarial",
+            "result": "pass" if ok else "fail",
+            "detail": detail,
+        }
+    )
+
+    # PRP-002 rev3 (C3/A2): the approval/review binding is mandatory.
+    ok, detail = check_approval_binding()
+    checks.append(
+        {
+            "name": "approval_binding",
+            "result": "pass" if ok else "fail",
+            "detail": detail,
+        }
     )
 
     commit_command = [sys.executable, "scripts/researchos_guard.py", "check-commits"]

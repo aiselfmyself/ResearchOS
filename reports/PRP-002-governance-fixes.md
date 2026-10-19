@@ -114,7 +114,7 @@ rolling head なら 1 個のハッシュが全行を固定でき、既存行は�
 * `python3 scripts/researchos_guard.py check-all --json` が **`ok=false`**
 * `python3 scripts/researchos_anchor.py verify` が改竄ツリーで **exit 1**、クリーンツリーで **exit 0**
 * 正当な追記（`append_jsonl` → 自動 pin → コミット）は **exit 0** のまま
-* 実行可能な証跡: `tests/test_append_only_tamper.py`（16 tests）と
+* 実行可能な証跡: `tests/test_append_only_tamper.py`（20 tests）と
   `verifications/prp002_rev2_acceptance_probes.py --only R1`
 
 ---
@@ -449,19 +449,19 @@ jobs:
 
 | ファイル | 対応ID | 変更内容 |
 |---|---|---|
-| `scripts/researchos_common.py` | C4/F1, G2, G4, **C2/A1** | `is_ancestor` / `commit_parents` helper, `COLLECTION_ID_KEYS` 強調, `next_id` 衝突警告。**(rev3)** `rolling_head` / `prefix_heads` / `head_at` / `ledger_lines` / `file_head`, アンカー台帳 (`anchored_ledgers`, `build_anchor_updates`, `record_anchor`, `anchor_errors`), `git_show_many`（`git cat-file --batch`）, `append_jsonl` の自動 pin, `resolve_effective(..., allow_identical_duplicates=)`, `STATE_FILES`/`COLLECTION_ID_KEYS` に `anchors` 追加 |
+| `scripts/researchos_common.py` | C4/F1, G2, G4, **C2/A1** | `is_ancestor` / `commit_parents` helper, `COLLECTION_ID_KEYS` 強調, `next_id` 衝突警告。**(rev3)** `rolling_head` / `prefix_heads` / `head_at` / `ledger_lines` / `file_head`, アンカー台帳 (`anchored_ledgers`, `build_anchor_updates`, `record_anchor`, `anchor_errors`), `git_show_many`（`git cat-file --batch`）, `append_jsonl` の自動 pin（著者は record の `session_id` → `created_by_session` → `claimed_by_session` → ブランチ名の順で解決。`state/review_queue.jsonl` の行は `session_id` を持たないため、これが無いと `unknown` で pin されて `check-authorship` が赤になる）, `session_from_branch` / `record_session_hint`（自動 pin の著者帰属。`state/review_queue.jsonl` の行は `session_id` を持たない）, `current_branch` の unborn-branch フォールバック（`git symbolic-ref --short HEAD`）, `resolve_effective(..., allow_identical_duplicates=)`, `STATE_FILES`/`COLLECTION_ID_KEYS` に `anchors` 追加 |
 | `scripts/researchos_guard.py` | C2/A1, C4/F1+F2, G1, F3, F4, C6, **§14** | bootstrap land 例外の除去, merge 監査, branch 束縛是正, close 例外, `--stage`。**(rev3)** `check_working_tree_against_head`（層2）, `check_state_history` + `_state_commit_log` + `subsequence_violations`（層3）, `check_append_only` への `anchor_errors` 統合（層4）, `check-anchors` サブコマンド, **全サブコマンドへの `--json`**, `RECORD_FILES` に `state/anchors.jsonl` |
 | **`scripts/researchos_anchor.py`（新規）** | **C2/A1** | **`update` / `list` / `verify`。tip pin の生成と検証。ブランチ名から session を導出** |
 | `scripts/validate_researchos.py` | G3, C3/A2, C6 | 集約整合性・required_checks・`review_line_sha256` 照合。**(rev3)** 束縛の**必須化**（欠落/一部欠落/単一文字列 = error、不一致 = 常に error）、`grandfathered_approvals()`、`anchor_errors()` の統合、`anchors` のスキーマ/一意性配線（同一行の重複は幂等） |
 | `scripts/researchos_queue.py` | G4 | `_load` を `load_effective` に統一 |
 | `scripts/researchos_verify.py` | G4, V10, **C2/A1・C3/A2** | id_key 明示, 4 ガバナンスプローブ統合。**(rev3)** 敵対的チェック 2 つを追加 → **15 checks**: `append_only_adversarial`（使い捨てコピーで 3 攻撃 + 対照）, `approval_binding`（束縛なし = exit 1 / 束縛あり = exit 0） |
 | `scripts/researchos_session.py` | F4, G4 | `resolve_effective` 修正, close 例外 |
-| `scripts/researchos_next.py` | V11, G4 | `load_effective`, fail→proposer 推奨 |
+| `scripts/researchos_next.py` | V11, G4, **§14・C3/A2** | `load_effective`, fail→proposer 推奨。**(rev3)** 引き継ぎルール5（手動追記後の `researchos_anchor.py update`）とルール6（`review_line_sha256` 必須）を追加。approver テンプレートを「参照レビューから束縛を計算する」形に修正（rev3 以前は束縛なしの承認例を示しており、そのとおりに書くと validator error になる）。手順の `RQ-001`/`PRP-001` ハードコードを撤廃し、実際に open なキュー項目から `queue_id`/`proposal_id`/passing review を導出（V11 の意図） |
 | `policy/roles.json` | G1, **C2/A1・C3/A2** | bootstrap land 承認必須。**(rev3)** 全ロールの `may_write` に `state/anchors.jsonl`, `enforcement.whole_file_append_only_anchors`, `enforcement.approval_review_binding`（祖父条項をデータ化） |
 | `schemas/approval.json` | C3/A2 | `review_line_sha256` 追加。**(rev3)** `required` に昇格 |
 | **`schemas/anchor.json`（新規）** | **C2/A1** | **アンカーエントリのスキーマ（`ANC-[0-9a-f]{16}`, 64hex, 行数, 自己鎖フィールド）** |
 | `tests/test_governance.py` | A7, G1, G3, G4, **A1・C3/A2** | 既存の修正。**(rev3)** `test_append_only_hash_chain_is_enforced` を**実際に改竄する**テストに置換, `ApprovalBindingTest`（9 tests）, `bind()` fixture, `approval()` fixture に束縛引数 |
-| **`tests/test_append_only_tamper.py`（新規）** | **C2/A1** | **実改竄テスト 16 件: rolling head / アンカー台帳（改竄・削除・再アンカー隠蔽・自己鎖）/ 使い捨てコピーでの 3 攻撃 + 履歴層単独 + 対照** |
+| **`tests/test_append_only_tamper.py`（新規）** | **C2/A1** | **実改竄テスト 20 件: rolling head / アンカー台帳（改竄・削除・再アンカー隠蔽・自己鎖）/ 使い捨てコピーでの 3 攻撃 + 履歴層単独 + 対照 / アンカー行の著者帰属（`unknown` 退行の防止）** |
 | `.github/workflows/verify-github-actions.yml` | F3, A8, **§14** | job 分割。**(rev3)** `check-append-only --json` / `check-anchors` / rev3 受入プローブを CI に追加 |
 | `docs/GOVERNANCE.md` | C2, C4, C6, G1, **C3/A2** | R6, 並行線路照合。**(rev3)** R4 を 4 層 + アンカー台帳に全面改写, R3 に承認束縛の必須化, ロール表に `state/anchors.jsonl`, コマンド一覧, リカバリ表, 残存リスク 6・7, 設計判断 |
 | **`verifications/prp002_rev2_acceptance_probes.py`（新規）** | **§14** | **DoD ランナ。R1-R4 の 26 プローブを実行し、§14 のコマンドと期待 exit を突き合わせる。R2.3 はガードを意図的に弱体化させたコピーで改竄テストが赤になることを要求する（mutation control）** |
@@ -503,7 +503,7 @@ python3 verifications/prp002_rev2_acceptance_probes.py --json   # 26/26 ok, exit
 | 6 | 台帳の追記専用性 | `python3 scripts/researchos_guard.py check-all --json` | exit 0 かつ `ok=true` | R4.12 |
 | 6 | **改竄時の追記専用性（rev3 で新設）** | `check-append-only --json` を、①行の書き換え ②行の削除 ③追記・コミット済み行の書き換え、の各使い捨てコピーで実行 | **3 つとも exit 1 / `ok=false`**。クリーンなコピーは exit 0（対照） | R1.3 |
 | 6 | **アンカー** | `python3 scripts/researchos_anchor.py verify` | exit 0（全台帳 pin 済み）。改竄コピーでは exit 1 | R1.1 |
-| 6 | **実改竄テスト** | `python3 -m unittest tests.test_append_only_tamper` | exit 0（16 tests）。**かつ**ガードを弱体化させたコピーでは exit ≠ 0 | R2.1, R2.3 |
+| 6 | **実改竄テスト** | `python3 -m unittest tests.test_append_only_tamper` | exit 0（20 tests）。**かつ**ガードを弱体化させたコピーでは exit ≠ 0 | R2.1, R2.3 |
 | 6 | authorship | `python3 scripts/researchos_guard.py check-authorship --json` | exit 0 | R4.6 |
 | 7 | **承認束縛の必須化** | `researchos_verify.check_approval_binding()`（= 15 checks の 1 つ） | 束縛なし `approved` → validator exit 1、束縛あり → exit 0 | R3.3 |
 | 7 | 文書整合性 | `docs/GOVERNANCE.md` に R4 の 4 層・アンカー台帳・承認束縛、`policy/roles.json` に `approval_review_binding` と `state/anchors.jsonl`、`schemas/approval.json` の `required` に `review_line_sha256`、`schemas/anchor.json` の存在 | すべて真 | R3.1, R3.2, R4.15 |
@@ -585,7 +585,7 @@ REV-003 §2 の状態は構造的に起きない（敵対的チェックが改�
 | セッション | `state/sessions.jsonl` の `SES-86da9dab`（proposer, branch `arena/86da9dab-researchos`, first_commit `e45cdd8...` = REV-003 の hand-off tip） |
 | 入力 | `verifications/prp002_verifier_f99f5b7f.md`（REV-003）§3・§4・§5・§9 |
 | 実装 | `scripts/researchos_common.py`, `scripts/researchos_guard.py`, **`scripts/researchos_anchor.py`**, `scripts/validate_researchos.py`, `scripts/researchos_verify.py`, `policy/roles.json`, `schemas/approval.json`, **`schemas/anchor.json`**, `.github/workflows/verify-github-actions.yml` |
-| テスト | **`tests/test_append_only_tamper.py`（新規 16 件）**, `tests/test_governance.py`（`ApprovalBindingTest` 9 件 + 改竄テストへの置換） |
+| テスト | **`tests/test_append_only_tamper.py`（新規 20 件）**, `tests/test_governance.py`（`ApprovalBindingTest` 9 件 + 改竄テストへの置換） |
 | プローブ | **`verifications/prp002_rev2_acceptance_probes.py`（新規、26 プローブ = §14 ランナ）** |
 | アンカー | **`state/anchors.jsonl`（genesis pin 10 件）** |
 | 提案 | `state/proposals.jsonl` の `PRP-002` **revision 3**（rev2 行の `supersedes` 付き追記） |
@@ -621,7 +621,7 @@ REV-003 §2 の状態は構造的に起きない（敵対的チェックが改�
 | 測定 | 結果 |
 | :--- | :--- |
 | `python3 verifications/prp002_rev2_acceptance_probes.py --json` | 26/26 ok, exit 0 |
-| `python3 -m unittest discover -s tests` | `Ran 82 tests ... OK`（rev2 時点は 57 件。内訳: `test_append_only_tamper` 16 件 + `ApprovalBindingTest` 9 件 = 25 件増） |
+| `python3 -m unittest discover -s tests` | `Ran 86 tests ... OK`（rev2 時点は 57 件。内訳: `test_append_only_tamper` 20 件 + `ApprovalBindingTest` 9 件 = 29 件増） |
 | `python3 scripts/researchos_guard.py check-all --json` | `ok=true`（`policy`, `append_only`, `commits`, `authorship`, `anchors` の 5 キーすべてエラー 0） |
 | `python3 scripts/validate_researchos.py --quiet` | exit 0 |
 | `python3 scripts/researchos_anchor.py verify` | `ok=true`（10 台帳すべて pin 済み） |
@@ -639,6 +639,23 @@ REV-003 §2 の状態は構造的に起きない（敵対的チェックが改�
 * `next_id` の UUID 化 — 並行線路の ID 衝突の根本対策は PRP-003。
 * REV-003 が positive と確認した F1/F2/F4/G1/G3/G4 の実装は**変更していない**（壊れていないものを触らない）。rev3 の差分は §2・§3・§9(rev3 追記)・§13・§14 と新規ファイルに限る。
 * 並行線路 `arena/f63b6887`（design-only の PRP-002 rev2）と `arena/363c9e54`（REV-002）は merge していない。REV-003 と同じく proposer tip から独立に rework した。
+
+### 18.4 rev3 の実装中に**自分で見つけた**副作用（verifier への申し送り）
+
+rev3 の変更が既存の検査・文書と衝突した3件。いずれも push 前に検出して修正済みで、
+「新しい層を足すと別の検査が赤くなる」ことの実例として記録する。
+
+| 見つけた経緯 | 症状 | 修正 | 退行防止 |
+| :--- | :--- | :--- | :--- |
+| `check-all --branch arena/86da9dab-researchos --stage propose --json`（コミット後、push 前） | `state/anchors.jsonl:12: record claims session 'unknown' but was introduced by commit fbe0f71 authored by 'SES-86da9dab'` → `ok=false`、exit 1。`append_jsonl` の自動 pin が record の `session_id` しか見ておらず、`state/review_queue.jsonl` の行は `created_by_session` / `claimed_by_session` しか持たないため `unknown` で pin されていた | `record_session_hint()`（`session_id` → `created_by_session` → `claimed_by_session`）を追加し、それでも無ければ `session_from_branch(root=root)` にフォールバック。`check-authorship` は弱めていない | `AnchorAuthorshipTest` 4 件（`test_record_session_hint_*`, `test_session_from_branch_*`, `test_auto_pin_falls_back_to_the_branch_session`, `test_repository_anchor_lines_name_a_real_session`）。`tests/test_append_only_tamper.py` は 16 → **20 件** |
+| 同上のテスト作成中 | 未 commit のリポジトリ（unborn branch）では `git rev-parse --abbrev-ref HEAD` が `HEAD` を返し、ブランチ名から session を導出できない | `current_branch()` に `git symbolic-ref --short HEAD` のフォールバックを追加（detached HEAD では従来どおり `HEAD`） | `test_auto_pin_falls_back_to_the_branch_session`（`git init -b arena/deadbeef-researchos` の空リポジトリで `SES-deadbeef` になることを確認） |
+| `researchos_next.py --write` の出力を目視 | rev3 で `review_line_sha256` を必須化したのに、引き継ぎの approver テンプレートが**束縛なしの承認例**を示していた。次のセッションがそのとおりに書くと validator が error になる | テンプレートを「参照レビューから `line_hash` を計算して束縛する」形に書き換え、`assert set(binding) == set(REVIEWS)` を追加。あわせて手順の `RQ-001`/`PRP-001` ハードコードを撤廃し、open なキュー項目から導出（V11 の意図）。ルール5（手動追記後の `anchor.py update`）・ルール6（束縛必須）を追加 | `state/NEXT_SESSION.md` の生成物を本セッションで確認（RQ-003 / PRP-002 / 15 checks が正しく出る） |
+
+* アンカー台帳は追記専用なので、`unknown` で pin された行は「訂正行の追記」では直せない
+  （`check-authorship` は行単位で見る）。該当行を含むコミットは **push 前**だったため、
+  コミットを作り直して正しい著者で pin し直した。push 後に同じことが起きた場合は、
+  正しい session で `researchos_anchor.py update` を実行して新しい行を追記し、
+  古い行は履歴に残したまま verifier に申し送ること（`docs/GOVERNANCE.md` §8-6）。
 
 ---
 
