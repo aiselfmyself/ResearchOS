@@ -1,0 +1,98 @@
+{
+  "schema": "ownership-cases-v1",
+  "captured_at": "2026-10-20",
+  "note": "Offline self-check cases for scripts/check_ownership.py. Each case lists repository-relative paths and the exact classification map that docs/parallel-work-ownership.md implies. Re-run with 'python3 scripts/check_ownership.py --selftest'; no network, no git history.",
+  "cases": [
+    {
+      "name": "integrator-owned shared files",
+      "session_file": null,
+      "paths": [
+        "README.md",
+        "docs/minimal-core-and-ci.md",
+        "state/claims.jsonl",
+        "state",
+        "gitswarm/artifacts/benchmark_matrix.json"
+      ],
+      "expect": {
+        "README.md": "INTEGRATOR_ONLY",
+        "docs/minimal-core-and-ci.md": "INTEGRATOR_ONLY",
+        "state/claims.jsonl": "INTEGRATOR_ONLY",
+        "state": "INTEGRATOR_ONLY",
+        "gitswarm/artifacts/benchmark_matrix.json": "INTEGRATOR_ONLY"
+      }
+    },
+    {
+      "name": "session writes its own note only",
+      "session_file": "contributions/2026-10-20_ownership_map.md",
+      "paths": [
+        "contributions/2026-10-20_ownership_map.md",
+        "contributions/2026-10-20_sla_fulltext_reading.md"
+      ],
+      "expect": {
+        "contributions/2026-10-20_ownership_map.md": "SESSION_CONTRIBUTION",
+        "contributions/2026-10-20_sla_fulltext_reading.md": "OTHER_SESSION_CONTRIBUTION"
+      }
+    },
+    {
+      "name": "without --session-file every note is just a note",
+      "session_file": null,
+      "paths": [
+        "contributions/worker01_stateless_analysis.md",
+        "contributions/worker02_gitswarm_and_limits.md"
+      ],
+      "expect": {
+        "contributions/worker01_stateless_analysis.md": "SESSION_CONTRIBUTION",
+        "contributions/worker02_gitswarm_and_limits.md": "SESSION_CONTRIBUTION"
+      }
+    },
+    {
+      "name": "paths outside the map are unspecified, not forbidden",
+      "session_file": "contributions/2026-10-20_ownership_map.md",
+      "paths": [
+        "scripts/check_ownership.py",
+        "docs/record-id-scheme.md",
+        "docs/parallel-work-ownership.md",
+        "tests/test_ownership.py",
+        "task/TASK.md"
+      ],
+      "expect": {
+        "scripts/check_ownership.py": "UNSPECIFIED",
+        "docs/record-id-scheme.md": "UNSPECIFIED",
+        "docs/parallel-work-ownership.md": "UNSPECIFIED",
+        "tests/test_ownership.py": "UNSPECIFIED",
+        "task/TASK.md": "UNSPECIFIED"
+      }
+    },
+    {
+      "name": "prefix lookalikes do not match",
+      "session_file": null,
+      "paths": [
+        "README.md.bak",
+        "docs/minimal-core-and-ci.md.orig",
+        "stateful/ledger.jsonl",
+        "gitswarm/solvers/greedy.py"
+      ],
+      "expect": {
+        "README.md.bak": "UNSPECIFIED",
+        "docs/minimal-core-and-ci.md.orig": "UNSPECIFIED",
+        "stateful/ledger.jsonl": "UNSPECIFIED",
+        "gitswarm/solvers/greedy.py": "UNSPECIFIED"
+      }
+    },
+    {
+      "name": "paths are normalized before matching and duplicates collapse",
+      "session_file": null,
+      "paths": [
+        "./README.md",
+        "README.md",
+        "state/./evidence.jsonl",
+        "docs//minimal-core-and-ci.md"
+      ],
+      "expect": {
+        "README.md": "INTEGRATOR_ONLY",
+        "state/evidence.jsonl": "INTEGRATOR_ONLY",
+        "docs/minimal-core-and-ci.md": "INTEGRATOR_ONLY"
+      }
+    }
+  ]
+}

@@ -15,6 +15,7 @@ scripts/
   new_id.py            非連番レコードIDの採番器（並行作業のID衝突対策）
   check_citations.py   書誌のarXiv照合（オフラインfixture、--liveは手動専用）
   check_memo_citations.py 調査メモ内引用のarXiv照合（オフラインfixture、--liveは手動専用）
+  check_ownership.py   並行作業の所有マップによるパス分類（助言専用・CI非接続）
 gitswarm/
   problem.py solvers/  30都市TSPの決定論的ソルバ群（greedy/random/two_opt/SA）
   benchmarks/          複数シード実行＋成果物照合（--write/--check）
@@ -25,8 +26,9 @@ tests/
   test_minimal_core.py    履歴非依存の回帰テスト（28件）
   test_check_citations.py 書誌照合テスト（17件・ネットワーク非依存）
   test_check_memo_citations.py メモ引用照合テスト（29件・ネットワーク非依存）
+  test_ownership.py       所有マップ分類テスト（16件・ネットワーク非依存）
 contributions/         研究ノート
-docs/                  分析レポートと設計記録
+docs/                  分析レポートと設計記録（並行作業の所有マップは docs/parallel-work-ownership.md。強制力なし）
 .github/workflows/
   core-check.yml       最小CI（テスト＋ベンチマーク再現性＋台帳検証＋書誌照合）
 ```

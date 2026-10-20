@@ -58,7 +58,7 @@ state/evidence.jsonl:15: ID 'EVD-015' extends the frozen sequential range
 |---|---|
 | 同一台帳への追記による **ID衝突**（add/add、union後の重複） | **解決**（接尾辞が独立） |
 | 同一台帳への追記による **テキスト衝突** | **未解決**（同じ行範囲を触るため。1レコード1ファイル分割は未実施） |
-| 共有ファイル（`README.md`、`docs/`、`gitswarm/artifacts/`）の同時編集 | **未解決**（所有分離の規約で運用回避） |
+| 共有ファイル（`README.md`、`docs/`、`gitswarm/artifacts/`）の同時編集 | **未解決**（`docs/parallel-work-ownership.md` の所有マップで運用回避を試みるが、強制力はなく、規約を知らないセッションの編集は防げない） |
 | 誰が変更したかの識別 | **未解決**（全セッションが同一 git author のため原理的に不可） |
 
 ## 5. やらないこと
