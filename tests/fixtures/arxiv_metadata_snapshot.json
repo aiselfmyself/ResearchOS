@@ -2,7 +2,7 @@
   "schema": "researchos/arxiv-metadata-snapshot/v1",
   "captured_at": "2026-10-20",
   "capture_method": "arxiv abs pages (https://arxiv.org/abs/<id>) read via web fetch tool",
-  "capture_note": "The export.arxiv.org Atom API returned 'Rate exceeded' from this sandbox at capture time, so the snapshot was taken from the abs pages instead. Abs pages and the Atom API report the same authoritative metadata fields (title, ordered authors, submission date) used by this fixture.",
+  "capture_note": "The export.arxiv.org Atom API returned 'Rate exceeded' from this sandbox at capture time, so the snapshot was taken from the abs pages instead. Abs pages and the Atom API report the same authoritative metadata fields (title, ordered authors, submission date) used by this fixture. Entries 2507.13334, 2605.23950, 2606.10209, 2608.06663, 2608.13417, 2609.18094 and 2610.08364 were appended the same day (2026-10-20), also read from their abs pages, for the second survey memo and the Agora reference of the GitSwarm fulltext reading.",
   "entries": [
     {
       "arxiv_id": "2610.07625",
@@ -83,6 +83,115 @@
         "Chun-Liang Li"
       ],
       "published": "2026-10-12"
+    },
+    {
+      "arxiv_id": "2507.13334",
+      "source_url": "https://arxiv.org/abs/2507.13334",
+      "title": "A Survey of Context Engineering for Large Language Models",
+      "authors": [
+        "Lingrui Mei",
+        "Jiayu Yao",
+        "Yuyao Ge",
+        "Yiwei Wang",
+        "Baolong Bi",
+        "Yujun Cai",
+        "Jiazhi Liu",
+        "Mingyu Li",
+        "Zhong-Zhi Li",
+        "Duzhen Zhang",
+        "Chenlin Zhou",
+        "Jiayi Mao",
+        "Tianze Xia",
+        "Jiafeng Guo",
+        "Shenghua Liu"
+      ],
+      "published": "2025-07-17"
+    },
+    {
+      "arxiv_id": "2606.10209",
+      "source_url": "https://arxiv.org/abs/2606.10209",
+      "title": "Less Context, Better Agents: Efficient Context Engineering for Long-Horizon Tool-Using LLM Agents",
+      "authors": [
+        "Abhilasha Lodha",
+        "Mahsa Pahlavikhah Varnosfaderani",
+        "Abir Chakraborty",
+        "Abhinav Mithal"
+      ],
+      "published": "2026-06-08"
+    },
+    {
+      "arxiv_id": "2608.06663",
+      "source_url": "https://arxiv.org/abs/2608.06663",
+      "title": "The Horizon Gap: Planning, Memory, Execution, Training, and Evaluation for Long-Horizon LLM Agents",
+      "authors": [
+        "Mingguang Chen",
+        "Licheng Wang",
+        "Bo Qu"
+      ],
+      "published": "2026-08-07"
+    },
+    {
+      "arxiv_id": "2610.08364",
+      "source_url": "https://arxiv.org/abs/2610.08364",
+      "title": "Transect: Retaining Observability for Long-Horizon LLM Agent Evaluations",
+      "authors": [
+        "Toby D. Pilditch",
+        "Konstantinos Voudouris",
+        "Alexandra Abbas",
+        "Cozmin Ududec"
+      ],
+      "published": "2026-10-06"
+    },
+    {
+      "arxiv_id": "2605.23950",
+      "source_url": "https://arxiv.org/abs/2605.23950",
+      "title": "Stop Comparing LLM Agents Without Disclosing the Harness",
+      "authors": [
+        "Yunbei Zhang",
+        "Janet Wang",
+        "Yingqiang Ge",
+        "Weijie Xu",
+        "Jihun Hamm",
+        "Chandan K. Reddy"
+      ],
+      "published": "2026-05-07"
+    },
+    {
+      "arxiv_id": "2608.13417",
+      "source_url": "https://arxiv.org/abs/2608.13417",
+      "title": "Beyond Final Scores: A Systematic Evaluation of Agents for Long-Horizon AI Research and Development",
+      "authors": [
+        "Yiwei Li",
+        "Wanli Yang",
+        "Hexiang Tan",
+        "Xiangzhou Huang",
+        "Zhengyu Chen",
+        "Ziran Li",
+        "Borun Chen",
+        "Shanglin Lei",
+        "Huaisheng Zhu",
+        "Hao Tian",
+        "Fei Sun",
+        "Xunliang Cai",
+        "Jingang Wang"
+      ],
+      "published": "2026-08-13"
+    },
+    {
+      "arxiv_id": "2609.18094",
+      "source_url": "https://arxiv.org/abs/2609.18094",
+      "title": "Agora: Git as Shared Memory for Collective AutoResearch",
+      "authors": [
+        "Yifan Zhang",
+        "Yunheng Zou",
+        "Shaokun Zhang",
+        "Jian Hu",
+        "Hao Zhang",
+        "Binfeng Xu",
+        "Jan Kautz",
+        "Yi Dong"
+      ],
+      "published": "2026-09-16"
     }
   ]
 }
