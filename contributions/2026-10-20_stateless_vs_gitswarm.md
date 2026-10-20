@@ -1,6 +1,7 @@
 # 文献調査メモ：Stateless Harness と GitSwarm
 
 - 作成日：2026-10-20
+- 改訂：2026-10-20（§3.3 の比較表を GitSwarm 本文で再確認し、§3.4 に実数表を追加。数値は arXiv HTML v1 で照合）
 - 対象：`task/TASK.md` §1「自律型AIエージェントにおける長期推論・分散協調アーキテクチャ（Stateless vs GitSwarm）の学術文献調査」
 - 位置づけ：arXiv プレプリント3本の調査メモ。新しい実験は行っていない。実行した確認は §7 に列挙する。
 
@@ -13,7 +14,7 @@
 
 ## 2. 対象文献と確認方法
 
-対象は [1] Zhang et al. (2026)、[2] Shah et al. (2026)、[3] Agarwal et al. (2026) の3本で、いずれも arXiv v1 の査読前プレプリントである。2026-10-20 に arXiv の abs ページで書誌と要旨を確認し、GitSwarm の本文数値は arXiv HTML の該当節で確認した。文献の引用はこの3件のみで、書誌（arXiv URL・著者・出版年・DOI）は §9 に置く。内部記録への参照は文献引用ではない。既存の `contributions/` 2件（worker01/worker02）の記述も一次資料と突き合わせ、スコープの誤りは本メモで訂正した。
+対象は [1] Zhang et al. (2026)、[2] Shah et al. (2026)、[3] Agarwal et al. (2026) の3本で、いずれも arXiv v1 の査読前プレプリントである。2026-10-20 に arXiv の abs ページで書誌と要旨を確認し、GitSwarm の本文数値は arXiv HTML v1（arXiv:2610.04862v1）の該当節で確認した。§3.4 の実数は同日に HTML v1 で再確認し、節番号・表番号を併記した。文献の引用はこの3件のみで、書誌（arXiv URL・著者・出版年・DOI）は §9 に置く。内部記録への参照は文献引用ではない。既存の `contributions/` 2件（worker01/worker02）の記述も一次資料と突き合わせ、スコープの誤りは本メモで訂正した。
 
 ## 3. 二つの設計
 
@@ -37,10 +38,32 @@
 | エージェントの文脈 | 呼び出しごとに再構成 | 独立エピソードから履歴を参照 |
 | 次の行動の決定 | stateless Advisor が割り当て | 同質ワーカーが自律決定 |
 | 中間成果の保存 | harness の状態 | アトミックコミット＋informed_by |
-| 最終選択 | 測定結果を所有（規則は未確認） | 検証性能、なければ推薦多数決 |
+| 最終選択 | harness が測定値で候補を保持（[1] §3.2。整理は SLA 全文読解レポート §6） | 検証性能（[2] §3.3 で推薦 readout を剥離）。検証不能時のみ推薦多数決（[2] §2.5） |
+| 票の位置づけ | 投票機構なし | 調整信号であり独立検証ではない（[2] Appendix G.3） |
 | 主な失敗モード | 状態・要約・Advisor への依存 | 評価雑音、多数決、履歴の肥大 |
 
-（失敗モードの行は本メモの整理であり、論文の主張ではない。）
+（失敗モードの行は本メモの整理であり、論文の主張ではない。最終選択と票の行は 2026-10-20 に [1]・[2] の本文で確認した。）
+
+### 3.4 実数（GitSwarm 本文、節番号付き）
+
+比較表の「検証性能」「多数決」の記述を、本文の実数で裏付ける。すべて 2026-10-20 に arXiv HTML v1（arXiv:2610.04862v1）で再確認した値である。
+
+| 項目 | 実数 | 出典 |
+|---|---|---|
+| ProgramBench 平均スコア | 79.39%（本文表記 79.4%） | [2] §3.2、Table 1 |
+| Forced Codex（単一エージェントを継続） | 65.12%（同 65.1%） | [2] §3.2、Table 1 |
+| IMOProofBench-Advanced | 30/30 全問正解。**単一実行** | [2] §1、§4 |
+| Looped Transformer の評価分解能 | 128例で 12組中5組を誤順位 → 512例で1組 | [2] §3.3 |
+| 分散ノミネーション（readout） | 62.06±2.44%、38.0分 | [2] §3.5、Appendix G.6 Table 13 |
+| 中央セレクタ | 64.40±1.49%、34.9分（+2.34ポイント） | 同上 |
+| 中央アグリゲータ | 58.19±4.53%、43.9分（−3.87ポイント） | 同上 |
+| 同期ウェーブ（実行スケジュール） | 63.11±0.58%、49.3分（+1.05ポイント） | 同上 |
+| 後続が built upon する貢献 | ProgramBench 94.7% / IMOProofBench 44.4% | [2] §3.4 |
+| 選択解の推移的祖先カバー | ProgramBench 81.6–92.6% / IMOProofBench 21.3–33.0% | [2] §3.4 |
+| 負ラベルの研究コミットの後続引用 | NanoChat 70.1%（709件中497件、最初の24アクティブ時間） | [2] §3.3、Appendix E.4 |
+| 票の設計上の位置づけ | 「coordination signals, not independent proofs of correctness」 | [2] Appendix G.3 |
+
+留保：ProgramBench は200問中50問の固定部分集合、IMO の全問正解は単一実行、設計比較は9開発タスク×3シードの小規模実験で、著者ら自身が統計的同等性を示すものではないと注記している（[2] §3.5、§4）。したがって上の表は「GitSwarm が何を測ったか」の記録であり、SLA との優劣の証拠ではない。
 
 ## 4. 一致点と相違点
 
@@ -66,11 +89,14 @@
 - 自然言語が主体で正解が曖昧な文献調査への適用は両論文の評価対象外である。GitSwarm が検証可能な課題で多数決を外している事実は、転用に慎重であるべき材料になる。
 - 本リポジトリの内部記録（文献外）：2026-10-19 の監査で、GitSwarm 模擬実験の成果物が実行値ではなく手書きだったこと、readout がコミット範囲に依存することが確認され、修正済み（`state/claims.jsonl` の CLM-004/005/007）。模擬実験のコードは `main` に含まれないため、`main` から模擬実験を再実行することはできない。
 
-## 7. 本PR作成時に実行した確認
+## 7. 本メモの確認（2026-10-20 改訂時に再実行）
 
-- `python3 -m unittest discover -s tests` → 28件 OK
-- `python3 gitswarm/benchmarks/benchmark.py --check` → PASS
-- `python3 scripts/validate_state.py` → PASS
+- `python3 -m unittest discover -s tests` → **45件 OK**
+- `python3 gitswarm/benchmarks/benchmark.py --check` → **PASS**
+- `python3 scripts/validate_state.py` → **PASS**（sources=4, evidence=15, claims=7, verifications=21, hypotheses=3）
+- `python3 scripts/check_citations.py` → **3 checked / 1 skipped / 0 failures**
+
+GitSwarm の §3.4 の数値は、同日に arXiv HTML v1（arXiv:2610.04862v1）の該当節・表で再確認した。`--live` 照合と外部実験は行っていない。
 
 （Python 3.11.2、2026-10-20。上記以外の実験は行っていない。）
 
