@@ -3,8 +3,10 @@
 # Gates ONLY the four deterministic, re-executable checks:
 #   1. unit tests (history-independent; readout is tested on synthetic repos)
 #   2. benchmark reproducibility (fresh execution vs committed artifact)
-#   3. research-ledger validation (schema + ID uniqueness + references)
-#   4. citation check of state/sources.jsonl against the bundled arXiv
+#   3. readout-simulation reproducibility (fresh execution vs committed
+#      artifact) -- the common-mode / error-amplification sweep
+#   4. research-ledger validation (schema + ID uniqueness + references)
+#   5. citation check of state/sources.jsonl against the bundled arXiv
 #      metadata snapshot (tests/fixtures/) -- fully OFFLINE; the --live
 #      arXiv API mode is manual-only and deliberately NOT gated here
 # Deliberately NOT gated here (governance freeze, 2026-10-20):
@@ -45,6 +47,9 @@ jobs:
 
       - name: Check benchmark reproducibility
         run: python3 gitswarm/benchmarks/benchmark.py --check
+
+      - name: Check readout simulation reproducibility
+        run: python3 gitswarm/readout_sim.py --check
 
       - name: Validate research ledgers
         run: python3 scripts/validate_state.py

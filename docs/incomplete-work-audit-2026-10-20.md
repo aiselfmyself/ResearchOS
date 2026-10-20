@@ -355,3 +355,25 @@ GitHub（gh）：
 | 日付 | 内容 |
 |---|---|
 | 2026-10-20 | 初版。`main`（1f32b05）時点の未完了要素を棚卸し。コード・台帳・CI の変更はなし。`docs/parallel-work-ownership.md` §2 に従い、`state/`・`README.md`・`docs/minimal-core-and-ci.md`・`gitswarm/artifacts/` には触れていない |
+| 2026-10-20 | §13「対応状況」を追加。優先度「高」5件の対応を記録。初版の指摘自体は監査記録として変更しない |
+
+## 13. 対応状況（同日 2026-10-20）
+
+本レポートの優先度「高」5件すべてを含む対応を同日実施した。棚卸し時点の指摘は**監査記録としてそのまま残す**（書き換えない）。
+
+| ID | 項目 | 対応 | 場所 |
+|---|---|---|---|
+| 1 | 統合レポートの作成 | ✅ 完了 | `contributions/2026-10-20_integrated_survey_report.md` |
+| 2 | 共通モード障害の直接測定 | ⚠️ 一部完了（決定論的投票モデル。`rho`・`c` の実測は未了） | `gitswarm/readout_sim.py`、同測定メモ |
+| 3 | worker02 の誤記（論文と逆） | ✅ 訂正（訂正前の文面を記録として保持） | `contributions/worker02_gitswarm_and_limits.md` |
+| 4 | CLM-004 / EVD-005 の現状との矛盾 | ✅ 是正（歴史的記録であることを明記。status は維持） | `state/claims.jsonl`、`state/evidence.jsonl` |
+| 5 | `counterclaim_ids` が空（TASK.md §3 未達） | ✅ 解消（反証4件を新規採番し CLM-001/002/003 に紐付け） | `state/claims.jsonl` |
+| 6 | 孤立 EVD | ✅ 3件中2件を主張・検証に紐付け。残1件（EVD-013）は歴史的監査記録として保持する判断を `scope_note` に明記 | `state/evidence.jsonl` |
+| 7 | 削除済み成果物を参照する EVD/VER | ⚠️ 注記のみ（`correction_note` で「main からは再検証できない」と明記）。**主張の扱い（残すか除外するか）は未判断** | `state/evidence.jsonl`、`state/verifications.jsonl` |
+| 9 | 未登録7件の出典 | ✅ 解消（fixture から機械的生成。`check_citations.py` が照合） | `state/sources.jsonl` |
+| 10 | worker01 の無出典造語 | ✅ 訂正（本ノート独自の比喩と明記） | `contributions/worker01_stateless_analysis.md` |
+| 13 | HYP の `subtasks` プレースホルダ | ✅ 解消（`TASK.md` §2/§4 の項目に差し替え） | `state/hypotheses.jsonl` |
+
+**未対応**：ID 8（`check_memo_citations.py` の CI 接続）、11（旧ブランチのアーカイブ）、12（記録数値のドリフト是正：本レポートの §8 が指摘した陳腐化は、メモ内の過去の記録値は歴史的スナップショットとして残す判断により未更新）、15（SRC-004 への VER）。
+
+`docs/parallel-work-ownership.md` §2 は `state/` を「統合役のみ」とする。本対応は `main` への取り込みを行うセッションが統合役として行ったものであり、`README.md` と `state/` を変更している。
