@@ -356,6 +356,7 @@ GitHub（gh）：
 |---|---|
 | 2026-10-20 | 初版。`main`（1f32b05）時点の未完了要素を棚卸し。コード・台帳・CI の変更はなし。`docs/parallel-work-ownership.md` §2 に従い、`state/`・`README.md`・`docs/minimal-core-and-ci.md`・`gitswarm/artifacts/` には触れていない |
 | 2026-10-20 | §13「対応状況」を追加。優先度「高」5件の対応を記録。初版の指摘自体は監査記録として変更しない |
+| 2026-10-20 | CLM-004/005/007 および依存する EVD/VER/HYP 計16件を**台帳から除外**（`main` から再検証できないため）。原文は `docs/archived-ledger-records-2026-10-20.md` に退避。§13 の ID 4/6/7 を更新。`docs/record-id-scheme.md` の件数表と `tests/test_minimal_core.py` の凍結上限テストを追従。連番は欠番のままとする（再利用しない） |
 
 ## 13. 対応状況（同日 2026-10-20）
 
@@ -366,10 +367,10 @@ GitHub（gh）：
 | 1 | 統合レポートの作成 | ✅ 完了 | `contributions/2026-10-20_integrated_survey_report.md` |
 | 2 | 共通モード障害の直接測定 | ⚠️ 一部完了（決定論的投票モデル。`rho`・`c` の実測は未了） | `gitswarm/readout_sim.py`、同測定メモ |
 | 3 | worker02 の誤記（論文と逆） | ✅ 訂正（訂正前の文面を記録として保持） | `contributions/worker02_gitswarm_and_limits.md` |
-| 4 | CLM-004 / EVD-005 の現状との矛盾 | ✅ 是正（歴史的記録であることを明記。status は維持） | `state/claims.jsonl`、`state/evidence.jsonl` |
+| 4 | CLM-004 / EVD-005 の現状との矛盾 | ✅ 解決（**台帳から除外**。参照先が `main` になく再検証できないため。原文は `docs/archived-ledger-records-2026-10-20.md` に退避） | `state/claims.jsonl`、`state/evidence.jsonl` |
 | 5 | `counterclaim_ids` が空（TASK.md §3 未達） | ✅ 解消（反証4件を新規採番し CLM-001/002/003 に紐付け） | `state/claims.jsonl` |
-| 6 | 孤立 EVD | ✅ 3件中2件を主張・検証に紐付け。残1件（EVD-013）は歴史的監査記録として保持する判断を `scope_note` に明記 | `state/evidence.jsonl` |
-| 7 | 削除済み成果物を参照する EVD/VER | ⚠️ 注記のみ（`correction_note` で「main からは再検証できない」と明記）。**主張の扱い（残すか除外するか）は未判断** | `state/evidence.jsonl`、`state/verifications.jsonl` |
+| 6 | 孤立 EVD | ✅ 解消（除外3件を含む全 EVD が主張・検証のいずれかから参照される状態になった） | `state/evidence.jsonl` |
+| 7 | 削除済み成果物を参照する EVD/VER | ✅ 解決（対象7件を台帳から除外。判断根拠と原文は `docs/archived-ledger-records-2026-10-20.md`） | `state/evidence.jsonl`、`state/verifications.jsonl` |
 | 9 | 未登録7件の出典 | ✅ 解消（fixture から機械的生成。`check_citations.py` が照合） | `state/sources.jsonl` |
 | 10 | worker01 の無出典造語 | ✅ 訂正（本ノート独自の比喩と明記） | `contributions/worker01_stateless_analysis.md` |
 | 13 | HYP の `subtasks` プレースホルダ | ✅ 解消（`TASK.md` §2/§4 の項目に差し替え） | `state/hypotheses.jsonl` |
