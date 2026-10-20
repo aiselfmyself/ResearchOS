@@ -1,0 +1,123 @@
+{
+  "session": "A'",
+  "paper_arxiv_id": "2609.18094",
+  "extracted_at": "2026-10-20",
+  "memo": "contributions/2026-10-20_agora_fulltext_reading_r2.md",
+  "items": [
+    {
+      "id": "A1",
+      "label": "書誌：タイトル",
+      "value": "Agora: Git as Shared Memory for Collective AutoResearch",
+      "location": "HTML v1 冒頭（title）／PDF 冒頭",
+      "confidence": "high"
+    },
+    {
+      "id": "A2",
+      "label": "書誌：著者数",
+      "value": 8,
+      "location": "HTML v1 冒頭の著者リスト",
+      "confidence": "high"
+    },
+    {
+      "id": "A3",
+      "label": "書誌：先頭著者",
+      "value": "Yifan Zhang",
+      "location": "HTML v1 冒頭",
+      "confidence": "high"
+    },
+    {
+      "id": "A4",
+      "label": "書誌：投稿日",
+      "value": "2026-09-16",
+      "location": "arXiv abs ページ（[v1] Wed, 16 Sep 2026）／HTML ヘッダー（16 Sep 2026）",
+      "confidence": "high"
+    },
+    {
+      "id": "A5",
+      "label": "書誌：ライセンス",
+      "value": "arXiv.org perpetual non-exclusive license",
+      "location": "HTML v1 ヘッダー（[License: arXiv.org perpetual non-exclusive license]）／abs ページ http://arxiv.org/licenses/nonexclusive-distrib/1.0/；PDF 1面フッターには「© 2026 NVIDIA. All rights reserved.」が併記されている",
+      "confidence": "high"
+    },
+    {
+      "id": "B1",
+      "label": "設計：ベンチマーク数",
+      "value": 1,
+      "location": "§4.1 （本文で実行された唯一の評価課題として。公開標準ベンチマークの実行は §2、§4.1 から確認されない）",
+      "confidence": "medium",
+      "note": "公開された標準ベンチマーク（MLAgentBench 等）の実行はなく、本値はその自作の weight-transfer 課題を評価課題として1を数えたもの。厳密に公開ベンチマークを数えるなら 0 となり得る。"
+    },
+    {
+      "id": "B2",
+      "label": "設計：ベンチマーク名",
+      "value": [
+        "weight-transfer task"
+      ],
+      "location": "§4.1 （評価器は FineWeb-Edu 200 texts の bpb）",
+      "confidence": "medium",
+      "note": "本論文著者による自作の単一開発用評価器であり、公開された標準ベンチマーク名ではない。"
+    },
+    {
+      "id": "C1",
+      "label": "結果：主要結果の代表値 1",
+      "value": "Best transfer(): 1.899044 bpb (§4.5 Primary result)",
+      "location": "§4.5",
+      "confidence": "high"
+    },
+    {
+      "id": "C2",
+      "label": "結果：主要結果の代表値 2",
+      "value": "From random initialization 3.3923 bpb (§4.5 Primary result / Abstract)",
+      "location": "§4.5",
+      "confidence": "high"
+    },
+    {
+      "id": "C3",
+      "label": "結果：主要結果の代表値 3",
+      "value": "Closes 62% of the gap to trained GPT-2 124M (about 1.0 bpb) (§4.5 Primary result / Abstract)",
+      "location": "§4.5",
+      "confidence": "medium",
+      "note": "62% の算出過程は本文からは再導出できないため confidence は medium とした。"
+    },
+    {
+      "id": "D1",
+      "label": "設計：最強ベースライン名",
+      "value": "none",
+      "location": "§5",
+      "confidence": "medium",
+      "note": "対照条件（isolated / plain leaderboard 条件）が実行されていないため、最強ベースラインとして提示されたものはない。数値比較に使えるのは random initialization の 3.3923 bpb と trained GPT-2 124M の約 1.0 bpb（§4.1 『The trained model sets the scale; it is not an achievable no-training baseline.』）のみ。"
+    },
+    {
+      "id": "E1",
+      "label": "信頼性：単一実行（n=1）か",
+      "value": true,
+      "location": "Appendix C（分析単位は the entire community run）、§4.3、§5",
+      "confidence": "high",
+      "note": "主要な community run は1つ（11 days and 19 hours、§4.3）。個別投稿の再現は165件あるが、並行群による反復・対照群への反復ではない。"
+    },
+    {
+      "id": "E2",
+      "label": "信頼性：実行回数が明記されているか",
+      "value": true,
+      "location": "§4.3、Appendix C",
+      "confidence": "medium",
+      "note": "主要な community run は1つであり明示されている（§4.3 『The run lasted 11 days and 19 hours』、Appendix C『The primary analysis unit is the entire community run』）。「実施回数 = 1」として分離して明記された反復回数の明記があるわけではなく、対照条件の実行は0回である。"
+    },
+    {
+      "id": "F1",
+      "label": "制約：論文自認の限界の数",
+      "value": 6,
+      "location": "§3.2、§4.5、§4.8、§5、§2、§4.7",
+      "confidence": "medium",
+      "note": "Discussion / Limitations の見出し区切りの節は存在せず、本文中に分散した著者の自己宣言を6として数えた。§2 のヒューリスティクスの限界を独立した限界として数えない読みでは5となり得る。"
+    },
+    {
+      "id": "G1",
+      "label": "再現性：コード公開の有無",
+      "value": "unknown",
+      "location": "§3.4",
+      "confidence": "low",
+      "note": "本文中には本論文の実装を案内するGitHub等の公開URLは記載されておらず、コードが実際に公開されたかは本文からは確認できないため unknown とした。"
+    }
+  ]
+}
