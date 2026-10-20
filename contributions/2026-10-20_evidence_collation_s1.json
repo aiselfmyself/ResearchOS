@@ -1,0 +1,112 @@
+[
+  {
+    "source_id": "SRC-20261020-05de",
+    "arxiv_id": "2507.13334",
+    "memo_cited_version": "v2",
+    "version_read": "v2",
+    "is_latest": true,
+    "version_delta_note": "",
+    "claims": [
+      {
+        "claim_id": "C-05de-01",
+        "verdict": "verbatim",
+        "locator": "Abstract",
+        "source_text": "Through this systematic analysis of over 1400 research papers"
+      },
+      {
+        "claim_id": "C-05de-02",
+        "verdict": "paraphrase_ok",
+        "locator": "Abstract",
+        "source_text": "This survey introduces Context Engineering, a formal discipline that transcends simple prompt design to encompass the systematic optimization of information payloads for LLMs."
+      },
+      {
+        "claim_id": "C-05de-03",
+        "verdict": "verbatim",
+        "locator": "Abstract",
+        "source_text": "We first examine the foundational Components: (1) Context Retrieval and Generation, encompassing prompt-based generation and external knowledge acquisition; (2) Context Processing, addressing long sequence processing, self-refinement, and structured information integration; and (3) Context Management, covering memory hierarchies, compression, and optimization."
+      },
+      {
+        "claim_id": "C-05de-04",
+        "verdict": "paraphrase_ok",
+        "locator": "Abstract",
+        "source_text": "While current models, augmented by advanced context engineering, demonstrate remarkable proficiency in understanding complex contexts, they exhibit pronounced limitations in generating equally sophisticated, long-form outputs."
+      },
+      {
+        "claim_id": "C-05de-05",
+        "verdict": "paraphrase_ok",
+        "locator": "arXiv abs Comments / HTML v2",
+        "source_text": "ongoing work; 166 pages, 1411 citations"
+      },
+      {
+        "claim_id": "C-05de-06",
+        "verdict": "verbatim",
+        "locator": "arXiv abs submission history / HTML v2 header",
+        "source_text": "arXiv:2507.13334v2 [cs.CL] 21 Jul 2025"
+      }
+    ]
+  },
+  {
+    "source_id": "SRC-20261020-787b",
+    "arxiv_id": "2606.10209",
+    "memo_cited_version": "v1",
+    "version_read": "v1",
+    "is_latest": true,
+    "version_delta_note": "",
+    "claims": [
+      {
+        "claim_id": "C-787b-01",
+        "verdict": "verbatim",
+        "locator": "Abstract / Table 2",
+        "source_text": "Methods: We evaluate four context engineering configurations applied to GPT-5 for automated hotel expense itemization in Microsoft Dynamics 365 Finance and Operations (D365 F&O) via Model Context Protocol (MCP): (1) GPT-5 with no user model (a motivating ablation), (2) the standard full-context agent (our context-engineering baseline) with full conversation history, (3) context pruned to the last 5 tool call/response pairs, and (4) context pruned with automated summarization using a summary window of 3."
+      },
+      {
+        "claim_id": "C-787b-02",
+        "verdict": "verbatim",
+        "locator": "§3.6 / Table 2 caption",
+        "source_text": "The benchmark consists of 50 hotel expense itemization tasks executed in D365 F&O via the MCP proxy."
+      },
+      {
+        "claim_id": "C-787b-03",
+        "verdict": "verbatim",
+        "locator": "Abstract / Table 2 caption",
+        "source_text": "Results are reported as averages across 5 independent experimental runs on a 50-task hotel expense benchmark, holding the user model constant across the context-engineering comparison (C2–C4) to isolate the effect of context management."
+      },
+      {
+        "claim_id": "C-787b-04",
+        "verdict": "verbatim",
+        "locator": "Table 2, C1; §4.1",
+        "source_text": "C1 (no user model) achieved only 8.0% complete itemization"
+      },
+      {
+        "claim_id": "C-787b-05",
+        "verdict": "verbatim",
+        "locator": "Table 2, C2; §4.2",
+        "source_text": "The full-context configuration reached 71.0% but consumed 1,480,996 tokens and 14.56 hours per benchmark."
+      },
+      {
+        "claim_id": "C-787b-06",
+        "verdict": "verbatim",
+        "locator": "Table 2, C3; §4.3",
+        "source_text": "Context pruning to the last 5 tool calls achieved 79.0% complete itemization with 535,274 tokens—a 63.9% reduction—in 5.39 hours."
+      },
+      {
+        "claim_id": "C-787b-07",
+        "verdict": "verbatim",
+        "locator": "Table 2, C4; §4.4",
+        "source_text": "Adding automated summarization achieved 91.6% complete itemization and 99.64% average amount itemized with 553,374 tokens in 5.79 hours."
+      },
+      {
+        "claim_id": "C-787b-08",
+        "verdict": "paraphrase_ok",
+        "locator": "§4.9",
+        "source_text": "Second, the context-engineering ordering still holds: adding summarization on top of pruning improves complete itemization from 92.0% to 94.5% at a ∼5.6% wall-clock premium"
+      },
+      {
+        "claim_id": "C-787b-09",
+        "verdict": "paraphrase_ok",
+        "locator": "Abstract / §6.4",
+        "source_text": "We position these results as strong evidence for one class of enterprise tool-use workflow rather than a proof of universal generalization, and we discuss the scope and limits of the approach explicitly."
+      }
+    ]
+  }
+]
