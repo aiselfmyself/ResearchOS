@@ -3,7 +3,8 @@
 - 作成日：2026-10-20
 - 種別：**`task/TASK.md` §4 が要求する Integrator による統合レポート**（多数決ではなく証拠の強弱に基づく論証）
 - 対象：`task/TASK.md` §1「自律型AIエージェントにおける長期推論・分散協調アーキテクチャの最新動向（Stateless vs GitSwarm）の学術文献調査」
-- 統合元：本リポジトリの `contributions/` の調査メモ6本（メモ1・メモ2・全文読解レポート1〜3・共通モード測定）＋ `state/` の台帳（sources=11, evidence=19, claims=11, verifications=32, hypotheses=3）
+- 統合元：本リポジトリの `contributions/` の調査メモ6本（メモ1・メモ2・全文読解レポート1〜3・共通モード測定）＋ `state/` の台帳（sources=11, evidence=14, claims=8, verifications=25, hypotheses=2）
+- 重複について：同日に別セッションから `contributions/2026-10-20_integrated_report.md`（PR #17）が追加され、`task/TASK.md` §4 に対するレポートが2本になった。**同ファイルは既存7メモの統合のみで新規の実験・台帳追記を含まない**のに対し、本レポートは本リポジトリでの新規測定（§5.3）・新規出典7件の台帳登録・主要主張への反証の紐付けを含む。1本への統合は人間の判断を要するため行っていない
 - 位置づけ：**一次資料は arXiv プレプリント10本。本リポジトリで実行した実験は1件のみ**（§5.3 の決定論的投票モデル）であり、他はすべて文献の調査・照合である。実行した確認は §9 に列挙する
 - 役割について：README の凍結方針により役割台帳は存在しない。本レポートは「`main` への取り込みを行うセッション」が Integrator として書いたものであり、形式的な役割認証は受けていない
 
@@ -237,15 +238,15 @@ DuoDiscover の fidelity test は、安価な代理評価器（yardstick）が�
 ## 9. 本レポート作成時に実行した確認
 
 ```text
-python3 -m unittest discover -s tests            → Ran 110 tests / OK
+python3 -m unittest discover -s tests            → Ran 111 tests / OK
 python3 gitswarm/benchmarks/benchmark.py --check → PASS
 python3 gitswarm/readout_sim.py --check          → PASS
-python3 scripts/validate_state.py                → PASS (sources=11, evidence=19, claims=11, verifications=32, hypotheses=3)
+python3 scripts/validate_state.py                → PASS (sources=11, evidence=14, claims=8, verifications=25, hypotheses=2)
 python3 scripts/check_citations.py               → 10 checked / 1 skipped / 0 failures
-python3 scripts/check_memo_citations.py          → 9 memos / 26 citations checked / 1 skipped / 0 failures
+python3 scripts/check_memo_citations.py          → 10 memos / 43 citations checked / 1 skipped / 0 failures
 ```
 
-（Python 3.11.2、2026-10-20。CI は Python 3.12 固定。）
+（Python 3.11.2、2026-10-20。CI は Python 3.12 固定。**上記は台帳からの16件除外と PR #17 のレポート追加を反映した再実行時の値**。本レポート作成時点は 110 tests / evidence=19 / claims=11 / verifications=32 / hypotheses=3 / 9 memos・26 citations だった。）
 
 **やっていないこと**：`--live` による arXiv API 実照合、新しい文献の取得、新しい実験（§5.3 は本レポートに先立ち別メモで実施済み）。
 
