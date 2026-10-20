@@ -1,15 +1,19 @@
 # Minimal core CI for ResearchOS.
 #
-# Gates ONLY the three deterministic, re-executable checks:
+# Gates ONLY the four deterministic, re-executable checks:
 #   1. unit tests (history-independent; readout is tested on synthetic repos)
 #   2. benchmark reproducibility (fresh execution vs committed artifact)
 #   3. research-ledger validation (schema + ID uniqueness + references)
-#
+#   4. citation check of state/sources.jsonl against the bundled arXiv
+#      metadata snapshot (tests/fixtures/) -- fully OFFLINE; the --live
+#      arXiv API mode is manual-only and deliberately NOT gated here
 # Deliberately NOT gated here (governance freeze, 2026-10-20):
 #   * commit-trailer / role / authorship checks
 #   * append-only hash chains, review queues, land gates
 #   * readout CLI on the real history (returns 1 while no worker commits
 #     exist yet -- that is the expected state of a fresh main, not a failure)
+#   * live arXiv API access (network + rate limits; check 4 re-runs the
+#     same comparison offline against the bundled snapshot instead)
 # See docs/minimal-core-and-ci.md for the rationale.
 name: Minimal core check
 
@@ -44,3 +48,6 @@ jobs:
 
       - name: Validate research ledgers
         run: python3 scripts/validate_state.py
+
+      - name: Check citations against bundled arXiv snapshot
+        run: python3 scripts/check_citations.py

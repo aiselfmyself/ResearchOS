@@ -13,17 +13,20 @@ state/                 研究台帳（JSONL。監査訂正済みデータ）
 scripts/
   validate_state.py    研究台帳の決定論的検証器（標準ライブラリのみ）
   new_id.py            非連番レコードIDの採番器（並行作業のID衝突対策）
+  check_citations.py   書誌のarXiv照合（オフラインfixture、--liveは手動専用）
 gitswarm/
   problem.py solvers/  30都市TSPの決定論的ソルバ群（greedy/random/two_opt/SA）
   benchmarks/          複数シード実行＋成果物照合（--write/--check）
   readout.py           GitSwarm readout解析器（履歴が貯まれば使う道具）
   artifacts/           実行で再生成できるベンチマーク行列
 tests/
-  test_minimal_core.py 履歴非依存の回帰テスト（28件）
+  fixtures/            arXiv書誌スナップショット（オフライン照合用・2026-10-20取得）
+  test_minimal_core.py    履歴非依存の回帰テスト（28件）
+  test_check_citations.py 書誌照合テスト（17件・ネットワーク非依存）
 contributions/         研究ノート
 docs/                  分析レポートと設計記録
 .github/workflows/
-  core-check.yml       最小CI（テスト＋ベンチマーク再現性＋台帳検証）
+  core-check.yml       最小CI（テスト＋ベンチマーク再現性＋台帳検証＋書誌照合）
 ```
 
 ## 使い方
@@ -38,11 +41,14 @@ python3 gitswarm/benchmarks/benchmark.py --check
 # 3. 研究台帳の検証
 python3 scripts/validate_state.py
 
+# 4. 書誌のarXiv照合（オフラインfixtureのみ。ネットワーク不要）
+python3 scripts/check_citations.py
+
 # 成果物の再生成（実行できることの証明。数値は不変のはず）
 python3 gitswarm/benchmarks/benchmark.py --write
 ```
 
-CI（`core-check.yml`）は上記1〜3だけをゲートする。Python 3.12固定。
+CI（`core-check.yml`）は上記1〜4だけをゲートする。Python 3.12固定。
 
 ## 意図的に含まれないもの（ガバナンス凍結）
 
@@ -51,5 +57,5 @@ CI（`core-check.yml`）は上記1〜3だけをゲートする。Python 3.12固�
 ## 次の段階（設計思想レポートのPhase順序に従う）
 
 1. 単一Workerのベースライン：`task/TASK.md` の文献調査を人間が読める短いレポートとして完成させる
-2. 捏造対策は1点に絞る：arXiv APIによる引用の機械照合
+2. 捏造対策は1点に絞る：arXiv APIによる引用の機械照合 ✅ 完了（2026-10-20：`scripts/check_citations.py`。オフラインfixture照合をCIでゲート、実API照合 `--live` は手動専用）
 3. その後、必要性が実証されたときに複数Worker・Supervisor・検証の拡張を検討する（Phase 4は最後）
