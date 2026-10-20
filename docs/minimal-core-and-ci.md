@@ -25,7 +25,8 @@
 | `task/TASK.md` | PR #9（§4の検証器参照のみ更新） | 本来の研究課題定義 |
 | `contributions/` 2件 | PR #9そのまま | 研究ノート（小規模・無害） |
 | `scripts/validate_state.py` | **新規**（約200行） | 研究5台帳専用の小さな検証器。旧 `validate_researchos.py`（858行）はガバナンス台帳・役割分離・trailer検査と結合していたため不採用 |
-| `tests/test_minimal_core.py` | **新規**（18テスト） | 履歴非依存テスト。旧 `test_integrity.py` はコミット数・SHA・ガバナンス台帳に結合していたため不採用（詳細は §3） |
+| `scripts/new_id.py`、`docs/record-id-scheme.md` | **新規**（2026-10-20） | 非連番IDの採番器と規約。並行ブランチが同じ連番を採番して衝突する問題（A5と同型）を、ID側で原理的に解消する。役割・パス制限は導入しない |
+| `tests/test_minimal_core.py` | **新規**（28テスト） | 履歴非依存テスト。旧 `test_integrity.py` はコミット数・SHA・ガバナンス台帳に結合していたため不採用（詳細は §3） |
 | `.gitignore` | PR #9そのまま | — |
 
 ### 1.2 除いたもの（と理由）
@@ -47,7 +48,7 @@
 
 ゲートするのは決定論的・再実行可能な3検査のみ：
 
-1. `python3 -m unittest discover -s tests -v` — 18テスト（約2秒）
+1. `python3 -m unittest discover -s tests -v` — 28テスト（約2秒）
 2. `python3 gitswarm/benchmarks/benchmark.py --check` — 成果物と fresh run の照合（許容誤差0.01）
 3. `python3 scripts/validate_state.py` — 研究台帳のスキーマ・ID一意・参照整合性
 

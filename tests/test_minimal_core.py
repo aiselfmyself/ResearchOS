@@ -16,7 +16,9 @@ Covered:
 """
 from __future__ import annotations
 
+import contextlib
 import hashlib
+import io
 import json
 import os
 import subprocess
@@ -31,6 +33,7 @@ if str(ROOT) not in sys.path:
 if str(ROOT / "scripts") not in sys.path:
     sys.path.insert(0, str(ROOT / "scripts"))
 
+import new_id  # noqa: E402
 import validate_state  # noqa: E402
 from gitswarm import readout  # noqa: E402
 from gitswarm.benchmarks.benchmark import (  # noqa: E402
@@ -257,6 +260,89 @@ class ResearchStateTest(unittest.TestCase):
         for claim_id in ("CLM-004", "CLM-005", "CLM-006", "CLM-007"):
             self.assertIn(claim_id, claims)
         self.assertEqual(claims["CLM-003"]["status"], "candidate")
+
+
+class RecordIdSchemeTest(unittest.TestCase):
+    """Non-sequential IDs stop two branches from minting the same number.
+
+    See docs/record-id-scheme.md. Sequential IDs are accepted only up to the
+    frozen maximum; new records must use PREFIX-YYYYMMDD-xxxx.
+    """
+
+    def _check(self, ids, prefix="EVD", key="evidence_id"):
+        records = [{key: value} for value in ids]
+        return validate_state.check_id_format(
+            records, key, "state/evidence.jsonl", prefix
+        )
+
+    def test_new_style_id_is_accepted(self) -> None:
+        self.assertEqual(self._check(["EVD-20261020-9f2c"]), [])
+
+    def test_legacy_id_within_frozen_range_is_accepted(self) -> None:
+        self.assertEqual(self._check(["EVD-001", "EVD-014"]), [])
+
+    def test_legacy_id_beyond_frozen_range_is_rejected(self) -> None:
+        """EVD-015 is exactly what a second branch would collide on."""
+        errors = self._check(["EVD-015"])
+        self.assertTrue(any("frozen sequential range" in e for e in errors), errors)
+
+    def test_wrong_prefix_is_rejected(self) -> None:
+        for bad in ("SRC-20261020-9f2c", "SRC-001"):
+            with self.subTest(bad=bad):
+                errors = self._check([bad])
+                self.assertTrue(any("must start with 'EVD'" in e for e in errors), errors)
+
+    def test_malformed_ids_are_rejected(self) -> None:
+        for bad in ("EVD-15", "EVD-20261020", "EVD-20261020-9F2C", "eud-001"):
+            with self.subTest(bad=bad):
+                errors = self._check([bad])
+                self.assertTrue(
+                    any("must look like EVD-YYYYMMDD-xxxx" in e for e in errors), errors
+                )
+
+    def test_bundled_ledgers_use_valid_ids(self) -> None:
+        report = validate_state.run_all_checks(ROOT)
+        self.assertEqual(report["errors"], [], msg="\n".join(report["errors"]))
+
+    def test_legacy_max_matches_current_ledgers(self) -> None:
+        """The frozen maxima must equal today's highest IDs, not exceed them."""
+        for name, (ledger, _, id_key) in validate_state.COLLECTIONS.items():
+            prefix = validate_state.ID_PREFIXES[name]
+            records, _ = validate_state.load_jsonl(ROOT / ledger)
+            highest = max(
+                int(record[id_key].split("-")[1])
+                for record in records
+                if validate_state.LEGACY_PATTERN.match(record[id_key])
+            )
+            self.assertEqual(
+                highest,
+                validate_state.LEGACY_MAX[prefix],
+                f"{prefix}: raise LEGACY_MAX only together with a migration plan",
+            )
+
+
+class NewIdToolTest(unittest.TestCase):
+    def test_mint_uses_the_new_format_and_avoids_taken_ids(self) -> None:
+        first = new_id.mint("EVD", day="20261020")
+        self.assertRegex(first, r"^EVD-20261020-[0-9a-f]{4}$")
+        self.assertNotEqual(first, new_id.mint("EVD", day="20261020", taken={first}))
+
+    def test_cli_prints_unique_ids(self) -> None:
+        buffer = io.StringIO()
+        with contextlib.redirect_stdout(buffer):
+            code = new_id.main(["SRC", "--count", "3", "--date", "20261020"])
+        self.assertEqual(code, 0)
+        lines = buffer.getvalue().split()
+        self.assertEqual(len(lines), 3)
+        self.assertEqual(len(set(lines)), 3)
+        for line in lines:
+            self.assertRegex(line, r"^SRC-20261020-[0-9a-f]{4}$")
+
+    def test_unknown_prefix_and_bad_date_are_rejected(self) -> None:
+        with self.assertRaises(ValueError):
+            new_id.mint("XYZ")
+        with self.assertRaises(ValueError):
+            new_id.mint("EVD", day="2026-10-20")
 
 
 class ValidatorUnitTest(unittest.TestCase):
