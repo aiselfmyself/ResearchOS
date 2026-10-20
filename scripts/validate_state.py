@@ -8,6 +8,9 @@ Scope (deliberately small -- see docs/minimal-core-and-ci.md):
     array item types. Extra fields are allowed (as in JSON Schema draft-07
     when additionalProperties is unset).
   * ID uniqueness within each ledger.
+  * Record-ID format: new records use PREFIX-YYYYMMDD-xxxx so that two
+    branches cannot mint the same ID; the pre-2026-10-20 sequential IDs are
+    grandfathered up to a frozen maximum (docs/record-id-scheme.md).
   * Referential integrity between ledgers:
       evidence.source_id        -> sources
       claim.evidence_ids        -> evidence
@@ -35,6 +38,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
@@ -57,6 +61,41 @@ COLLECTIONS: Dict[str, Tuple[str, str, str]] = {
         "hypothesis_id",
     ),
 }
+
+# ---------------------------------------------------------------------------
+# Record-ID scheme (see docs/record-id-scheme.md)
+#
+# Sequential IDs collide when two branches append to the same ledger: both
+# read the same max(ID) and mint the same next number. New records therefore
+# use ``PREFIX-YYYYMMDD-xxxx``, where ``xxxx`` is a random 4-hex suffix, so
+# two independent sessions cannot mint the same ID. Once minted, an ID is
+# never changed (references depend on it).
+#
+# The 49 records that predate this scheme keep their sequential IDs. They are
+# grandfathered by *number*, not by listing them: a legacy ID is accepted only
+# if it is at or below the frozen maximum below. Anything beyond that range is
+# a new record and must use the new format.
+# ---------------------------------------------------------------------------
+ID_PREFIXES: Dict[str, str] = {
+    "sources": "SRC",
+    "evidence": "EVD",
+    "claims": "CLM",
+    "verifications": "VER",
+    "hypotheses": "HYP",
+}
+
+# Frozen at 2026-10-20 when the non-sequential scheme was adopted.
+# Do not raise these numbers; mint new records with a YYYYMMDD suffix instead.
+LEGACY_MAX: Dict[str, int] = {
+    "SRC": 4,
+    "EVD": 14,
+    "CLM": 7,
+    "VER": 21,
+    "HYP": 3,
+}
+
+ID_PATTERN = re.compile(r"^(?P<prefix>[A-Z]{3})-(?P<date>\d{8})-(?P<suffix>[0-9a-f]{4})$")
+LEGACY_PATTERN = re.compile(r"^(?P<prefix>[A-Z]{3})-(?P<num>\d{3})$")
 
 
 def load_jsonl(path: Path) -> Tuple[List[Dict[str, Any]], List[str]]:
@@ -156,6 +195,48 @@ def check_uniqueness(
     return errors
 
 
+def check_id_format(
+    records: List[Dict[str, Any]], id_key: str, ledger: str, prefix: str
+) -> List[str]:
+    """Enforce the non-sequential ID scheme (docs/record-id-scheme.md).
+
+    Accepted:
+      * ``PREFIX-YYYYMMDD-xxxx`` (the current scheme); and
+      * ``PREFIX-NNN`` only up to ``LEGACY_MAX[prefix]`` (grandfathered).
+    """
+    errors: List[str] = []
+    legacy_max = LEGACY_MAX.get(prefix, 0)
+    for lineno, record in enumerate(records, start=1):
+        rid = record.get(id_key)
+        if not isinstance(rid, str):
+            continue  # reported by check_uniqueness
+        match = ID_PATTERN.match(rid)
+        if match:
+            if match.group("prefix") != prefix:
+                errors.append(
+                    f"{ledger}:{lineno}: ID {rid!r} must start with {prefix!r}"
+                )
+            continue
+        match = LEGACY_PATTERN.match(rid)
+        if match:
+            if match.group("prefix") != prefix:
+                errors.append(
+                    f"{ledger}:{lineno}: ID {rid!r} must start with {prefix!r}"
+                )
+            elif int(match.group("num")) > legacy_max:
+                errors.append(
+                    f"{ledger}:{lineno}: ID {rid!r} extends the frozen sequential "
+                    f"range (max {prefix}-{legacy_max:03d}); mint one with "
+                    f"'python3 scripts/new_id.py {prefix}' instead"
+                )
+            continue
+        errors.append(
+            f"{ledger}:{lineno}: ID {rid!r} must look like "
+            f"{prefix}-YYYYMMDD-xxxx (mint one with scripts/new_id.py)"
+        )
+    return errors
+
+
 def check_references(data: Dict[str, List[Dict[str, Any]]]) -> List[str]:
     errors: List[str] = []
     ids = {
@@ -213,6 +294,9 @@ def run_all_checks(root: Path = ROOT) -> Dict[str, List[str]]:
         for record in records:
             errors.extend(validate_record(record, schema, label))
         errors.extend(check_uniqueness(records, id_key, ledger_rel))
+        errors.extend(
+            check_id_format(records, id_key, ledger_rel, ID_PREFIXES[name])
+        )
         data[name] = records
     errors.extend(check_references(data))
     return {"errors": errors}

@@ -66,9 +66,9 @@
 - 自然言語が主体で正解が曖昧な文献調査への適用は両論文の評価対象外である。GitSwarm が検証可能な課題で多数決を外している事実は、転用に慎重であるべき材料になる。
 - 本リポジトリの内部記録（文献外）：2026-10-19 の監査で、GitSwarm 模擬実験の成果物が実行値ではなく手書きだったこと、readout がコミット範囲に依存することが確認され、修正済み（`state/claims.jsonl` の CLM-004/005/007）。模擬実験のコードは `main` に含まれないため、`main` から模擬実験を再実行することはできない。
 
-## 7. 本メモ作成時に実行した確認
+## 7. 本PR作成時に実行した確認
 
-- `python3 -m unittest discover -s tests` → 18件 OK
+- `python3 -m unittest discover -s tests` → 28件 OK
 - `python3 gitswarm/benchmarks/benchmark.py --check` → PASS
 - `python3 scripts/validate_state.py` → PASS
 

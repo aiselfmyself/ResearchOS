@@ -12,13 +12,14 @@ schemas/               研究オブジェクトのスキーマ（source/evidence
 state/                 研究台帳（JSONL。監査訂正済みデータ）
 scripts/
   validate_state.py    研究台帳の決定論的検証器（標準ライブラリのみ）
+  new_id.py            非連番レコードIDの採番器（並行作業のID衝突対策）
 gitswarm/
   problem.py solvers/  30都市TSPの決定論的ソルバ群（greedy/random/two_opt/SA）
   benchmarks/          複数シード実行＋成果物照合（--write/--check）
   readout.py           GitSwarm readout解析器（履歴が貯まれば使う道具）
   artifacts/           実行で再生成できるベンチマーク行列
 tests/
-  test_minimal_core.py 履歴非依存の回帰テスト（18件）
+  test_minimal_core.py 履歴非依存の回帰テスト（28件）
 contributions/         研究ノート
 docs/                  分析レポートと設計記録
 .github/workflows/
