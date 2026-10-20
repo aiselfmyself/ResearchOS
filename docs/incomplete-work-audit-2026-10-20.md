@@ -503,6 +503,40 @@ basin を離れた」「調整層が制約だった」の 3 つがあり、v4 §
 
 ---
 
+### 13.4 証拠照合 S2 の裁定と EVD 化（2026-10-20）
+
+並列セッション S2（PR #29）が P3 Horizon Gap ＋ P4 Transect の 12 claim を照合した。
+`wrong_value` / `not_found` は **0 件**、`verbatim` 5 件 / `paraphrase_ok` 7 件だった。
+統合役が裁定し、**12 claim を 7 件の EVD にまとめて起こした**（`state/evidence.jsonl` 25 → 32 件）。
+
+| EVD | 対象 | 内容 |
+|---|---|---|
+| `EVD-20261020-e9fb` | P3 §2.1 | long-horizon / long-context / long-term memory を**タスク／モデル／システム**の層で峻別 |
+| `EVD-20261020-0766` | P3 Abs, §9 | **outcome-only 指標はホライズンが伸びるほど非情報化する** |
+| `EVD-20261020-aa81` | P3 Abs, §9 | 未解決の測定問題：モデル vs harness の能力分解、および **correlated measurement bias** |
+| `EVD-20261020-f880` | P3 Abs, §2.2 | コーパス 1,547 本、bleed filter 26.8%（520/1,939、内訳 176+344 を開示） |
+| `EVD-20261020-4c61` | P4 Abs, §1 | **observability envelope** と 4 つの圧力（within-run opacity / human attention bottleneck / insufficient statistical power / setup attribution uncertainty） |
+| `EVD-20261020-04b2` | P4 Abs, §3 | 実演は約 1,300 万トークン、**89% が委譲されたサブエージェント作業** |
+| `EVD-20261020-b733` | P4 Abs, §3.1, §3.5 | **仮説生成段階の証拠が乏しい**：オーケストレータ出力 580 件中 Hypothesising は 2 件、Analysis design は 0 件 |
+
+**12 claim を 7 EVD にまとめた理由**：定義 3 件（C-303f-03〜05）は原典で 1 つの塊であり、
+4 圧力（C-875e-01〜03）も同じく 1 つの列挙である。分割すると同じ節の引用が重複するため、
+自然な単位で統合した。1 EVD = 1 claim にしないことは統合役の判断である。
+
+**裁定で見つけた論文中の緊張関係（記録のみ、誤りとは断定しない）**：
+`EVD-20261020-04b2` が引く「13 million tokens were generated」と、同論文 §3.5 の
+「7.8 million and 2.9 million ... out of 14.5 million」で**総計が異なる**。
+指標の違い（generated vs new-work tokens）と解釈するのが妥当だが、
+引用時はどちらの指標かを明示する必要がある。`data_points.INTERNAL_TENSION` に記録した。
+
+**S2 の成果物に残る未記入箇所**：`2026-10-20_evidence_collation_s2.md` の
+「実行した確認」節は実測値ではなく**想定値のまま**である（同節に「実際の実行値は
+PR 作成時に再取得して記載すること」と明記があるため、虚偽ではない）。
+CI は通っている（core-check pass）。S2 のファイルは所有マップ §2 により
+統合役は書き換えないため、そのまま残す。
+
+---
+
 **未対応**：ID 11（旧ブランチのアーカイブ）、12（記録数値のドリフト是正：本レポートの §8 が指摘した陳腐化は、メモ内の過去の記録値は歴史的スナップショットとして残す判断により未更新）、15（SRC-004 への VER）。
 
 `docs/parallel-work-ownership.md` §2 は `state/` を「統合役のみ」とする。本対応は `main` への取り込みを行うセッションが統合役として行ったものであり、`README.md` と `state/` を変更している。
