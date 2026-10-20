@@ -1,0 +1,88 @@
+{
+  "schema": "researchos/arxiv-metadata-snapshot/v1",
+  "captured_at": "2026-10-20",
+  "capture_method": "arxiv abs pages (https://arxiv.org/abs/<id>) read via web fetch tool",
+  "capture_note": "The export.arxiv.org Atom API returned 'Rate exceeded' from this sandbox at capture time, so the snapshot was taken from the abs pages instead. Abs pages and the Atom API report the same authoritative metadata fields (title, ordered authors, submission date) used by this fixture.",
+  "entries": [
+    {
+      "arxiv_id": "2610.07625",
+      "source_url": "https://arxiv.org/abs/2610.07625",
+      "title": "Stateless Language Agents: Scaling Long-Horizon Automated Research",
+      "authors": [
+        "Qizheng Zhang",
+        "Changxiu Ji",
+        "Isaac Sun",
+        "Yuetai Li",
+        "Shubhangi Upasani",
+        "Sherry Ruan",
+        "Boyuan Ma",
+        "Fenglu Hong",
+        "Vamsidhar Kamanuru",
+        "Yoonho Lee",
+        "Yuzhen Mao",
+        "Genghan Zhang",
+        "Rulin Shao",
+        "Qiuyang Mang",
+        "Andy Dimnaku",
+        "Changran Hu",
+        "Radha Poovendran",
+        "Kunle Olukotun"
+      ],
+      "published": "2026-10-06"
+    },
+    {
+      "arxiv_id": "2610.04862",
+      "source_url": "https://arxiv.org/abs/2610.04862",
+      "title": "GitSwarm: Decentralized Compounding Inference",
+      "authors": [
+        "Vedant Shah",
+        "Ankur Samanta",
+        "Paras Dahal",
+        "Mikhail Plekhanov",
+        "Carole-Jean Wu",
+        "Scott Yih",
+        "Remi Munos",
+        "Rob Fergus",
+        "Jakob Foerster",
+        "Ruslan Salakhutdinov",
+        "Sanjeev Arora",
+        "Jason Weston",
+        "Aaron Courville",
+        "Anirudh Goyal"
+      ],
+      "published": "2026-10-04"
+    },
+    {
+      "arxiv_id": "2610.17184",
+      "source_url": "https://arxiv.org/abs/2610.17184",
+      "title": "DuoDiscover: Scaling Autonomous Discovery Beyond the Evaluation Bottleneck",
+      "authors": [
+        "Shubham Agarwal",
+        "Akshat Gupta",
+        "Mike Heddes",
+        "Dilara Soylu",
+        "Rui Meng",
+        "Patrick Tser Jern Kon",
+        "Jiefeng Chen",
+        "Mert Cemri",
+        "Shu Liu",
+        "Abe Gonzalez",
+        "Akanksha Jain",
+        "Bhavana Dalvi Mishra",
+        "Linfeng Song",
+        "Vilobh Meshram",
+        "Xiangru Tang",
+        "Jinsung Yoon",
+        "Aditya Parameswaran",
+        "Ion Stoica",
+        "Vahab Mirrokni",
+        "Burak Gokturk",
+        "Parthasarathy Ranganathan",
+        "Tomas Pfister",
+        "Nanyun Peng",
+        "Chun-Liang Li"
+      ],
+      "published": "2026-10-12"
+    }
+  ]
+}
