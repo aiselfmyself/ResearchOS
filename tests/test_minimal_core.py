@@ -28,6 +28,13 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+
+# Frozen upper bounds of the grandfathered sequential ID range, as of
+# 2026-10-20. Pinning them here is what makes raising one a reviewable edit
+# rather than a silent side effect. Gaps inside the range (records archived
+# on 2026-10-20) are fine and expected -- see
+# docs/archived-ledger-records-2026-10-20.md.
+FROZEN_MAX_EXPECTED = {"SRC": 4, "EVD": 14, "CLM": 7, "VER": 21, "HYP": 3}
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 if str(ROOT / "scripts") not in sys.path:
@@ -255,11 +262,35 @@ class ResearchStateTest(unittest.TestCase):
             self.assertIn(evidence["quote_type"], allowed)
 
     def test_audit_claim_statuses(self) -> None:
+        """CLM-006 (2026-10-19 author correction) must stay; CLM-003 stays candidate.
+
+        CLM-004 / CLM-005 / CLM-007 were archived on 2026-10-20 by human
+        decision: each describes an artifact that is not in ``main`` (or that
+        has since been regenerated), so none can be re-verified from a fresh
+        checkout -- which is the whole point of the minimal core
+        (README, "再実行できるものだけを main に載せる").  They are preserved
+        verbatim in docs/archived-ledger-records-2026-10-20.md, and the
+        remediation they triggered lives on in benchmark.py --check.
+        """
         records, _ = validate_state.load_jsonl(ROOT / "state/claims.jsonl")
         claims = {r["claim_id"]: r for r in records}
-        for claim_id in ("CLM-004", "CLM-005", "CLM-006", "CLM-007"):
-            self.assertIn(claim_id, claims)
+        self.assertIn("CLM-006", claims)
         self.assertEqual(claims["CLM-003"]["status"], "candidate")
+        for archived in ("CLM-004", "CLM-005", "CLM-007"):
+            self.assertNotIn(archived, claims, f"{archived} should stay archived")
+
+    def test_archived_records_are_preserved_in_docs(self) -> None:
+        """Excluding a record from the ledger must not mean losing it."""
+        path = ROOT / "docs" / "archived-ledger-records-2026-10-20.md"
+        self.assertTrue(path.exists(), f"missing archive document: {path}")
+        archive = path.read_text(encoding="utf-8")
+        for archived in (
+            "CLM-004", "CLM-005", "CLM-007",
+            "EVD-005", "EVD-006", "EVD-012", "EVD-013", "EVD-014",
+            "VER-008", "VER-009", "VER-014", "VER-016", "HYP-003",
+        ):
+            with self.subTest(archived=archived):
+                self.assertIn(archived, archive)
 
 
 class RecordIdSchemeTest(unittest.TestCase):
@@ -305,7 +336,23 @@ class RecordIdSchemeTest(unittest.TestCase):
         self.assertEqual(report["errors"], [], msg="\n".join(report["errors"]))
 
     def test_legacy_max_matches_current_ledgers(self) -> None:
-        """The frozen maxima must equal today's highest IDs, not exceed them."""
+        """The frozen maxima must cover today's IDs without quietly growing.
+
+        Two directions are checked:
+
+        * ``highest <= LEGACY_MAX`` -- a sequential ID outside the frozen
+          range must never validate.
+        * ``LEGACY_MAX == FROZEN_MAX_EXPECTED`` -- raising a maximum stays a
+          deliberate, reviewable edit to this file, not a side effect of
+          some other change.
+
+        Equality with the *current* highest ID is deliberately NOT
+        required. On 2026-10-20 a set of grandfathered records was archived
+        (docs/archived-ledger-records-2026-10-20.md), which leaves gaps at
+        the top of each frozen range. Lowering ``LEGACY_MAX`` to close those
+        gaps would invalidate the very IDs the archive document still cites,
+        so the maxima stay where they are.
+        """
         for name, (ledger, _, id_key) in validate_state.COLLECTIONS.items():
             prefix = validate_state.ID_PREFIXES[name]
             records, _ = validate_state.load_jsonl(ROOT / ledger)
@@ -314,11 +361,20 @@ class RecordIdSchemeTest(unittest.TestCase):
                 for record in records
                 if validate_state.LEGACY_PATTERN.match(record[id_key])
             )
-            self.assertEqual(
-                highest,
-                validate_state.LEGACY_MAX[prefix],
-                f"{prefix}: raise LEGACY_MAX only together with a migration plan",
-            )
+            with self.subTest(prefix=prefix):
+                self.assertLessEqual(
+                    highest,
+                    validate_state.LEGACY_MAX[prefix],
+                    f"{prefix}: sequential ID {prefix}-{highest:03d} exceeds the "
+                    f"frozen range; raise LEGACY_MAX only together with a "
+                    f"migration plan",
+                )
+                self.assertEqual(
+                    validate_state.LEGACY_MAX[prefix],
+                    FROZEN_MAX_EXPECTED[prefix],
+                    f"{prefix}: LEGACY_MAX changed; raise it only together "
+                    f"with a migration plan, and update this expectation",
+                )
 
 
 class NewIdToolTest(unittest.TestCase):
