@@ -1,0 +1,46 @@
+# Minimal core CI for ResearchOS.
+#
+# Gates ONLY the three deterministic, re-executable checks:
+#   1. unit tests (history-independent; readout is tested on synthetic repos)
+#   2. benchmark reproducibility (fresh execution vs committed artifact)
+#   3. research-ledger validation (schema + ID uniqueness + references)
+#
+# Deliberately NOT gated here (governance freeze, 2026-10-20):
+#   * commit-trailer / role / authorship checks
+#   * append-only hash chains, review queues, land gates
+#   * readout CLI on the real history (returns 1 while no worker commits
+#     exist yet -- that is the expected state of a fresh main, not a failure)
+# See docs/minimal-core-and-ci.md for the rationale.
+name: Minimal core check
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  core-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        # Shallow checkout is enough: no test depends on this repo's history.
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run unit tests
+        run: python3 -m unittest discover -s tests -v
+
+      - name: Check benchmark reproducibility
+        run: python3 gitswarm/benchmarks/benchmark.py --check
+
+      - name: Validate research ledgers
+        run: python3 scripts/validate_state.py

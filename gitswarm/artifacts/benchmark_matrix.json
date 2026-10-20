@@ -1,0 +1,89 @@
+{
+  "_meta": {
+    "schema_version": 2,
+    "generated_at_utc": "2026-10-20T01:49:38+00:00",
+    "generated_by": "gitswarm/benchmarks/benchmark.py",
+    "git_head": "f0f3a47",
+    "python": "3.11.2",
+    "platform": "Linux-6.1.158+-x86_64-with-glibc2.36",
+    "problem": {
+      "name": "30-city Euclidean TSP",
+      "n_cities": 30,
+      "seeds": [
+        42,
+        100,
+        777,
+        999,
+        2026
+      ],
+      "random_iterations": 500,
+      "sa_params": {
+        "temp": 150.0,
+        "cooling": 0.995,
+        "steps": 5000
+      }
+    },
+    "solver_sha256": {
+      "greedy": "2018f56cbc7f5160d02b1b27306c6cd58338e09d67e29971bf8efa7e34fab221",
+      "random": "a12e68bf14cca497e7eb11acc0fa1f70ab044c2d6462167ef54bdbb10ed6a04f",
+      "two_opt": "0ed5549e2c529fe3638145b21f844911276fe178db2742a092e36adc9cffc29f",
+      "simulated_annealing": "1dc16ec40ed64db1514a858f90b7beea481d36d378fdcf52d1d5406cebb0e32d"
+    }
+  },
+  "greedy": {
+    "mean_distance": 5521.41,
+    "min_distance": 5039.797,
+    "max_distance": 6296.501,
+    "runs": 5
+  },
+  "random": {
+    "mean_distance": 12279.86,
+    "min_distance": 11581.285,
+    "max_distance": 13337.465,
+    "runs": 5
+  },
+  "two_opt": {
+    "mean_distance": 4739.72,
+    "min_distance": 4401.48,
+    "max_distance": 5264.448,
+    "runs": 5
+  },
+  "simulated_annealing": {
+    "mean_distance": 4731.96,
+    "min_distance": 4396.027,
+    "max_distance": 5264.448,
+    "runs": 5
+  },
+  "per_seed": {
+    "42": {
+      "greedy": 5057.938,
+      "random": 12454.649,
+      "two_opt": 4584.578,
+      "simulated_annealing": 4551.257
+    },
+    "100": {
+      "greedy": 5039.797,
+      "random": 11773.873,
+      "two_opt": 4401.48,
+      "simulated_annealing": 4396.027
+    },
+    "777": {
+      "greedy": 6296.501,
+      "random": 13337.465,
+      "two_opt": 5264.448,
+      "simulated_annealing": 5264.448
+    },
+    "999": {
+      "greedy": 5688.167,
+      "random": 12252.032,
+      "two_opt": 4863.18,
+      "simulated_annealing": 4863.18
+    },
+    "2026": {
+      "greedy": 5524.627,
+      "random": 11581.285,
+      "two_opt": 4584.903,
+      "simulated_annealing": 4584.903
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ResearchOS Hypothesis",
+  "type": "object",
+  "required": ["hypothesis_id", "statement", "status"],
+  "properties": {
+    "hypothesis_id": {"type": "string"},
+    "statement": {"type": "string"},
+    "subtasks": {"type": "array", "items": {"type": "string"}},
+    "status": {
+      "type": "string",
+      "enum": ["proposed", "testing", "supported", "falsified", "inconclusive"]
+    },
+    "evidence_ids": {"type": "array", "items": {"type": "string"}},
+    "notes": {"type": "string"}
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ResearchOS Evidence",
+  "type": "object",
+  "required": ["evidence_id", "source_id", "excerpt", "interpretation", "confidence"],
+  "properties": {
+    "evidence_id": {"type": "string"},
+    "source_id": {"type": "string"},
+    "section_or_page": {"type": "string"},
+    "excerpt": {"type": "string"},
+    "interpretation": {"type": "string"},
+    "data_points": {"type": "object"},
+    "confidence": {"type": "string", "enum": ["high", "medium", "low"]}
+  }
+}

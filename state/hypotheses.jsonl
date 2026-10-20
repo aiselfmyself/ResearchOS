@@ -1,0 +1,3 @@
+{"hypothesis_id": "HYP-001", "statement": "外部化された構造化メモリ（Git/State Store）を持つエージェントは、単一セッションの巨大プロンプトより累積探索効率と再現性で優れる。", "subtasks": ["Subtask 1", "Subtask 2"], "status": "supported", "evidence_ids": ["EVD-001", "EVD-002", "EVD-008"]}
+{"hypothesis_id": "HYP-002", "statement": "同質ワーカーによる多数決ノミネーションは、正解判定が困難な主観的・学術的研究では共通モード障害（誤りの再生産）に脆弱である。", "subtasks": ["Subtask 3"], "status": "testing", "evidence_ids": ["EVD-003", "EVD-004", "EVD-011"], "notes": "2026-10-19 の独立検証で testing に変更。直接実験が不足している。"}
+{"hypothesis_id": "HYP-003", "statement": "本リポジトリの GitSwarm 模擬実験の定量指標は、同一コード・同一シードで再現可能である。", "subtasks": ["Subtask 2", "Subtask 4"], "status": "falsified", "evidence_ids": ["EVD-005", "EVD-012"], "notes": "benchmark_matrix.json は実行値ではなく手書き値だった。再生成と CI ドリフト検査で是正。"}

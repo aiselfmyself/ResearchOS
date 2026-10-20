@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ResearchOS Source",
+  "type": "object",
+  "required": ["source_id", "title", "authors", "year", "url", "type"],
+  "properties": {
+    "source_id": {"type": "string"},
+    "title": {"type": "string"},
+    "authors": {"type": "array", "items": {"type": "string"}},
+    "year": {"type": "integer"},
+    "url": {"type": "string"},
+    "type": {"type": "string", "enum": ["paper", "preprint", "book", "dataset", "code", "report"]},
+    "venue": {"type": "string"},
+    "abstract_summary": {"type": "string"}
+  }
+}
