@@ -1,0 +1,94 @@
+[
+  {
+    "source_id": "SRC-20261020-303f",
+    "arxiv_id": "2608.06663",
+    "memo_cited_version": "v1",
+    "version_read": "v1",
+    "is_latest": true,
+    "version_delta_note": "最新版確認：https://arxiv.org/abs/2608.06663 の Submission history は [v1] 2026-08-07 のみで v1 が最新版である。メモ引用版 v1 と一致するため差分なし。",
+    "claims": [
+      {
+        "claim_id": "C-303f-01",
+        "verdict": "verbatim",
+        "locator": "Abstract, Section 1, Section 2.2",
+        "source_text": "and survey 1,547 arXiv papers (2024-2026) — collected via a systematic eight-thread seed harvest with a disclosed, quantified two-stage bleed filter (26.8% of raw hits excluded as off-topic)"
+      },
+      {
+        "claim_id": "C-303f-02",
+        "verdict": "verbatim",
+        "locator": "Abstract, Section 2.2 Corpus construction",
+        "source_text": "520 of the 1,939 raw unique hits (26.8%) were judged off-topic and dropped over the two stages"
+      },
+      {
+        "claim_id": "C-303f-03",
+        "verdict": "paraphrase_ok",
+        "locator": "Abstract, Section 2.1 Definitions",
+        "source_text": "long-horizon (a property of the task, its required number of steps) / Long-horizon is a property of the task: how many sequential decisions or actions it requires, independent of whether the resulting interaction trace fits inside one context window."
+      },
+      {
+        "claim_id": "C-303f-04",
+        "verdict": "paraphrase_ok",
+        "locator": "Abstract, Section 2.1 Definitions",
+        "source_text": "long-context (a property of the model, how many tokens it can attend to at once) / Long-context is a property of the model/serving stack: how many tokens a single forward pass can attend to."
+      },
+      {
+        "claim_id": "C-303f-05",
+        "verdict": "paraphrase_ok",
+        "locator": "Abstract, Section 2.1 Definitions",
+        "source_text": "long-term memory (a property of the system, whether information persists across steps or sessions) / Long-term memory is a property of the system: whether information available at step or session t remains available (in some form — verbatim in context, retrieved from an external store, or baked into weights) at step or session t+k."
+      },
+      {
+        "claim_id": "C-303f-06",
+        "verdict": "paraphrase_ok",
+        "locator": "Abstract, Section 9 Discussion",
+        "source_text": "outcome-only signals — a single reward, a single pass/fail check — grow uninformative as horizon grows / Across all categories, we find the same pattern: outcome-only signals grow uninformative as horizons lengthen"
+      },
+      {
+        "claim_id": "C-303f-07",
+        "verdict": "paraphrase_ok",
+        "locator": "Abstract, Section 1 Contributions (3), Section 9 Discussion",
+        "source_text": "how much long-horizon capability lives in the underlying model versus the harness wrapped around it, the risk of correlated measurement bias where the process-level signals used to train long-horizon agents and those used to evaluate them rest on shared assumptions about what counts as progress"
+      }
+    ]
+  },
+  {
+    "source_id": "SRC-20261020-875e",
+    "arxiv_id": "2610.08364",
+    "memo_cited_version": "v2",
+    "version_read": "v2",
+    "is_latest": true,
+    "version_delta_note": "最新版確認：https://arxiv.org/abs/2610.08364 は v2 (2026-10-08) が最新版。メモ引用版 v2 と一致。履歴：v1 2026-10-06, v2 2026-10-08 (Comments: v2: Fixed typo in corresponding author address)。本文・数値の変更はなく、照合対象の4圧力・observability envelope・トークン数・活動偏りの記述は v1/v2 同一であることを HTML v1/v2 の Introduction/Abstract/Section 3 の目視で確認。",
+    "claims": [
+      {
+        "claim_id": "C-875e-01",
+        "verdict": "verbatim",
+        "locator": "Abstract, Section 1 Introduction",
+        "source_text": "The observability envelope—the range of what evaluators can reliably infer about an agent's behaviours—is therefore narrowing. / We call the range of attributes an evaluator can reliably see or infer from an evaluation its observability envelope."
+      },
+      {
+        "claim_id": "C-875e-02",
+        "verdict": "verbatim",
+        "locator": "Section 1 Introduction, four pressures",
+        "source_text": "First, within-run opacity: a final score summarises performance on a long-horizon task but obscures discarded strategies, course corrections, recoveries, unexpected behaviors, and attempts to game the evaluation. Second, a human attention bottleneck: reviewing hundreds or thousands of pages of agent activity requires scarce subject-matter expertise. Third, insufficient statistical power: long agent evaluations are costly in time and resources, so evaluators can afford relatively few repetitions per agent and setup. Fourth, setup attribution uncertainty: observed performance is determined by both the model and the system it is embedded in."
+      },
+      {
+        "claim_id": "C-875e-03",
+        "verdict": "paraphrase_ok",
+        "locator": "Abstract, Section 1 Introduction (human attention bottleneck)",
+        "source_text": "transcripts can span hundreds of pages of outputs and actions from complex multi-agent networks. / reviewing hundreds or thousands of pages of agent activity requires scarce subject-matter expertise and the ability to connect and co-interpret complex events at distant points in a transcript"
+      },
+      {
+        "claim_id": "C-875e-04",
+        "verdict": "verbatim",
+        "locator": "Abstract, Section 3 Case Study introduction",
+        "source_text": "We demonstrate the workflow on an AI R&D evaluation that generated almost 13 million tokens / 13 million tokens were generated during the evaluation, 89% of them in delegated sub-agent work."
+      },
+      {
+        "claim_id": "C-875e-05",
+        "verdict": "paraphrase_ok",
+        "locator": "Abstract, Section 3.1 How did the research process unfold?, Section 3.5",
+        "source_text": "The combined view shows a focus on operational work and manuscript production, with little evidence of a sustained hypothesis generation stage—arguably a necessary component for high-quality scientific outputs. / only two of the 580 orchestrator outputs are labelled Hypothesising, compared with 56 labelled Reflecting and 27 labelled Evidence interpretation. Surprisingly, Analysis design does not appear at all."
+      }
+    ]
+  }
+]
