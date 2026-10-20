@@ -14,6 +14,7 @@ scripts/
   validate_state.py    研究台帳の決定論的検証器（標準ライブラリのみ）
   new_id.py            非連番レコードIDの採番器（並行作業のID衝突対策）
   check_citations.py   書誌のarXiv照合（オフラインfixture、--liveは手動専用）
+  check_memo_citations.py 調査メモ内引用のarXiv照合（オフラインfixture、--liveは手動専用）
   check_ownership.py   並行作業の所有マップによるパス分類（助言専用・CI非接続）
 gitswarm/
   problem.py solvers/  30都市TSPの決定論的ソルバ群（greedy/random/two_opt/SA）
@@ -24,6 +25,7 @@ tests/
   fixtures/            arXiv書誌スナップショット（オフライン照合用・2026-10-20取得）
   test_minimal_core.py    履歴非依存の回帰テスト（28件）
   test_check_citations.py 書誌照合テスト（17件・ネットワーク非依存）
+  test_check_memo_citations.py メモ引用照合テスト（29件・ネットワーク非依存）
   test_ownership.py       所有マップ分類テスト（16件・ネットワーク非依存）
 contributions/         研究ノート
 docs/                  分析レポートと設計記録（並行作業の所有マップは docs/parallel-work-ownership.md。強制力なし）
@@ -45,6 +47,9 @@ python3 scripts/validate_state.py
 
 # 4. 書誌のarXiv照合（オフラインfixtureのみ。ネットワーク不要）
 python3 scripts/check_citations.py
+
+# 5. 調査メモ内引用のarXiv照合（オフラインfixtureのみ。CIゲート対象外）
+python3 scripts/check_memo_citations.py
 
 # 成果物の再生成（実行できることの証明。数値は不変のはず）
 python3 gitswarm/benchmarks/benchmark.py --write

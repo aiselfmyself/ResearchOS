@@ -27,6 +27,7 @@
 | `scripts/validate_state.py` | **新規**（約200行） | 研究5台帳専用の小さな検証器。旧 `validate_researchos.py`（858行）はガバナンス台帳・役割分離・trailer検査と結合していたため不採用 |
 | `scripts/new_id.py`、`docs/record-id-scheme.md` | **新規**（2026-10-20） | 非連番IDの採番器と規約。並行ブランチが同じ連番を採番して衝突する問題（A5と同型）を、ID側で原理的に解消する。役割・パス制限は導入しない |
 | `scripts/check_citations.py`、`tests/fixtures/arxiv_metadata_snapshot.json`、`tests/test_check_citations.py` | **新規**（2026-10-20） | README「次の段階」2の最小実装。台帳書誌とarXivスナップショット（2026-10-20取得）の照合は標準ライブラリのみ・ネットワーク不要。実API照合（`--live`）は手動専用でCIゲートにしない |
+| `scripts/check_memo_citations.py`、`tests/test_check_memo_citations.py`、fixture追記7件 | **新規**（2026-10-20） | 調査メモ（`contributions/*.md`）の参考文献・本文中arXiv引用と同梱スナップショットの照合。標準ライブラリのみ・ネットワーク不要、`--live` は手動専用。CIゲートへの追加は当該PRのDoD外のため未実施 |
 | `tests/test_minimal_core.py` | **新規**（28テスト） | 履歴非依存テスト。旧 `test_integrity.py` はコミット数・SHA・ガバナンス台帳に結合していたため不採用（詳細は §3） |
 | `.gitignore` | PR #9そのまま | — |
 
@@ -49,7 +50,7 @@
 
 ゲートするのは決定論的・再実行可能な4検査のみ：
 
-1. `python3 -m unittest discover -s tests -v` — 45テスト（約2秒）
+1. `python3 -m unittest discover -s tests -v` — 74テスト（約2秒）
 2. `python3 gitswarm/benchmarks/benchmark.py --check` — 成果物と fresh run の照合（許容誤差0.01）
 3. `python3 scripts/validate_state.py` — 研究台帳のスキーマ・ID一意・参照整合性
 4. `python3 scripts/check_citations.py` — 台帳書誌と同梱arXivスナップショットの照合（**オフライン・ネットワーク不要**。実API照合の `--live` は手動専用でゲートしない）
