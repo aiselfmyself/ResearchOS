@@ -26,9 +26,9 @@ gitswarm/
   artifacts/           実行で再生成できる成果物（ベンチマーク行列・投票スイープ行列）
 tests/
   fixtures/            arXiv書誌スナップショット（オフライン照合用・2026-10-20取得）
-  test_minimal_core.py    履歴非依存の回帰テスト（28件）
+  test_minimal_core.py    履歴非依存の回帰テスト（34件）
   test_check_citations.py 書誌照合テスト（17件・ネットワーク非依存）
-  test_check_memo_citations.py メモ引用照合テスト（29件・ネットワーク非依存）
+  test_check_memo_citations.py メモ引用照合テスト（33件・ネットワーク非依存）
   test_ownership.py       所有マップ分類テスト（16件・ネットワーク非依存）
   test_readout_sim.py     投票スイープの回帰・閾値予測テスト（20件・ネットワーク非依存）
 contributions/         研究ノート（統合レポート・調査メモ・全文読解レポート・共通モード測定）
@@ -55,7 +55,7 @@ python3 scripts/validate_state.py
 # 5. 書誌のarXiv照合（オフラインfixtureのみ。ネットワーク不要）
 python3 scripts/check_citations.py
 
-# 6. 調査メモ内引用のarXiv照合（オフラインfixtureのみ。CIゲート対象外）
+# 6. 調査メモ内引用のarXiv照合（オフラインfixtureのみ。CIゲート対象）
 python3 scripts/check_memo_citations.py
 
 # 成果物の再生成（実行できることの証明。数値は不変のはず）
@@ -63,7 +63,7 @@ python3 gitswarm/benchmarks/benchmark.py --write
 python3 gitswarm/readout_sim.py --write
 ```
 
-CI（`core-check.yml`）は上記1〜5だけをゲートする。Python 3.12固定。
+CI（`core-check.yml`）は上記1〜6をゲートする。Python 3.12固定。
 
 ## 意図的に含まれないもの（ガバナンス凍結）
 

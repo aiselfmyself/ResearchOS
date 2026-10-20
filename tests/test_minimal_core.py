@@ -463,6 +463,67 @@ class ValidatorUnitTest(unittest.TestCase):
         errors = validate_state.check_uniqueness(records, "source_id", "test")
         self.assertTrue(any("duplicate" in e for e in errors), errors)
 
+    # -- cross-reference check inside prose fields (added 2026-10-20) -------
+    #
+    # check_references() only walks structured id fields, so a record can
+    # mention an ID or a file path in prose that no longer exists. That is
+    # exactly what the 2026-10-20 audit found (CLM-004/005/007 and
+    # EVD-012/013/014 pointed at artefacts the minimal-core extraction had
+    # deleted). check_cross_references() closes that blind spot.
+
+    @staticmethod
+    def _prose_data(interpretation: str) -> dict:
+        return {
+            "sources": [{"source_id": "SRC-001"}],
+            "evidence": [
+                {
+                    "evidence_id": "EVD-X",
+                    "source_id": "SRC-001",
+                    "excerpt": "x",
+                    "interpretation": interpretation,
+                    "confidence": "high",
+                }
+            ],
+            "claims": [],
+            "verifications": [],
+            "hypotheses": [],
+        }
+
+    def test_prose_id_mention_must_resolve(self) -> None:
+        errors = validate_state.check_cross_references(
+            self._prose_data("CLM-004 を根拠とする。"), ROOT
+        )
+        self.assertTrue(any("CLM-004" in e for e in errors), errors)
+
+    def test_prose_path_mention_must_exist(self) -> None:
+        errors = validate_state.check_cross_references(
+            self._prose_data("gitswarm/run_simulation.py の出力。"), ROOT
+        )
+        self.assertTrue(any("run_simulation.py" in e for e in errors), errors)
+
+    def test_bare_filename_mention_is_not_flagged(self) -> None:
+        """A filename with no directory is prose, not a repo-relative path."""
+        errors = validate_state.check_cross_references(
+            self._prose_data("run_simulation.py 等は main から除外された。"), ROOT
+        )
+        self.assertEqual(errors, [], msg="\n".join(errors))
+
+    def test_nested_string_fields_are_scanned(self) -> None:
+        data = self._prose_data("clean")
+        data["evidence"][0]["notes"] = ["CLM-007 に言及", {"deep": "EVD-012 にも言及"}]
+        errors = validate_state.check_cross_references(data, ROOT)
+        self.assertTrue(any("CLM-007" in e for e in errors), errors)
+        self.assertTrue(any("EVD-012" in e for e in errors), errors)
+
+    def test_bundled_ledgers_have_no_dangling_prose_mentions(self) -> None:
+        data = {}
+        for name, (ledger_rel, _schema, _id_key) in validate_state.COLLECTIONS.items():
+            records, load_errors = validate_state.load_jsonl(ROOT / ledger_rel)
+            self.assertEqual(load_errors, [], msg="\n".join(load_errors))
+            data[name] = records
+        errors = validate_state.check_cross_references(data, ROOT)
+        self.assertEqual(errors, [], msg="\n".join(errors))
+
 
 if __name__ == "__main__":
     unittest.main()

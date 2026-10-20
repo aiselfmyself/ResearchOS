@@ -278,6 +278,89 @@ def check_references(data: Dict[str, List[Dict[str, Any]]]) -> List[str]:
     return errors
 
 
+# ---------------------------------------------------------------------------
+# Cross-reference check inside prose fields (added 2026-10-20)
+#
+# check_references() only walks the structured *id fields*, so it cannot see
+# an ID or a file path that a record merely *mentions* in prose. That blind
+# spot is exactly what the 2026-10-20 audit found: CLM-004/005/007 and
+# EVD-012/013/014 described artefacts that the minimal-core extraction had
+# deleted, and nothing in CI noticed. See
+# docs/incomplete-work-audit-2026-10-20.md §3.2 and §3.3, and
+# docs/archived-ledger-records-2026-10-20.md for the records removed.
+#
+# The patterns are deliberately conservative: only ID-shaped tokens and
+# repo-relative paths under a known top-level directory are checked, so bare
+# filenames ("run_simulation.py") and ordinary prose stay untouched.
+# ---------------------------------------------------------------------------
+ID_TOKEN_RE = re.compile(
+    r"(?<![-\w])(?P<prefix>SRC|EVD|CLM|VER|HYP)"
+    r"-(?:\d{3}|\d{8}-[0-9a-f]{4})(?![-\w])"
+)
+PATH_TOKEN_RE = re.compile(
+    r"(?<![-\w])(?P<path>(?:gitswarm|scripts|tests|state|contributions|docs)"
+    r"/[\w][\w./-]*\.(?:py|md|json|jsonl|yml|txt))(?![-\w])"
+)
+
+
+def _collect_strings(node: Any, out: List[str]) -> None:
+    """Collect every string reachable from a decoded JSON record."""
+    if isinstance(node, str):
+        out.append(node)
+    elif isinstance(node, list):
+        for item in node:
+            _collect_strings(item, out)
+    elif isinstance(node, dict):
+        for item in node.values():
+            _collect_strings(item, out)
+
+
+def check_cross_references(
+    data: Dict[str, List[Dict[str, Any]]], root: Path
+) -> List[str]:
+    """Flag ledger IDs and repo paths mentioned in prose that do not exist."""
+    errors: List[str] = []
+    ids = {
+        ID_PREFIXES[name]: {
+            record.get(COLLECTIONS[name][2])
+            for record in records
+            if isinstance(record.get(COLLECTIONS[name][2]), str)
+        }
+        for name, records in data.items()
+    }
+
+    for name, records in data.items():
+        id_key = COLLECTIONS[name][2]
+        for record in records:
+            label = f"{name} {record.get(id_key)}"
+            strings: List[str] = []
+            _collect_strings(record, strings)
+            seen: set = set()
+            for text in strings:
+                for match in ID_TOKEN_RE.finditer(text):
+                    token = match.group(0)
+                    if token in ids.get(match.group("prefix"), set()):
+                        continue
+                    if token in seen:
+                        continue
+                    seen.add(token)
+                    errors.append(
+                        f"{label}: mentions {token}, which is not in any "
+                        f"ledger (records archived on 2026-10-20 are "
+                        f"listed in "
+                        f"docs/archived-ledger-records-2026-10-20.md)"
+                    )
+                for match in PATH_TOKEN_RE.finditer(text):
+                    path = match.group("path")
+                    if (root / path).exists() or path in seen:
+                        continue
+                    seen.add(path)
+                    errors.append(
+                        f"{label}: mentions {path}, which does not exist"
+                    )
+    return errors
+
+
 def run_all_checks(root: Path = ROOT) -> Dict[str, List[str]]:
     errors: List[str] = []
     data: Dict[str, List[Dict[str, Any]]] = {}
@@ -299,6 +382,7 @@ def run_all_checks(root: Path = ROOT) -> Dict[str, List[str]]:
         )
         data[name] = records
     errors.extend(check_references(data))
+    errors.extend(check_cross_references(data, root))
     return {"errors": errors}
 
 
