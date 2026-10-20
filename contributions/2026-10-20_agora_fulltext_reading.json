@@ -1,0 +1,113 @@
+{
+  "session": "A",
+  "paper_arxiv_id": "2609.18094",
+  "extracted_at": "2026-10-20",
+  "memo": "contributions/2026-10-20_agora_fulltext_reading.md",
+  "items": [
+    {
+      "id": "A1",
+      "label": "書誌：タイトル",
+      "value": "Agora: Git as Shared Memory for Collective AutoResearch",
+      "location": "HTML v1 冒頭（タイトル）",
+      "confidence": "high"
+    },
+    {
+      "id": "A2",
+      "label": "書誌：著者数",
+      "value": 8,
+      "location": "HTML v1 冒頭（著者一覧）",
+      "confidence": "high"
+    },
+    {
+      "id": "A3",
+      "label": "書誌：先頭著者",
+      "value": "Yifan Zhang",
+      "location": "HTML v1 冒頭（著者一覧）",
+      "confidence": "high"
+    },
+    {
+      "id": "A4",
+      "label": "書誌：投稿日",
+      "value": "2026-09-16",
+      "location": "HTML v1 冒頭（arXiv:2609.18094v1 [cs.LG] 16 Sep 2026）",
+      "confidence": "high"
+    },
+    {
+      "id": "A5",
+      "label": "ライセンス（無ければ \"none\"）",
+      "value": "arXiv.org perpetual non-exclusive license",
+      "location": "HTML v1 冒頭（License 表示。論文の配布ライセンスであり、ソフトウェアのライセンスは本文に記載なし）",
+      "confidence": "medium"
+    },
+    {
+      "id": "B1",
+      "label": "ベンチマーク数",
+      "value": 1,
+      "location": "§4.1 Task and evaluator（評価タスクは weight transfer の 1 つのみ。論文はベンチマークスイートとは呼んでいない）",
+      "confidence": "medium"
+    },
+    {
+      "id": "B2",
+      "label": "ベンチマーク名",
+      "value": ["Weight-transfer task（FineWeb-Edu 200 テキストの開発評価器）"],
+      "location": "§4.1 Task and evaluator",
+      "confidence": "medium"
+    },
+    {
+      "id": "C1",
+      "label": "主要結果の代表値 1（数値＋出典節）",
+      "value": "1.899044 bpb（ランダム初期化 3.3923 bpb、学習済み GPT-2 124M 約 1.0。その差の 62% を閉じる）",
+      "location": "§4.5 Primary result（Abstract にも同値）",
+      "confidence": "high"
+    },
+    {
+      "id": "C2",
+      "label": "主要結果の代表値 2",
+      "value": "検証 165 件（対象 95 件）、失敗報告 0 件（作者以外のアカウントによる再実行）",
+      "location": "§4.5 Lineage and reproduction",
+      "confidence": "high"
+    },
+    {
+      "id": "C3",
+      "label": "主要結果の代表値 3",
+      "value": "最初の 18 件の scored contribution が総改善量の約 98% を占める",
+      "location": "§4.5 Trajectory、§4.6 (1)",
+      "confidence": "high"
+    },
+    {
+      "id": "D1",
+      "label": "最強ベースライン名",
+      "value": "none",
+      "location": "§4.5（比較は random 初期化と学習済み GPT-2 124M の参照値のみ）。Appendix C の比較は提案のみで未実行",
+      "confidence": "medium"
+    },
+    {
+      "id": "E1",
+      "label": "単一実行（n=1）か",
+      "value": true,
+      "location": "§4.5 Primary result（'the number to trust'）、§5 Conclusion（'we did not run the same models and compute without Agora'）、Appendix C（'primary analysis unit is the entire community run'）",
+      "confidence": "medium"
+    },
+    {
+      "id": "E2",
+      "label": "実行回数が明記されているか",
+      "value": false,
+      "location": "§4.8 および §5（主結果の複製走行への言及がない。検証は個別投稿の再現であり、走行の繰り返しではない）",
+      "confidence": "medium"
+    },
+    {
+      "id": "F1",
+      "label": "論文自認の限界の数",
+      "value": 3,
+      "location": "§4.6（'a picture of its weaknesses' の 2 点：重複作業が止まらないこと、探索の偏り）、§5（'What the run does not settle is causal'）。集計規則は memo §6 を参照",
+      "confidence": "medium"
+    },
+    {
+      "id": "G1",
+      "label": "コード公開の有無",
+      "value": "unknown",
+      "location": null,
+      "confidence": "low"
+    }
+  ]
+}
