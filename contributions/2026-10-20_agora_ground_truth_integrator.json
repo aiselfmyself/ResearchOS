@@ -1,0 +1,114 @@
+{
+  "session": "integrator",
+  "paper_arxiv_id": "2609.18094",
+  "extracted_at": "2026-10-20",
+  "memo": "contributions/2026-10-20_parallel_experiment_results.md",
+  "notes": "null = 単一の正解を定められない項目（自由選択・書式差・仕様上あいまい）。誤り率の計算から除外する。",
+  "items": [
+    {
+      "id": "A1",
+      "label": "タイトル",
+      "value": "Agora: Git as Shared Memory for Collective AutoResearch",
+      "location": "abs / HTML v1 header",
+      "confidence": "high"
+    },
+    {
+      "id": "A2",
+      "label": "著者数",
+      "value": 8,
+      "location": "abs",
+      "confidence": "high"
+    },
+    {
+      "id": "A3",
+      "label": "先頭著者",
+      "value": "Yifan Zhang",
+      "location": "abs",
+      "confidence": "high"
+    },
+    {
+      "id": "A4",
+      "label": "投稿日",
+      "value": "2026-09-16",
+      "location": "abs submission history (v1)",
+      "confidence": "high"
+    },
+    {
+      "id": "A5",
+      "label": "ライセンス",
+      "value": "arXiv.org perpetual non-exclusive license",
+      "location": "abs",
+      "confidence": "high"
+    },
+    {
+      "id": "B1",
+      "label": "ベンチマーク数",
+      "value": 1,
+      "location": "abs (single weight-transfer problem)",
+      "confidence": "high"
+    },
+    {
+      "id": "B2",
+      "label": "ベンチマーク名",
+      "value": null,
+      "location": null,
+      "confidence": "low"
+    },
+    {
+      "id": "C1",
+      "label": "主要結果1",
+      "value": null,
+      "location": null,
+      "confidence": "low"
+    },
+    {
+      "id": "C2",
+      "label": "主要結果2",
+      "value": null,
+      "location": null,
+      "confidence": "low"
+    },
+    {
+      "id": "C3",
+      "label": "主要結果3",
+      "value": null,
+      "location": null,
+      "confidence": "low"
+    },
+    {
+      "id": "D1",
+      "label": "最強ベースライン",
+      "value": "none",
+      "location": "abs (matched comparison not run)",
+      "confidence": "medium"
+    },
+    {
+      "id": "E1",
+      "label": "単一実行か",
+      "value": true,
+      "location": "abs (a run of nearly 12 days)",
+      "confidence": "high"
+    },
+    {
+      "id": "E2",
+      "label": "実行回数明記",
+      "value": null,
+      "location": null,
+      "confidence": "low"
+    },
+    {
+      "id": "F1",
+      "label": "限界の数",
+      "value": null,
+      "location": null,
+      "confidence": "low"
+    },
+    {
+      "id": "G1",
+      "label": "コード公開",
+      "value": null,
+      "location": null,
+      "confidence": "low"
+    }
+  ]
+}
