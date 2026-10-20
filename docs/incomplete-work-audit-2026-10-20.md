@@ -356,6 +356,7 @@ GitHub（gh）：
 |---|---|
 | 2026-10-20 | 初版。`main`（1f32b05）時点の未完了要素を棚卸し。コード・台帳・CI の変更はなし。`docs/parallel-work-ownership.md` §2 に従い、`state/`・`README.md`・`docs/minimal-core-and-ci.md`・`gitswarm/artifacts/` には触れていない |
 | 2026-10-20 | §13「対応状況」を追加。優先度「高」5件の対応を記録。初版の指摘自体は監査記録として変更しない |
+| 2026-10-20 | ハーネス硬化P1（`check_memo_citations.py` の CI 接続と MALFORMED 検出、`validate_state.py` への参照解決検査の追加）を実施。ID 8 を解消。P0（タスク宣言レジストリ）は**意図的に見送り**（下記注記） |
 | 2026-10-20 | CLM-004/005/007 および依存する EVD/VER/HYP 計16件を**台帳から除外**（`main` から再検証できないため）。原文は `docs/archived-ledger-records-2026-10-20.md` に退避。§13 の ID 4/6/7 を更新。`docs/record-id-scheme.md` の件数表と `tests/test_minimal_core.py` の凍結上限テストを追従。連番は欠番のままとする（再利用しない） |
 
 ## 13. 対応状況（同日 2026-10-20）
@@ -371,10 +372,33 @@ GitHub（gh）：
 | 5 | `counterclaim_ids` が空（TASK.md §3 未達） | ✅ 解消（反証4件を新規採番し CLM-001/002/003 に紐付け） | `state/claims.jsonl` |
 | 6 | 孤立 EVD | ✅ 解消（除外3件を含む全 EVD が主張・検証のいずれかから参照される状態になった） | `state/evidence.jsonl` |
 | 7 | 削除済み成果物を参照する EVD/VER | ✅ 解決（対象7件を台帳から除外。判断根拠と原文は `docs/archived-ledger-records-2026-10-20.md`） | `state/evidence.jsonl`、`state/verifications.jsonl` |
+| 8 | `check_memo_citations.py` の CI 接続 | ✅ 解消（`core-check.yml` の6番目のゲートとして追加）。あわせて「arXiv ID も URL も無い参照」を黙って SKIP せず **MALFORMED として失敗**させるよう変更 | `.github/workflows/core-check.yml`、`scripts/check_memo_citations.py` |
 | 9 | 未登録7件の出典 | ✅ 解消（fixture から機械的生成。`check_citations.py` が照合） | `state/sources.jsonl` |
 | 10 | worker01 の無出典造語 | ✅ 訂正（本ノート独自の比喩と明記） | `contributions/worker01_stateless_analysis.md` |
 | 13 | HYP の `subtasks` プレースホルダ | ✅ 解消（`TASK.md` §2/§4 の項目に差し替え） | `state/hypotheses.jsonl` |
 
-**未対応**：ID 8（`check_memo_citations.py` の CI 接続）、11（旧ブランチのアーカイブ）、12（記録数値のドリフト是正：本レポートの §8 が指摘した陳腐化は、メモ内の過去の記録値は歴史的スナップショットとして残す判断により未更新）、15（SRC-004 への VER）。
+### 13.1 ハーネス硬化の優先順位（2026-10-20 の判断）
+
+2026-10-20 の統合レポート重複（PR #17 と PR #18 が同一の `task/TASK.md` §4 を二重に作成）を受け、
+ハーネス硬化を P0／P1／P2 に分けて検討した。
+
+| 優先度 | 内容 | 判断 |
+|---|---|---|
+| P0 | タスク宣言レジストリ（着手前にタスクを宣言し、二重宣言を CI で検出） | **見送り** |
+| P1 | 参照解決検査・`check_memo_citations.py` の CI 接続と黙読スキップの排除 | **実施**（本節 ID 8、および PR #21） |
+| P2 | 検証ブロックの機械実行化・文献IDのグローバル化 | 未判断 |
+
+**P0 を見送った理由**（2026-10-20、人間による判断）：同一タスクへの二重着手が発生しても、
+それは「**二重の独立したトライアル**」と解釈できる。統合レポートの形で両者を突き合わせる
+こと自体が**検証フェーズを兼ねるため、むしろ利点**になり得る。
+
+この判断は本研究の主題（同質ワーカーの並列化が独立した証拠を増やすか）にも関係する。
+2つの独立セッションが同じ成果物を生成する事象は、**ワーカー間の誤り相関 `rho` の観測例**
+と読める。統合時に両者を比較することで、相関の有無を実際に観察できる。
+（ただしセッション数は少ないため統計的検出力は極めて低い。存在証明の域を出ない。）
+
+---
+
+**未対応**：ID 11（旧ブランチのアーカイブ）、12（記録数値のドリフト是正：本レポートの §8 が指摘した陳腐化は、メモ内の過去の記録値は歴史的スナップショットとして残す判断により未更新）、15（SRC-004 への VER）。
 
 `docs/parallel-work-ownership.md` §2 は `state/` を「統合役のみ」とする。本対応は `main` への取り込みを行うセッションが統合役として行ったものであり、`README.md` と `state/` を変更している。

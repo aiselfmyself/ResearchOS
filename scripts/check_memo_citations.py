@@ -24,8 +24,11 @@ Modes:
 Comparison rules per reference entry (lines starting with "[label]" inside
 the 参考文献 / References section):
 
-  * entries without an arXiv ID (e.g. links to GitHub repos) are skipped,
-    not failed;
+  * entries without an arXiv ID are skipped -- but only when the entry
+    carries some other URL (e.g. a link to a GitHub repository). An entry
+    with no arXiv ID and no URL at all is reported as MALFORMED and fails:
+    in practice it means the entry was wrapped onto a second physical line,
+    which the line-oriented parser cannot see;
   * the arXiv ID (from "arXiv:ID" or an arxiv.org/abs/ URL) must exist in
     the snapshot;
   * the quoted title must match the snapshot title (whitespace- and
@@ -78,6 +81,10 @@ REF_START_RE = re.compile(r"^\[([A-Za-z0-9]+)\]\s*")
 YEAR_RE_TEMPLATE = r"arXiv:{id}(?:v\d+)?(?:\s*\[[^\]]*\])?,\s*(\d{{4}})"
 QUOTED_RE = re.compile(r'"([^"]+)"')
 ELLIPSIS_RE = re.compile(r"\s*(?:…|\.\.\.)\s*")
+# Any URL marks a reference as legitimately non-arXiv (a code repository, a
+# project page, ...). Without one, an entry that carries no arXiv ID is far
+# more likely to be broken than intentional -- see check_entry().
+URL_RE = re.compile(r"https?://", re.IGNORECASE)
 
 
 def extract_arxiv_ids(text: str) -> List[str]:
@@ -184,7 +191,20 @@ def check_entry(
     label = entry["label"]
     arxiv_id = entry.get("arxiv_id")
     if arxiv_id is None:
-        return 0, [f"SKIP    {memo_name} [{label}] (no arXiv ID)"]
+        # A reference to something other than a paper (a code repository, a
+        # project page) is fine -- but only if it actually links to it. An
+        # entry with no arXiv ID *and* no URL is almost always an entry that
+        # an editor wrapped onto a second physical line: the parser only ever
+        # sees the first line, so the arXiv ID sitting on the second line
+        # silently disappears. That used to be reported as a harmless SKIP,
+        # which meant a real citation went entirely unverified.
+        if URL_RE.search(entry.get("raw", "")):
+            return 0, [f"SKIP    {memo_name} [{label}] (no arXiv ID)"]
+        return 0, [
+            f"MALFORMED {memo_name} [{label}] reference has neither an arXiv "
+            f"ID nor any URL -- it is most likely wrapped across lines. "
+            f"Put every reference on a single physical line."
+        ]
     if len(entry["ids"]) > 1:
         return 1, [
             f"MISMATCH {memo_name} [{label}] inconsistent arXiv IDs in one "
@@ -246,7 +266,7 @@ def check_memo(
             checked += n
             if entry.get("arxiv_id"):
                 ref_ids.extend(entry["ids"])
-            else:
+            elif not any(line.startswith("MALFORMED") for line in lines):
                 skipped += 1
             report.extend(lines)
 
@@ -365,7 +385,11 @@ def main(argv: Optional[List[str]] = None) -> int:
         skipped += s
         report.extend(lines)
 
-    failures = [line for line in report if line.startswith(("MISMATCH", "MISSING"))]
+    failures = [
+        line
+        for line in report
+        if line.startswith(("MISMATCH", "MISSING", "MALFORMED"))
+    ]
     if not args.quiet:
         print(header_note)
         print(f"memos: {', '.join(m.name for m in memos)}")

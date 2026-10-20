@@ -135,6 +135,49 @@ class ParseReferenceTest(unittest.TestCase):
         self.assertIsNone(cm.parse_reference_entry("（内部記録への参照は文献引用ではない。）"))
         self.assertIsNone(cm.parse_reference_entry(""))
 
+    def test_wrapped_entry_without_url_is_reported_as_malformed(self):
+        """An entry split across two lines used to be a silent SKIP.
+
+        The parser is line-oriented, so the arXiv ID sitting on the second
+        line simply vanishes. Reporting that as "skipped" meant a real
+        citation went unverified, which is worse than having no check.
+        """
+        entry = cm.parse_reference_entry(
+            "[1] Alice One, Bob Two. \"Some Title.\""
+        )
+        self.assertIsNotNone(entry)
+        self.assertIsNone(entry["arxiv_id"])
+        checked, lines = cm.check_entry("memo.md", entry, {})
+        self.assertEqual(checked, 0)
+        self.assertTrue(
+            any(line.startswith("MALFORMED") for line in lines), lines
+        )
+
+    def test_non_arxiv_entry_with_a_url_is_still_skipped(self):
+        """A code repository is a legitimate reference, so keep skipping it."""
+        entry = cm.parse_reference_entry(
+            "[4] コードリポジトリ — https://github.com/example/repo （2026-10-20 確認）"
+        )
+        self.assertIsNone(entry["arxiv_id"])
+        checked, lines = cm.check_entry("memo.md", entry, {})
+        self.assertEqual(checked, 0)
+        self.assertTrue(any(line.startswith("SKIP") for line in lines), lines)
+
+    def test_malformed_entry_is_counted_as_a_failure_not_a_skip(self):
+        """MALFORMED must fail CI, so it must not be counted as 'skipped'."""
+        with tempfile.TemporaryDirectory() as tmp:
+            memo = write_text(
+                Path(tmp) / "wrapped.md",
+                "# memo\n\n本文 [1] を参照。\n\n"
+                "## 参考文献\n\n"
+                "[1] Alice One, Bob Two. \"Some Title.\"\n",
+            )
+            code, out, _err = run_main(["--memos", str(memo)])
+        self.assertEqual(code, 1, out)
+        self.assertIn("MALFORMED", out)
+        self.assertIn("0 skipped", out)
+        self.assertIn("1 failure", out)
+
 
 class AuthorCheckTest(unittest.TestCase):
 
@@ -225,11 +268,34 @@ class EntryCheckTest(unittest.TestCase):
         self.assertEqual(checked, 1)
         self.assertTrue(any("inconsistent arXiv IDs" in l for l in lines))
 
-    def test_non_arxiv_entry_is_skipped(self):
-        entry = {"label": "9", "ids": [], "arxiv_id": None}
+    def test_non_arxiv_entry_with_url_is_skipped(self):
+        """A reference to something other than a paper is fine, if it links."""
+        entry = {
+            "label": "9",
+            "ids": [],
+            "arxiv_id": None,
+            "raw": "コードリポジトリ — https://github.com/example/repo （確認 2026-10-20）",
+        }
         checked, lines = cm.check_entry("memo.md", entry, self.ENTRIES)
         self.assertEqual(checked, 0)
-        self.assertTrue(lines[0].startswith("SKIP"))
+        self.assertTrue(lines[0].startswith("SKIP"), lines)
+
+    def test_entry_without_arxiv_id_or_url_is_malformed(self):
+        """No arXiv ID *and* no URL means the entry is broken, not non-arXiv.
+
+        In practice this is an entry an editor wrapped onto a second physical
+        line: the line-oriented parser never sees the arXiv ID. It used to be
+        reported as a harmless SKIP, so a real citation went unverified.
+        """
+        entry = {
+            "label": "9",
+            "ids": [],
+            "arxiv_id": None,
+            "raw": 'Alice One, Bob Two. "Some Title."',
+        }
+        checked, lines = cm.check_entry("memo.md", entry, self.ENTRIES)
+        self.assertEqual(checked, 0)
+        self.assertTrue(lines[0].startswith("MALFORMED"), lines)
 
 
 class MemoFileTest(unittest.TestCase):
