@@ -63,3 +63,6 @@ jobs:
 
       - name: Check memo citations against bundled arXiv snapshot
         run: python3 scripts/check_memo_citations.py
+
+      - name: Check ledger IDs and repo paths referenced in memos
+        run: python3 scripts/check_memo_ledger_refs.py

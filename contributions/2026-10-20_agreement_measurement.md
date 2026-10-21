@@ -99,7 +99,9 @@ python3 scripts/check_memo_citations.py
 → 10 memo(s) scanned, 33 arXiv citation(s) checked, 0 failure(s)（本メモ込み）
 ```
 
-A / A' の JSON はこのメモの対象外（他セッションの担当）なので、実データでの lift はまだ出ていない。両 PR が揃えば統合役が `python3 scripts/measure_agreement.py --a contributions/2026-10-2X_agora_fulltext_reading.json --b contributions/2026-10-2X_agora_fulltext_reading_r2.json --json` で E2 の計測ができる（実験ドキュメント §5 手順2）。
+A / A' の JSON はこのメモの対象外（他セッションの担当）なので、実データでの lift はまだ出ていない。両 PR が揃えば統合役が `python3 scripts/measure_agreement.py --a contributions/2026-10-20_agora_fulltext_reading.json --b contributions/2026-10-20_agora_fulltext_reading_r2.json --json` で E2 の計測ができる（実験ドキュメント §5 手順2）。
+
+> **【2026-10-21 訂正・統合役】** この行は初稿でファイル名を `2026-10-2X_…`（日付テンプレート）としていた。対象ファイルはその後 `contributions/2026-10-20_agora_fulltext_reading.json` と `…_r2.json` として実際に追加されたため、**実在するファイル名に解決した**。初稿のままだとこのコマンドは実行できない。`scripts/check_memo_ledger_refs.py` が検出した。
 
 ## 9. 提案（このメモでは実行していない）
 
