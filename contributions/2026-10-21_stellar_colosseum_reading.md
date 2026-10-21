@@ -304,6 +304,12 @@ Colosseum のデータモデルのうち、本リポジトリの欠け目（VER 
 | 7 | メモ内台帳ID・パス参照 | `python3 scripts/check_memo_ledger_refs.py` | 18 memo(s) scanned, 0 dangling reference(s), 5 archived ID reference(s) |
 | 8 | 文書内陳腐化数値 | `python3 scripts/check_doc_numbers.py` | actual: tests=242 gates=8 sources=12 evidence=55 claims=8 verifications=30 hypotheses=2 / 0 stale number(s) |
 
+### 12.1 補足：`origin/main`（PR #44 マージ後）とのマージ後の再実行
+
+本ブランチの PR 作成時、main は並行セッションの PR #44（SHELDON 読解、`contributions/2026-10-21_sheldon_reading.md`）をマージ済みで、共通祖先は 964005e だった。`state/sources.jsonl`・`state/evidence.jsonl`・`state/verifications.jsonl` の3ファイルで末尾追記の衝突が発生したが、両側とも基底行の変更ゼロの純粋な追記であることを diff で確認し、main 側レコード＋本ブランチの追記レコード（SRC 1・EVD 6・VER 1）の union で解決した。ID 衝突はなし（`new_id.py` のランダム接尾辞）。
+
+マージコミット上で全8ゲートを再実行し、全て exit 0。マージ後の台帳規模は **sources=13, evidence=60, claims=9, verifications=31, hypotheses=2**（`validate_state.py` の実測）。上表の値はコミット 82110b1 単体時点の歴史的記録であり、マージで無効になるものではない。
+
 ## 13. 参考文献
 
 [S1] Honghao Lin, David P. Woodruff, Yuan Deng, Jieming Mao, Song Zuo, Vahab Mirrokni. "Stellar Colosseum: A Many-Agent Harness for Long-Horizon Research in Mathematics and Theoretical Computer Science." arXiv:2609.15983v2 [cs.AI], 2026（v1 投稿 2026-09-14、v2 2026-09-15）. https://arxiv.org/abs/2609.15983 / HTML: https://arxiv.org/html/2609.15983v2 / DOI: 10.48550/arXiv.2609.15983
