@@ -63,7 +63,7 @@
 リポジトリからの再計算値を突き合わせて検査する。算出コマンドは下記「使い方」節。
 
 - 台帳: sources=23 / evidence=86 / claims=9 / verifications=34 / hypotheses=2
-- テスト: 合計 303件（`tests/` の 15 ファイル。内訳は下記 §構成）
+- テスト: 合計 349件（`tests/` の 16 ファイル。内訳は下記 §構成）
 - CI ゲート: 8ゲート（`.github/workflows/core-check.yml` の `run:` を持つステップ数）
 
 **なぜこの節を引用ブロック（`>`）で書かないか** —— ゲートは「`>` で始まる行」を**過去の
@@ -103,6 +103,10 @@ scripts/
                         （計測器。RRSI の hold-out/OOD 分離の実装）
   prune_candidates.py   低寄与コンポーネントを報告する（計測器。**何も削除しない**。
                         RRSI の剪定の実装。削除は人間の判断）
+  gap_scan.py           関係台帳（REL）から仮説カバレッジの穴を報告する
+                        （計測器・CI非接続。unassessed / unexplained /
+                        仮説別 verdict / 領域別の未評価件数。provisional は
+                        fail-closed で、独立出典の再遭遇が無い反駁は数えない）
 gitswarm/
   problem.py solvers/  30都市TSPの決定論的ソルバ群（greedy/random/two_opt/SA）
   benchmarks/          複数シード実行＋成果物照合（--write/--check）
@@ -126,7 +130,8 @@ tests/
   test_holdout_eval.py         hold-out 分割と過適合判定のテスト（18件）
   test_prune_candidates.py     低寄与コンポーネント報告のテスト（19件）
   test_relations.py            関係台帳（REL）の検査・採番・メモ参照解決のテスト（37件）
-                               ── 合計 303件
+  test_gap_scan.py             仮説カバレッジの穴（unassessed / unexplained / provisional ゲート）の報告テスト（46件）
+                               ── 合計 349件
 contributions/         研究ノート（統合レポート・調査メモ・全文読解レポート・共通モード測定）
 docs/                  分析レポートと設計記録（並行作業の所有マップは docs/parallel-work-ownership.md。強制力なし）
 .github/workflows/
@@ -137,7 +142,7 @@ docs/                  分析レポートと設計記録（並行作業の所有
 ## 使い方
 
 ```sh
-# 1. テスト（約5秒・303件）
+# 1. テスト（約5秒・349件）
 python3 -m unittest discover -s tests -v
 
 # 2. ベンチマークの再現性確認（fresh実行と成果物の照合）
