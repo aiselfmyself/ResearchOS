@@ -74,9 +74,11 @@ from pathlib import Path
 from typing import Dict, List, Set, Tuple
 
 try:
+    import ledger_store
     import validate_state as vs
 except ImportError:  # running as scripts/check_memo_ledger_refs.py
     sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import ledger_store
     import validate_state as vs
 
 ROOT = vs.ROOT
@@ -87,7 +89,12 @@ Finding = Tuple[str, str, str]  # (memo name, kind, token)
 
 
 def load_ledger_ids() -> Dict[str, Set[str]]:
-    """Map every ID prefix to the set of IDs present in the research ledgers."""
+    """Map every ID prefix to the set of IDs in the research ledgers.
+
+    Since 2026-10-21 a ledger is the union of its frozen base file and its
+    session shards (`state/<name>.d/*.jsonl`), so a memo may legitimately
+    cite an ID that only exists in a shard.
+    """
     ids: Dict[str, Set[str]] = {}
     for name, (ledger, _schema, id_key) in vs.COLLECTIONS.items():
         prefix = vs.ID_PREFIXES[name]
@@ -95,11 +102,11 @@ def load_ledger_ids() -> Dict[str, Set[str]]:
         path = ROOT / ledger
         if not path.exists():
             raise FileNotFoundError(f"ledger not found: {path}")
-        for line in path.read_text(encoding="utf-8").splitlines():
-            line = line.strip()
-            if not line:
-                continue
-            value = json.loads(line).get(id_key)
+        records, errors = ledger_store.load_jsonl(path)
+        if errors:
+            raise ValueError("\n".join(errors))
+        for record in records:
+            value = record.get(id_key)
             if isinstance(value, str):
                 ids[prefix].add(value)
     return ids
@@ -196,7 +203,7 @@ def main(argv: List[str] | None = None) -> int:
 
     try:
         ids = load_ledger_ids()
-    except (OSError, json.JSONDecodeError) as exc:
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
         print(f"error: could not load ledgers: {exc}", file=sys.stderr)
         return 2
 

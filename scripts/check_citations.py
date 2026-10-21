@@ -40,6 +40,13 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 ROOT = Path(__file__).resolve().parents[1]
+
+try:
+    import ledger_store
+except ImportError:  # running as scripts/check_citations.py
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import ledger_store
+
 DEFAULT_SOURCES = ROOT / "state" / "sources.jsonl"
 DEFAULT_FIXTURE = ROOT / "tests" / "fixtures" / "arxiv_metadata_snapshot.json"
 LIVE_API = "https://export.arxiv.org/api/query"
@@ -72,28 +79,30 @@ def extract_arxiv_id(source: Dict[str, Any]) -> Optional[str]:
 
 
 def load_ledger(path: Path) -> List[Dict[str, Any]]:
-    records: List[Dict[str, Any]] = []
-    with path.open(encoding="utf-8") as handle:
-        for line_number, line in enumerate(handle, start=1):
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                records.append(json.loads(line))
-            except json.JSONDecodeError as exc:
-                raise ValueError(f"{path}:{line_number}: invalid JSON: {exc}") from exc
+    """Return the sources union view: frozen base file + session shards.
+
+    A ledger whose shards double an ID is rejected here rather than silently
+    collapsed, for the same reason the validator reports duplicates: the
+    checker must not pick a winner (see scripts/ledger_store.py).
+    """
+    records, errors, origins = ledger_store.load_ledger(path)
+    if errors:
+        raise ValueError("\n".join(errors))
+    duplicates = ledger_store.duplicate_ids(records, origins, "source_id")
+    if duplicates:
+        raise ValueError("\n".join(duplicates))
     return records
 
 
 def load_fixture(path: Path) -> Tuple[Dict[str, Dict[str, Any]], Dict[str, Any]]:
-    """Return ({arxiv_id: entry}, fixture header) from the snapshot JSON."""
-    with path.open(encoding="utf-8") as handle:
-        fixture = json.load(handle)
-    entries: Dict[str, Dict[str, Any]] = {}
-    for entry in fixture.get("entries", []):
-        entries[entry["arxiv_id"]] = entry
-    header = {key: value for key, value in fixture.items() if key != "entries"}
-    return entries, header
+    """Return ({arxiv_id: entry}, fixture header) for the snapshot union view.
+
+    The base JSON is the frozen snapshot; entries added after 2026-10-21 live
+    in `tests/fixtures/arxiv_metadata_snapshot.d/*.json`. The header returned
+    is the base header verbatim, so a new part cannot silently rewrite the
+    base's `captured_at` / `capture_note`.
+    """
+    return ledger_store.load_fixture(path)
 
 
 def parse_atom_response(xml_text: str) -> Dict[str, Dict[str, Any]]:

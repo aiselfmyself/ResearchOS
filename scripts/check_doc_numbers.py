@@ -50,7 +50,9 @@ Actual values are recomputed, never hard-coded:
   number `unittest` collects, so no imports or 5-second run is needed);
 * gate count — steps in `core-check.yml` that carry a `run:` key (setup steps
   use `uses:`, so this needs no allowlist of setup step names);
-* ledger counts — non-empty lines in `state/*.jsonl`.
+* ledger counts — records in the ledger union view, i.e. the frozen
+  `state/*.jsonl` base plus any `state/<name>.d/*.jsonl` session shards
+  (see `scripts/ledger_store.py`).
 
 Usage:
     python3 scripts/check_doc_numbers.py
@@ -72,6 +74,13 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 ROOT = Path(__file__).resolve().parents[1]
+
+try:
+    import ledger_store
+except ImportError:  # running as scripts/check_doc_numbers.py
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import ledger_store
+
 TESTS_DIR = ROOT / "tests"
 STATE_DIR = ROOT / "state"
 WORKFLOW = ROOT / ".github" / "workflows" / "core-check.yml"
@@ -165,13 +174,18 @@ def actual_gate_count() -> int:
 
 
 def actual_ledger_counts() -> Dict[str, int]:
+    """Record counts of the ledger union view (frozen base + session shards).
+
+    Before the 2026-10-21 sharding migration this counted non-empty *lines* of
+    `state/<name>.jsonl`. That is no longer the ledger: new records go to
+    `state/<name>.d/*.jsonl` and the base file is frozen. Counting the union
+    keeps the documented numbers meaningful; unparseable lines are not records
+    and are reported by `validate_state.py` instead of being counted here.
+    """
     out: Dict[str, int] = {}
     for name, fname in LEDGERS.items():
-        path = STATE_DIR / fname
-        if not path.exists():
-            out[name] = 0
-            continue
-        out[name] = sum(1 for line in path.read_text(encoding="utf-8").splitlines() if line.strip())
+        records, _errors = ledger_store.load_jsonl(STATE_DIR / fname)
+        out[name] = len(records)
     return out
 
 

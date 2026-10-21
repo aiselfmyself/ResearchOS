@@ -162,10 +162,10 @@ def exclusion_density(paths: Sequence[Path]) -> Dict[str, Any]:
 def run_memo_citations(paths: Sequence[Path]) -> Tuple[int, int]:
     import check_memo_citations as cmc
 
-    entries = cmc.load_fixture(cmc.DEFAULT_FIXTURE) if hasattr(cmc, "load_fixture") \
-        else json.loads(cmc.DEFAULT_FIXTURE.read_text(encoding="utf-8"))
-    if isinstance(entries, dict) and "entries" in entries:
-        entries = {e["arxiv_id"]: e for e in entries["entries"]}
+    # One loader for both citation checkers: the snapshot is the frozen base
+    # JSON plus its `*.d/*.json` parts (scripts/ledger_store.py). Reading the
+    # JSON directly here would miss entries added after the base was frozen.
+    entries, _header = cmc.load_fixture(cmc.DEFAULT_FIXTURE)
     checked = 0
     findings = 0
     for p in paths:

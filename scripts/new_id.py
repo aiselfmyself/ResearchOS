@@ -7,9 +7,11 @@ which shows up as a git add/add conflict or as a duplicate-ID validation error
 after a union merge. This tool mints ``PREFIX-YYYYMMDD-xxxx`` instead, where
 ``xxxx`` is a random 4-hex suffix, so independent sessions cannot collide.
 
-The ID is checked against the existing ledger before it is printed. Once an ID
-is written into a record it must never change, because other records reference
-it.
+The ID is checked against the existing ledger before it is printed. Since the
+2026-10-21 sharding migration the ledger is the union of the frozen base file
+and its session shards (`state/<name>.d/*.jsonl`), so the collision check reads
+both. Once an ID is written into a record it must never change, because other
+records reference it.
 
 Usage:
     python3 scripts/new_id.py SRC
@@ -21,7 +23,6 @@ Standard library only. See docs/record-id-scheme.md.
 from __future__ import annotations
 
 import argparse
-import json
 import secrets
 import sys
 from datetime import date
@@ -29,6 +30,12 @@ from pathlib import Path
 from typing import Iterable, List, Optional
 
 ROOT = Path(__file__).resolve().parents[1]
+
+try:
+    import ledger_store
+except ImportError:  # running as scripts/new_id.py
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import ledger_store
 
 PREFIXES = {
     "SRC": "state/sources.jsonl",
@@ -50,17 +57,17 @@ ID_KEYS = {
 
 
 def _existing_ids(path: Path, id_key: str) -> set:
-    if not path.exists():
-        return set()
+    """Every ID already used by this ledger, base file *and* its shards.
+
+    Missing from the collision check means minting a duplicate ID that a
+    different session already wrote into a shard (see scripts/ledger_store.py).
+    Unparseable records are skipped, as before: the validator is the gate for
+    malformed ledgers, not the ID tool.
+    """
+    records, _errors = ledger_store.load_jsonl(path)
     ids = set()
-    for line in path.read_text(encoding="utf-8").splitlines():
-        if not line.strip():
-            continue
-        try:
-            record = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        rid = record.get(id_key) if isinstance(record, dict) else None
+    for record in records:
+        rid = record.get(id_key)
         if isinstance(rid, str):
             ids.add(rid)
     return ids

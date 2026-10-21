@@ -297,6 +297,16 @@ def load_memos(memo_args: Optional[List[Path]]) -> List[Path]:
     return sorted(DEFAULT_MEMO_DIR.glob("*.md"))
 
 
+def load_fixture(path: Path) -> Tuple[Dict[str, Dict[str, Any]], Dict[str, Any]]:
+    """Snapshot union view: frozen base JSON + `*.d/*.json` parts.
+
+    Delegates to `check_citations.load_fixture` (and thus to
+    `ledger_store.load_fixture`) so the two citation checkers cannot disagree
+    about which entries exist.
+    """
+    return cc.load_fixture(path)
+
+
 def fetch_live_ids(arxiv_ids: List[str]) -> Dict[str, Dict[str, Any]]:
     """Query the arXiv Atom API. MANUAL use only (network + rate limits)."""
     return cc.fetch_live(arxiv_ids)
