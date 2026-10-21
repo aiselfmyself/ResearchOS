@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "fragment.schema.json",
+  "title": "Literary Fragment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["fragment_id", "created_at", "language", "form", "title", "text", "narrator_mode", "question_ids", "motif_ids", "material_ids", "status"],
+  "properties": {
+    "fragment_id": {"type": "string", "minLength": 1},
+    "created_at": {"type": "string", "minLength": 4},
+    "language": {"type": "string", "minLength": 2},
+    "form": {"type": "string", "enum": ["fragment", "dialogue", "essay", "poem", "letter", "scene", "other"]},
+    "title": {"type": "string"},
+    "text": {"type": "string", "minLength": 1},
+    "narrator_mode": {"type": "string", "enum": ["human_narrator", "fictional_first_person", "reflective_literary_voice", "dialogue", "third_person", "other"]},
+    "question_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "motif_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "material_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "session_id": {"type": "string"},
+    "prompt_template": {"type": "string"},
+    "status": {"type": "string", "enum": ["draft", "selected", "archived"]},
+    "editor_note": {"type": "string"}
+  }
+}

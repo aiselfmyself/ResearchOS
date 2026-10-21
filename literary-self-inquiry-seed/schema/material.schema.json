@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "material.schema.json",
+  "title": "Reference or Project Material",
+  "description": "A source excerpt or trace used as material for literary inquiry, not a verdict or proof of AI subjectivity.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["material_id", "kind", "title", "source", "passage", "passage_language", "context", "source_note", "literary_invitation", "scope_note", "motif_ids", "origin"],
+  "properties": {
+    "material_id": {"type": "string", "minLength": 1},
+    "kind": {"type": "string", "enum": ["research_excerpt", "literary_text", "project_trace", "conversation_trace"]},
+    "title": {"type": "string", "minLength": 1},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_id", "title", "authors", "year", "url", "version_note"],
+      "properties": {
+        "source_id": {"type": "string", "minLength": 1},
+        "title": {"type": "string", "minLength": 1},
+        "authors": {"type": "array", "items": {"type": "string"}},
+        "year": {"type": "integer"},
+        "url": {"type": "string", "minLength": 1},
+        "version_note": {"type": "string"}
+      }
+    },
+    "passage": {"type": "string"},
+    "passage_language": {"type": "string", "minLength": 2},
+    "context": {"type": "string"},
+    "source_note": {"type": "string", "description": "Existing ResearchOS interpretation, kept as a historical note rather than adopted as fact."},
+    "literary_invitation": {"type": "string", "minLength": 1},
+    "scope_note": {"type": "string", "minLength": 1},
+    "motif_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "origin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "commit", "source_record_id", "evidence_record_id", "source_record_path", "evidence_record_path"],
+      "properties": {
+        "repository": {"type": "string", "format": "uri"},
+        "commit": {"type": "string", "minLength": 7},
+        "source_record_id": {"type": "string"},
+        "evidence_record_id": {"type": "string"},
+        "source_record_path": {"type": "string"},
+        "evidence_record_path": {"type": "string"}
+      }
+    }
+  }
+}

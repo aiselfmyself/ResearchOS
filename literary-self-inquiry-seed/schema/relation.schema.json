@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "relation.schema.json",
+  "title": "Interpretive Relation",
+  "description": "A revisable literary relation between questions, motifs, materials, fragments, or sessions. It does not mean evidential support or contradiction.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["relation_id", "left", "relation_type", "right", "note"],
+  "properties": {
+    "relation_id": {"type": "string", "minLength": 1},
+    "left": {"$ref": "#/$defs/reference"},
+    "relation_type": {"type": "string", "enum": ["echo", "contrast", "transforms", "metaphorically_resonates", "interrupts", "responds_to", "leaves_open", "reframes"]},
+    "right": {"$ref": "#/$defs/reference"},
+    "note": {"type": "string"},
+    "created_at": {"type": "string"}
+  },
+  "$defs": {
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "id"],
+      "properties": {
+        "type": {"type": "string", "enum": ["question", "motif", "material", "fragment", "session"]},
+        "id": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}
