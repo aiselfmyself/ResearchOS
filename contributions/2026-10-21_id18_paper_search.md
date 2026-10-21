@@ -49,7 +49,7 @@
 | arXiv:2605.23950（[8] 本体、既存 SRC-20261020-07a3） | 既存の比較対象そのもの。第3論文ではない |
 | arXiv:2607.13085（Baselines Before Architecture, XBOW pentest） | 同一モデル（GPT-5）で Codex/OpenCode/Pi を比べる harness 研究。**モデル能力の水準を変えた対照がハーネス格子と組になっていない**。ペンテスト領域で [8] と別 |
 | arXiv:2609.09218（Double Measurement Confound） | 検索スニペットに 7 モデル × 2 × 2 の表と τ-bench の scaffold 比較があるが、本文は未精読。主題は「scaffold と scorer の二重の測定交絡」で、モデル差とハーネス差の分散比を主目的としない。**未精読のため判定保留** |
-| arXiv:2605.27898（A Unified Framework for the Evaluation of LLM Agentic Capabilities） | 15 モデル・7 ベンチマーク（24 ドメイン）。固定 smolagents/ReAct の統一 scaffold で、原実装 vs 統一の比較は一部のペアのみ。モデル × ハーネスの格子も分散分解もなし。**本文一部精読（§2.4・§3.1・§3.3・§3.4 の表と Finding）**。※旧表記 2606.27898 は誤り（確率論の別論文） |
+| arXiv:2605.27898（A Unified Framework for the Evaluation of LLM Agentic Capabilities） | 15 モデル・7 ベンチマーク（24 ドメイン）。固定 smolagents/ReAct の統一 scaffold で、原実装 vs 統一の比較は一部のペアのみ。モデル × ハーネスの格子も分散分解もなし。**本文一部精読（§2.4・§3.1・§3.3・§3.4 の表と Finding）**。※旧表記（2606 番台の別 ID）は誤り。確率論の別論文 |
 | arXiv:2607.22585 | 次点として精読（§3.3）。2 モデルのみで R の分母・分子を比較する設計として弱い |
 | arXiv:2610.00651 | 次点として精読（§3.4）。観測データの分散分解。決定的な数値ではない |
 
@@ -187,27 +187,27 @@
 
 ## 5. 登録する場合の SRC / EVD 候補情報
 
-**台帳は変更していない。** 以下は、人間が登録を判断するための候補情報である。
+**2026-10-21 に台帳へ登録済み。** 登録は state/sources.jsonl に 7 件（SRC-20261021-065a, fb4a, 9a02, f186, 4172, a714, 7176）、state/evidence.jsonl に 8 件（EVD-20261021-c1a2, 43a0, e06c, 589c, d78f, 1026, 887d, c029）。fixture（tests/fixtures/arxiv_metadata_snapshot.json）へは abs ページで確認した 8 件を追記（2026-10-21、人間の承認に基づく）。下表は登録時点の候補情報。EVD は abstract・本文で確認した逐語に絞り、未確認の本文表は根拠にしていない。
 
 ### 5.1 SRC 候補
 
 | 候補 | 題名 | 著者 | 公開日・版 | URL | 種別 | 備考 |
 |---|---|---|---|---|---|---|
-| SRC-候補-1 | Scaffold Effects on GAIA: A Controlled Comparison | Jason Starace | arXiv:2606.08529v1、2026-06-07 | https://arxiv.org/abs/2606.08529 | preprint | 単著、事前登録と称する（未確認）、CC BY 4.0 |
-| SRC-候補-2 | Coding Agents Have Converged: Why the SWE-bench Leaderboard Can No Longer Order Its Top Entries, and What to Measure Instead | Fengshuo Liu ほか 4 名 | arXiv:2609.17394v1、2026-09-15 | https://arxiv.org/abs/2609.17394 | preprint | 観測データの監査 |
-| SRC-候補-3 | Agent Evaluation Reliability: More Tasks Won't (Always) Fix An Agent Leaderboard | Michael Hardy ほか | arXiv:2610.00651v1、2026-09-30 | https://arxiv.org/abs/2610.00651 | preprint | 観測データの G-theory 分解 |
-| SRC-候補-4 | The Scaffold Effect in Coding Agents: Harness Choice as a Hidden Variable in Coding-Agent Evaluation | Naman Vats, Oleg Golev | arXiv:2607.22585v1、2026-06-08 | https://arxiv.org/abs/2607.22585 | preprint | 2 モデル × 3 ハーネス |
+| SRC-候補-1（SRC-20261021-065a） | Scaffold Effects on GAIA: A Controlled Comparison | Jason Starace | arXiv:2606.08529v1、2026-06-07 | https://arxiv.org/abs/2606.08529 | preprint | 単著、事前登録と称する（未確認）、CC BY 4.0 |
+| SRC-候補-2（SRC-20261021-fb4a） | Coding Agents Have Converged: Why the SWE-bench Leaderboard Can No Longer Order Its Top Entries, and What to Measure Instead | Fengshuo Liu ほか 4 名 | arXiv:2609.17394v1、2026-09-15 | https://arxiv.org/abs/2609.17394 | preprint | 観測データの監査 |
+| SRC-候補-3（SRC-20261021-9a02） | Agent Evaluation Reliability: More Tasks Won't (Always) Fix An Agent Leaderboard | Michael Hardy ほか | arXiv:2610.00651v1、2026-09-30 | https://arxiv.org/abs/2610.00651 | preprint | 観測データの G-theory 分解 |
+| SRC-候補-4（SRC-20261021-f186） | The Scaffold Effect in Coding Agents: Harness Choice as a Hidden Variable in Coding-Agent Evaluation | Naman Vats, Oleg Golev | arXiv:2607.22585v1、2026-06-08 | https://arxiv.org/abs/2607.22585 | preprint | 2 モデル × 3 ハーネス |
 
 ### 5.2 EVD 候補（逐語引用候補）
 
 | 候補 | 対象 SRC | 逐語引用（原文） | 格付け案 | 注意 |
 |---|---|---|---|---|
-| EVD-候補-A1 | SRC-候補-1 | "Scaffold choice alone moves measured accuracy by as much as 28 percentage points within a single model (Opus, Level 2, robust slice)" | 証拠段階 B（単一プレプリント・自前実験） | 「28pp」は robust slice の値。primary では 0.704–0.830 の L1 Opus の 13pp など |
-| EVD-候補-A2 | SRC-候補-1 | "At Level 1, the gap is small for the three frontier models (Opus 0.13, Gemini 0.06, GPT-5 0.04, primary slice) and largest for Haiku (0.23)." | 証拠段階 B | 同上 |
-| EVD-候補-A3 | SRC-候補-1 | "A reader comparing two models evaluated under different scaffolds could easily attribute to the model a difference that belongs to the agent loop." | 論文の解釈（引用のみ） | 論文の主張そのもの |
-| EVD-候補-B1 | SRC-候補-2 | "The reading is not that scaffolds matter more than models, but that the fitted ranges are of the same order." | 証拠段階 C（観測） | 著者の限定を必ず併記 |
-| EVD-候補-C1 | SRC-候補-3 | "the contrast σM2−σA2 favors neither direction (posterior directional probability approximately 50%)" | 証拠段階 C（観測・ベイズ） | 潜在ロジットスケール |
-| EVD-候補-D1 | SRC-候補-4 | "Pass-rate effects of harness and model upgrade are of comparable magnitude and within bootstrap noise at n=50." | 証拠段階 B（同一タスク、2 モデル） | 2 モデルのみ |
+| EVD-候補-A1 | SRC-候補-1（SRC-20261021-065a） | "Scaffold choice alone moves measured accuracy by as much as 28 percentage points within a single model (Opus, Level 2, robust slice)" | 証拠段階 B（単一プレプリント・自前実験） | 「28pp」は robust slice の値。primary では 0.704–0.830 の L1 Opus の 13pp など |
+| EVD-候補-A2 | SRC-候補-1（SRC-20261021-065a） | "At Level 1, the gap is small for the three frontier models (Opus 0.13, Gemini 0.06, GPT-5 0.04, primary slice) and largest for Haiku (0.23)." | 証拠段階 B | 同上 |
+| EVD-候補-A3 | SRC-候補-1（SRC-20261021-065a） | "A reader comparing two models evaluated under different scaffolds could easily attribute to the model a difference that belongs to the agent loop." | 論文の解釈（引用のみ） | 論文の主張そのもの |
+| EVD-候補-B1 | SRC-候補-2（SRC-20261021-fb4a） | "The reading is not that scaffolds matter more than models, but that the fitted ranges are of the same order." | 証拠段階 C（観測） | 著者の限定を必ず併記 |
+| EVD-候補-C1 | SRC-候補-3（SRC-20261021-9a02） | "the contrast σM2−σA2 favors neither direction (posterior directional probability approximately 50%)" | 証拠段階 C（観測・ベイズ） | 潜在ロジットスケール |
+| EVD-候補-D1 | SRC-候補-4（SRC-20261021-f186） | "Pass-rate effects of harness and model upgrade are of comparable magnitude and within bootstrap noise at n=50." | 証拠段階 B（同一タスク、2 モデル） | 2 モデルのみ |
 
 **私の再計算（EVD に入れるなら必ず「推論」と明示）**：A の R 換算値（5.15 / 3.34 / 6.28 / 1.71）は**論文の報告値ではない**。Table 3 の点推定から私が計算したもの。
 
@@ -228,7 +228,7 @@
 ## 7. 次の一手（提案。実行は人間の判断）
 
 1. **arXiv:2609.32459 の図の数値取得**（SWE-bench Pro の 5+5 モデル × 2 ハーネス）。取得できれば、同一モデルファミリ内の model range と harness range を R 型に計算できる候補になる。TeX ソースは未取得。
-2. **未確認の次候補**：arXiv:2608.18389（A Jagged Frontier、4 モデル × mini-SWE-agent / OpenCode、SWE-bench Verified・Pro。検索スニペットのみ）、arXiv:2610.00917（Finding the Right Fit、モデル × 5 ハーネスの行列、TUA-Bench 等。スニペットのみ）。両者とも本文の表で格子と分散の要件を確認する必要がある。
+2. **未確認の次候補**：「A Jagged Frontier」（4 モデル × mini-SWE-agent / OpenCode、SWE-bench Verified・Pro。検索スニペットのみ）、「Finding the Right Fit」（モデル × 5 ハーネスの行列、TUA-Bench 等。スニペットのみ）。両者とも本文の表で格子と分散の要件を確認する必要がある。
 3. A を登録する場合、**R の値を論文の数値として書かない**。タスク領域の違いを必ず併記する。
 4. ID 18 の状態は「部分的に前進」とし、「解決」には変更しない。
 
