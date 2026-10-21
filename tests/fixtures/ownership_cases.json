@@ -1,7 +1,7 @@
 {
   "schema": "ownership-cases-v1",
-  "captured_at": "2026-10-20",
-  "note": "Offline self-check cases for scripts/check_ownership.py. Each case lists repository-relative paths and the exact classification map that docs/parallel-work-ownership.md implies. Re-run with 'python3 scripts/check_ownership.py --selftest'; no network, no git history.",
+  "captured_at": "2026-10-21",
+  "note": "Offline self-check cases for scripts/check_ownership.py. Each case lists repository-relative paths and the exact classification map that docs/parallel-work-ownership.md implies. Re-run with 'python3 scripts/check_ownership.py --selftest'; no network, no git history. Updated 2026-10-21: state/ moved from INTEGRATOR_ONLY to ANY_SESSION_APPEND when ledger appends and ID minting were opened up to every session.",
   "cases": [
     {
       "name": "integrator-owned shared files",
@@ -16,8 +16,8 @@
       "expect": {
         "README.md": "INTEGRATOR_ONLY",
         "docs/minimal-core-and-ci.md": "INTEGRATOR_ONLY",
-        "state/claims.jsonl": "INTEGRATOR_ONLY",
-        "state": "INTEGRATOR_ONLY",
+        "state/claims.jsonl": "ANY_SESSION_APPEND",
+        "state": "ANY_SESSION_APPEND",
         "gitswarm/artifacts/benchmark_matrix.json": "INTEGRATOR_ONLY"
       }
     },
@@ -90,7 +90,7 @@
       ],
       "expect": {
         "README.md": "INTEGRATOR_ONLY",
-        "state/evidence.jsonl": "INTEGRATOR_ONLY",
+        "state/evidence.jsonl": "ANY_SESSION_APPEND",
         "docs/minimal-core-and-ci.md": "INTEGRATOR_ONLY"
       }
     }

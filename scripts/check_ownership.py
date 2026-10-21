@@ -9,12 +9,15 @@ not a gate:
   * it does not read git authors, roles, trailers or history;
   * it does not rewrite, lock or protect anything.
 
-The map itself is three lines of convention (docs/parallel-work-ownership.md):
-one integrator session owns ``state/``, ``README.md``,
-``docs/minimal-core-and-ci.md`` and ``gitswarm/artifacts/``; every other
-session writes only its own file under ``contributions/``. Everything else is
-UNSPECIFIED -- the convention simply says nothing about it -- and the script
-reports it that way instead of inventing a rule.
+The map itself is a short table (docs/parallel-work-ownership.md 2). One
+integrator session owns ``README.md``, ``docs/minimal-core-and-ci.md`` and
+``gitswarm/artifacts/``. Since 2026-10-21 ``state/`` is NOT integrator-owned:
+any session may append ledger records and mint IDs without waiting for a human.
+Deleting or rewriting an existing record still needs explicit human approval
+(docs/autonomous-merge-policy-2026-10-21.md 1). Every session writes only its
+own file under ``contributions/``. Everything else is UNSPECIFIED -- the
+convention simply says nothing about it -- and the script reports it that way
+instead of inventing a rule.
 
 Because the tool can only see a path list, "my own file" has to be given
 explicitly: pass ``--session-file contributions/<my-note>.md`` and any other
@@ -44,6 +47,7 @@ FIXTURE = ROOT / "tests" / "fixtures" / "ownership_cases.json"
 
 # Classification values (kept as plain strings so the JSON output is readable).
 INTEGRATOR_ONLY = "INTEGRATOR_ONLY"
+ANY_SESSION_APPEND = "ANY_SESSION_APPEND"
 SESSION_CONTRIBUTION = "SESSION_CONTRIBUTION"
 OTHER_SESSION_CONTRIBUTION = "OTHER_SESSION_CONTRIBUTION"
 UNSPECIFIED = "UNSPECIFIED"
@@ -56,13 +60,17 @@ DIR = "dir"
 RULES: Sequence[tuple] = (
     ("README.md", FILE, INTEGRATOR_ONLY),
     ("docs/minimal-core-and-ci.md", FILE, INTEGRATOR_ONLY),
-    ("state/", DIR, INTEGRATOR_ONLY),
+    # 2026-10-21: ledger appends and ID minting were opened up to every
+    # session. Deletion and rewriting of existing records remain human-gated.
+    ("state/", DIR, ANY_SESSION_APPEND),
     ("gitswarm/artifacts/", DIR, INTEGRATOR_ONLY),
     ("contributions/", DIR, SESSION_CONTRIBUTION),
 )
 
 # Classes that --strict reports as a conflict. --strict is a manual convenience
 # for the integrator; nothing in CI or in the hooks calls it.
+# ANY_SESSION_APPEND is deliberately absent: appending to state/ is allowed for
+# every session, so it is not a conflict.
 CONFLICTING = (INTEGRATOR_ONLY, OTHER_SESSION_CONTRIBUTION)
 
 

@@ -23,16 +23,23 @@
 | CI が緑の PR の `main` へのマージ | **不要**（自発的に実施してよい） | 取り消しが安価。§3 |
 | リモートブランチの削除 | **要る** | 到達不能なコミットを生む。§4 |
 | `--force` を伴う push | **要る** | 履歴を書き換え、他人の作業を消しうる |
-| 台帳レコード（`state/*.jsonl`）の削除 | **要る** | 追記専用という前提を壊す。再現性の根拠が失われる |
+| 台帳レコード（`state/*.jsonl`）の**追記** | **不要**（自発的に実施してよい） | 取り消しが安価。CI（ゲート4・5）が構造と書誌を機械的に検査する。`docs/parallel-work-ownership.md` §2.1 |
+| **ID の採番**（`python3 scripts/new_id.py`） | **不要** | 非連番IDが衝突を原理的に避ける。`docs/record-id-scheme.md` §2 |
+| 台帳レコード（`state/*.jsonl`）の**削除・書き換え** | **要る** | 追記専用という前提を壊す。再現性の根拠が失われる。訂正は追記（`correction_note`）で残す |
 | リポジトリ設定・CI 定義の変更 | **要る** | 全セッションに効く。誤りが波及する範囲が最大 |
+
+**「追記」と「書き換え」の区別がすべてである。** 追記は履歴を追加する操作であり、既存のコミットも既存のレコードも消さない。
+書き換えはそうではない。本表の「不要」は追記と採番にのみ適用され、書き換えには適用されない。
 
 ## 2. 自発的にマージしてよい条件
 
 次の**すべて**を満たすとき、セッションは人間の承認を待たずに `gh pr merge` してよい。
 
 1. **CI が緑である**（`gh pr checks` がすべて `pass`）。
-   本リポジトリの CI は 6 ゲート——`unittest`・`benchmark --check`・`readout_sim --check`・
-   `validate_state.py`・`check_citations.py`・`check_memo_citations.py`。
+   本リポジトリの CI は 8 ゲート——`unittest`・`benchmark --check`・`readout_sim --check`・
+   `validate_state.py`・`check_citations.py`・`check_memo_citations.py`・
+   `check_memo_ledger_refs.py`・`check_doc_numbers.py`
+   （2026-10-21 時点。本節は初版から数が変わっていたため、同日に訂正した）。
 2. **`MERGEABLE` / `CLEAN` である**（コンフリクトがない）。
 3. **PR 本文に、何をしたかと検証結果を明記している。**
    マージが人間の目を通らない分、**後から読む者が判断できる材料**を PR に残す義務が生じる。

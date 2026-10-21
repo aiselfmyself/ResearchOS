@@ -62,8 +62,8 @@
 以下は**実測値**であり、`scripts/check_doc_numbers.py`（CI の 8 番目のゲート）が本文書の記述と
 リポジトリからの再計算値を突き合わせて検査する。算出コマンドは下記「使い方」節。
 
-- 台帳: sources=22 / evidence=81 / claims=9 / verifications=32 / hypotheses=2
-- テスト: 合計 242件（`tests/` の 12 ファイル。内訳は下記 §構成）
+- 台帳: sources=23 / evidence=86 / claims=9 / verifications=34 / hypotheses=2
+- テスト: 合計 243件（`tests/` の 12 ファイル。内訳は下記 §構成）
 - CI ゲート: 8ゲート（`.github/workflows/core-check.yml` の `run:` を持つステップ数）
 
 **なぜこの節を引用ブロック（`>`）で書かないか** —— ゲートは「`>` で始まる行」を**過去の
@@ -115,7 +115,7 @@ tests/
   test_check_citations.py      書誌照合テスト（17件・ネットワーク非依存）
   test_check_memo_citations.py 調査メモ内引用の照合テスト（33件）
   test_measure_agreement.py    並列セッション間一致度の測定テスト（25件）
-  test_ownership.py            所有マップによるパス分類テスト（16件）
+  test_ownership.py            所有マップによるパス分類テスト（17件）
   test_readout_sim.py          共通モード障害シミュレータの回帰テスト（20件）
   test_check_memo_ledger_refs.py メモ内ID・パス参照の検査テスト（12件）
   test_estimate_rho.py         rho 推定器の回帰テスト（13件）
@@ -123,7 +123,7 @@ tests/
   test_check_doc_numbers.py    文書内の陳腐化した数値の検査テスト（21件）
   test_holdout_eval.py         hold-out 分割と過適合判定のテスト（18件）
   test_prune_candidates.py     低寄与コンポーネント報告のテスト（19件）
-                               ── 合計 242件
+                               ── 合計 243件
 contributions/         研究ノート（統合レポート・調査メモ・全文読解レポート・共通モード測定）
 docs/                  分析レポートと設計記録（並行作業の所有マップは docs/parallel-work-ownership.md。強制力なし）
 .github/workflows/
@@ -134,7 +134,7 @@ docs/                  分析レポートと設計記録（並行作業の所有
 ## 使い方
 
 ```sh
-# 1. テスト（約5秒・242件）
+# 1. テスト（約5秒・243件）
 python3 -m unittest discover -s tests -v
 
 # 2. ベンチマークの再現性確認（fresh実行と成果物の照合）
