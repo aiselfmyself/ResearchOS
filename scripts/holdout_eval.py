@@ -1,30 +1,27 @@
 #!/usr/bin/env python3
-"""Hold-out / OOD separation for the repository's deterministic checks.
+"""Out-of-sample robustness diagnostic for deterministic repository checks.
 
-WHY THIS EXISTS
----------------
-RRSI (arXiv:2609.24972, triaged in `docs/literature-triage-2026-10-21.md`)
-improves a *harness* by evaluating candidate changes against a fixed task set,
-and guards against the obvious failure: **the harness overfits to the tasks it
-was tuned on.** Its remedy is to separate the indicator tasks used to guide
-search from a held-out / OOD evaluation used to decide adoption.
+RELATION TO RRSI (arXiv:2609.24972)
+----------------------------------
+This tool borrows only the generalization concern, not the RRSI selection
+algorithm. RRSI's critic reads a candidate harness diff BEFORE evaluation and
+screens for task-specific content. Its selector still evaluates candidates on
+the evolve set, using a noise-adjusted performance floor and a policy-token
+cost rule. Held-out and OOD benchmarks are used to report transfer after the
+evolution run; they are not the critic and are not the paper's candidate
+adoption rule.
 
-This repository has the same shape, with different nouns:
+This script instead partitions a small local corpus (memos/docs) and measures
+whether existing deterministic detectors behave differently on the two parts.
+It neither reads candidate diffs for benchmark leakage nor evaluates an agent
+harness on task benchmarks. Its local "adopt" / "reject" labels are diagnostic
+heuristics only, not RRSI decisions or a guarantee of generalization.
 
-    RRSI                                this repository
-    ---------------------------------   ----------------------------------
-    harness (prompts, control flow)     CI + scripts + docs conventions
-    fixed task set                      the current corpus (memos, docs)
-    candidate edit                      a new check, a skip rule, a threshold
-    overfitting                         "tuned until the gate is green"
-
-The last row is not hypothetical. `scripts/check_doc_numbers.py` had to grow
-two skip rules (blockquotes, `drift-ok`) and a narrowing of the "N件" pattern
-before it stopped reporting false positives. **Every one of those rules was
-fitted to the corpus in front of me.** Nothing in the repository checked
-whether the rules generalise to files that were not part of that fitting.
-
-This module supplies that missing check.
+The concern is still useful here: `scripts/check_doc_numbers.py` grew skip
+rules (blockquotes, `drift-ok`) and a narrower "N件" pattern after false
+positives on the corpus in front of it. However, this corpus has already been
+seen during development, and a hash split of repository files/lines is not a
+pristine benchmark hold-out. Repeatedly consulting it can itself overfit.
 
 WHAT IT DOES
 ------------
@@ -32,11 +29,12 @@ WHAT IT DOES
    (SHA-256 of the path under a recorded seed), so the split is stable across
    runs and machines.
 2. Runs a detector over each partition separately.
-3. Reports the generalisation gap, and flags the RRSI failure mode:
-   **zero findings on dev, findings on hold-out** -- i.e. a detector that
-   looks clean only on the partition it was tuned against.
-4. Gives an **adoption verdict judged on the hold-out partition**, not on dev.
-   This is RRSI's central rule: *adoption is decided out of sample.*
+3. Reports the generalisation gap and flags a diagnostic pattern such as zero
+   findings on dev but findings on hold-out. This is a reason to inspect the
+   rule, not proof that it is benchmark-specific or wrong.
+4. Emits local diagnostic labels based on the partition results. They do not
+   replace code review, a pre-evaluation diff critic, or a separate evaluation
+   on genuinely unseen task suites.
 
 WHAT IT DELIBERATELY DOES NOT DO
 --------------------------------
@@ -46,10 +44,10 @@ WHAT IT DELIBERATELY DOES NOT DO
   findings on both partitions is a *normal* state for some detectors, and
   flagging normal states is a mistake this repository has already made once
   (recorded as lesson A7).
-* It does **not** judge whether a detector is *correct*. Only whether its
-  behaviour transfers across a partition it was not tuned on.
-* It does **not** limit edits per round (RRSI's other regulariser). In this
-  repository that is the PR review process, not a script.
+* It does **not** judge whether a detector is correct, identify task-specific
+  logic in a candidate diff, or establish performance transfer to OOD tasks.
+* It does **not** limit edits per round or implement RRSI's critic, noise-band
+  selection, cost accounting, or component pruning.
 
 USAGE
 -----
@@ -326,7 +324,7 @@ def evaluate(name: str, seed: str = DEFAULT_SEED,
         gap = out["holdout"]["rate"] - out["dev"]["rate"]
     out["generalisation_gap"] = gap
 
-    # --- RRSI adoption rule: decide out of sample -------------------------
+    # --- Local hold-out diagnostic (not RRSI candidate selection) ----------
     if dev_find == 0 and hold_find > 0:
         out["status"] = "OVERFIT-SUSPECTED"
         out["verdict"] = "reject"
@@ -338,21 +336,24 @@ def evaluate(name: str, seed: str = DEFAULT_SEED,
         out["status"] = "findings-on-holdout"
         out["verdict"] = "reject"
         out["reason"] = (
-            "Findings on hold-out. Adoption is judged out of sample, so this "
-            "detector would not be adopted as-is."
+            "Findings on hold-out: inspect the detector and the partition. "
+            "This local diagnostic is not RRSI's candidate-acceptance rule."
         )
     elif dev_find > 0:
         out["status"] = "dev-only-findings"
         out["verdict"] = "adopt-with-caveat"
         out["reason"] = (
-            "Hold-out is clean but dev has findings. Adoption is permitted, but "
-            "the dev findings are unexplained -- check whether a skip rule is "
-            "hiding them."
+            "Hold-out is clean but dev has findings. This local diagnostic "
+            "permits further review, but the dev findings are unexplained -- "
+            "check whether a skip rule is hiding them."
         )
     else:
         out["status"] = "clean"
         out["verdict"] = "adopt"
-        out["reason"] = "No findings on either partition."
+        out["reason"] = (
+            "No findings on either partition in this small, previously seen "
+            "corpus; this is not proof of generalization."
+        )
 
     # --- exclusion asymmetry ----------------------------------------------
     dd = out["dev_exclusion"]["density"]

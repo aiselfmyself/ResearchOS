@@ -101,10 +101,10 @@ ID の並び（1101.5041 … 2506.16109、`hep-th/9601029`、`quant-ph/0509167`�
 | 差分単位でハーネス変更を評価 | PR 単位の変更 ＋ CI 8 ゲート |
 | 各変更の仮説・diff・スコア／コスト差・採否を記録 | `state/verifications.jsonl`（29件）＋ `hypotheses.jsonl` |
 | 失敗を次ラウンドへ再投入 | 監査の「未対応」リスト → 次の一手 |
-| 固定タスクへの過適合を避ける | **未実装**（A7 の教訓はあるが、hold-out の仕組みはない） |
-| 低寄与コンポーネントの剪定 | **未実装**（監査 ID 19 で「使われていない数値」は検出したが、「使われていない仕組み」は未検出） |
+| 固定タスクへの過適合を避ける | `scripts/holdout_eval.py` を暫定追加。ただし静的detectorの分割診断であり、RRSIのpre-evaluation critic／selectorではない（全文読解後の判定は [RRSI読解 §5](../contributions/2026-10-21_rrsi_reading.md#5-暫定実装への判定)） |
+| 低寄与コンポーネントの剪定 | `scripts/prune_candidates.py` を暫定追加。ただしtests/docs/imports等の構造インベントリで、実測寄与・token costによるRRSI pruningではない（同 §5） |
 
-**A 判定の理由**：対応表の下 2 行が**そのまま本リポジトリの未実装項目**として読める。
+**A 判定の理由（初期トリアージ時点）**：下 2 行は設計課題として直接関連する。現時点では暫定コードが存在するが、RRSI本文の基準との対応は不一致があるため、単純な「実装済み」とは数えず、全文読解後に再評価する（[RRSI読解 §5](../contributions/2026-10-21_rrsi_reading.md#5-暫定実装への判定)）。
 
 #### (2) `arXiv:2609.15983` Stellar Colosseum: A Many-Agent Harness for Long-Horizon Research
 
@@ -255,3 +255,16 @@ ID 18 の成否にかかわらず詳細調査に回す価値がある。
 
 *2026-10-21、統合役。優先順位は要約に基づく暫定選別。*
 *2026-10-21 改訂：アクセスの誤記を訂正。優先 1・2 は abs ページで書誌・抄録を確認済み（本文は未読）。*
+
+## 7. RRSI v3 全文読解後の訂正（2026-10-21）
+
+本節は §2.1・§6.1 の**抄録基準の暫定記録を更新**する。`https://arxiv.org/html/2609.24972v3` を Arena `fetch_page` で全15チャンク通読し、§3・Appendix D/E/F、表1・2・5・8・9を確認した。書誌・逐語引用・数値は [`contributions/2026-10-21_rrsi_reading.md`](../contributions/2026-10-21_rrsi_reading.md) と台帳 `SRC-20261021-a3a2`／`EVD-20261021-*` に記録した。
+
+1. **版情報**：absページは現行v3（2026-10-04改訂）を示す。本文未読で記録していたインベントリのv2をv3へ訂正し、v2を2026-10-19に確認した履歴は訂正注記に保持した。authors/title/submission dateはfixtureと一致し、書誌訂正は不要。
+2. **hold-outとcriticは別機構**：RRSI criticは候補diffを評価前に読み、task/entity/value/answer等のspecificity・grader gaming・inert machinery等を篩にかける。selectorはevolve-setのscoreをnoise floor・token-cost条件で採否する。held-out/OODは探索後の転移評価であり、selectorの代用ではない。
+3. **pruning基準**：編集履歴からcomponent別の最近の最大実測score gain `g_t(l)` を取り、`g_t(l) <= 0` を直近4/5ラウンドで満たすcomponentをproposerへ削除候補として戻す。静的なtest/doc/import参照は寄与測定ではない。policy-token費用は別の候補採択条件。
+4. **両暫定スクリプトの判定**：`holdout_eval.py` と `prune_candidates.py` は本リポジトリの診断／構造インベントリとしては残せるが、RRSIのcritic・selector・pruner実装としては**要修正**。この訂正では人間判断を要する削除・撤回を行っていない。詳細は読解メモ §5。
+5. **budgetの内部不整合**：Eq. (4) は`t/T`、Algorithm 1は`t=0,...,T-1`。この範囲と `ceil` では各設定の最終ラウンドが2 editとなり、Table 5の`b_min=1`および本文の「closing rounds carry a single edit」と一致しない。公式コード（commit `be50316e1db05914068a973f322770ef08ed7ba1`、2026-09-23）でも`budget_table`は`range(T)`で同じ端点問題を持つ。ローカル実装時は勝手に式を補正せず、実行indexを明示してテストする。
+6. **コスト目的**：30% fewer policy tokensは付随指標ではなく論文の成果の一つ。Table 2のworkspace ablationはunregularized 3.80MからRRSI 2.42M tokens/trial（約36.3%減）であり、abstractの30%は全体のheadlineとして別記する。
+
+公式コードは読み取り確認のみで、本リポジトリへ移植していない。§6.1にある「全文未読」はその節の作成時点の記録として残すが、現在の読解状態は本節および読解メモが優先する。

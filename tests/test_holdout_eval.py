@@ -1,17 +1,14 @@
-"""Tests for scripts/holdout_eval.py (RRSI: hold-out / OOD separation).
+"""Tests for the local out-of-sample diagnostic in scripts/holdout_eval.py.
 
-RRSI's point is that a harness tuned by evaluating candidates on a fixed task
-set overfits to that set, and adoption must therefore be decided out of
-sample. This repository has the same shape: `check_doc_numbers.py` was made
-to stop reporting false positives by adding skip rules (blockquotes,
-`drift-ok`) and narrowing the "N件" pattern -- **every one of those rules was
-fitted to the corpus in front of the author.** Nothing checked whether they
-generalise.
+The tool is inspired by RRSI's generalization concern but is not its critic or
+candidate selector: RRSI screens candidate diffs before evaluation and selects
+on the evolve set, then reports held-out/OOD transfer. Here a deterministic
+repository detector is run on partitions of a small, previously seen corpus.
 
 The instrument is only worth having if it actually fires, so the most
 important test here is `test_detects_overfitting`: a synthetic corpus where
-the dev partition is clean and the hold-out is not must be rejected with
-status OVERFIT-SUSPECTED.
+the dev partition is clean and the hold-out is not must be flagged as a local
+diagnostic with status OVERFIT-SUSPECTED.
 
 Also pinned:
   * the partition is deterministic and stable when files are added;

@@ -1,21 +1,27 @@
 #!/usr/bin/env python3
-"""Report low-contribution components, so a human can decide what to prune.
+"""Inventory structural usage signals for human maintenance triage.
 
-WHY THIS EXISTS
----------------
-RRSI (arXiv:2609.24972, triaged in `docs/literature-triage-2026-10-21.md`)
-does not only regularise harness search -- it also **prunes components of
-little value**, on the grounds that a harness accumulates parts that cost
-tokens and attention while contributing nothing.
+RELATION TO RRSI (arXiv:2609.24972)
+----------------------------------
+RRSI's pruning signal is measured utility: it tracks recent score changes for
+evaluated edits by component, and sends components with no strictly positive
+recent measured gain back to the proposer for removal. A separate acceptance
+rule measures policy-token cost. This script implements neither rule.
 
-This repository has been accumulating parts too. Over three days it grew from
-4 CI gates to 8, and from 1 check script to 8. Nothing has ever asked which of
-them earn their place.
+Instead, it reports static repository signals (CI inclusion, tests, doc
+references, and importers) that can help a human decide where to inspect. They
+are not measures of performance contribution, token cost, component size, or
+continued usefulness. The resulting candidate list is a prompt for review,
+not an RRSI pruning verdict and not an authorization to delete anything.
+
+The repository has been accumulating parts too. This tool asks which pieces
+have observable structural links, while leaving utility and removal decisions
+to measured evidence and human review.
 
 WHAT THIS REPORTS
 -----------------
 For every script in `scripts/` and every gate in `core-check.yml`, it computes
-mechanically-checkable contribution signals:
+mechanically-checkable structural signals:
 
     in_ci              is the script a CI gate step?
     has_tests          does tests/test_<name>.py exist?
