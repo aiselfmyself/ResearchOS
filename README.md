@@ -62,9 +62,9 @@
 以下は**実測値**であり、`scripts/check_doc_numbers.py`（CI の 8 番目のゲート）が本文書の記述と
 リポジトリからの再計算値を突き合わせて検査する。算出コマンドは下記「使い方」節。
 
-- 台帳: sources=23 / evidence=88 / claims=9 / verifications=40 / hypotheses=6 / relations=235
+- 台帳: sources=23 / evidence=88 / claims=9 / verifications=40 / hypotheses=6 / relations=241
 - 関係台帳の中身（`scripts/gap_scan.py` の実測・ゲート対象外）:
-  unassessed **2 / 88 (2.3%)**、unexplained **22 / 88 (25.0%)**、unresolved のみ 0 件、
+  unassessed **0 / 88 (0.0%)**、unexplained **21 / 88 (23.9%)**、unresolved のみ 0 件、
   provisional **58 / 88**（`observation_key` の注釈 30 件により non-provisional 30 件）
 - 観測キーの注釈: `state/evidence_keys.jsonl`（凍結ベース・空）＋`state/evidence_keys.d/*.jsonl` の **30 件**（30 EVD）
 - テスト: 合計 437件（`tests/` の 20 ファイル。内訳は下記 §構成）
@@ -74,11 +74,14 @@
 凍結ベースであり、2026-10-21 以降の追記先は `state/<台帳名>.d/<YYYY-MM-DD>-<12桁hex>.jsonl`。
 旧パスは**全件一覧ではない**（履歴的な参照はそのまま解決する）。
 
-**関係台帳（REL）は 2026-10-21 に投入された。** 既存 2 仮説への裁定 172 行（`HYP-001` 12/0/63/11、
-`HYP-002` 11/0/71/4。順に support/refute/neutral/unresolved）と、新仮説 4 件（`HYP-20261021-*`）への
-63 行の計 235 行。`refute` は **0 件**だが、これは「反駁が無い」ではなく、`observation_key` の
-無い単独出典の反駁が `provisional` として数えられないため（fail-closed）。判断の記録は
-`contributions/2026-10-21_relation_backfill_integration.md` にある。
+**関係台帳（REL）は 2026-10-21 に投入された。** 初回投入は既存 2 仮説への裁定 172 行と
+新仮説 4 件（`HYP-20261021-*`）への 63 行の計 235 行。その後、ID18 本文確認で追加された
+新規 EVD 2 件へ 6 行を backfill し、現在は **241 行**である（`HYP-001` 12/0/65/11、
+`HYP-002` 11/0/73/4。順に support/refute/neutral/unresolved）。`refute` は **0 件**だが、
+これは「反駁が無い」ではなく、`observation_key` の無い単独出典の反駁が `provisional` として
+数えられないため（fail-closed）。判断の記録は
+`contributions/2026-10-21_relation_backfill_integration.md` と
+`contributions/2026-10-21_relation_backfill_id18_new_evidence.md` にある。
 
 **なぜこの節を引用ブロック（`>`）で書かないか** —— ゲートは「`>` で始まる行」を**過去の
 スナップショット**として数値検査から除外する。上の各段落で日付付きに述べた件数はその時点の
@@ -89,10 +92,11 @@
 
 参考（ゲートの検査対象外。算出方法は `contributions/2026-10-21_current-status-audit.md` §1.2 と
 `scripts/gap_scan.py`）：出典 23 件のうち EVD を持たないものは 0 件。EVD 88 件のうち support の REL を
-持たないものは **22 件（25.0%）**。うち 20 件は「書誌監査など仮説の対象外 6 件」「外部化しても
-再現性が崩れた負の開示 3 件」「統制欠如による保留 11 件」に分かれ、support を付けるべき観測ではない。
-残りの 2 件は ID18 本文確認のシャード変換で追加された新規 EVD で、関係 backfill は未実施である
-（変換記録は `contributions/2026-10-21_id18_shard_conversion.md` §5）。
+持たないものは **21 件（23.9%）**。この 21 件は「書誌監査など仮説の対象外 6 件」「外部化しても
+再現性が崩れた負の開示 3 件」「統制欠如・検出力不足による保留 12 件」に分かれ、support を付けるべき
+観測ではない。ID18 本文確認で追加された新規 EVD 2 件のうち、1 件は support、もう 1 件は
+検出力不足のため unresolved と裁定した
+（`contributions/2026-10-21_relation_backfill_id18_new_evidence.md`）。
 
 ## 構成
 
