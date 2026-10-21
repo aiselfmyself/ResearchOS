@@ -190,6 +190,30 @@ class RegistrationTest(unittest.TestCase):
             self.assertIsInstance(records, list)
 
 
+class SearchChannelTest(unittest.TestCase):
+    """Round 1 found that a known-item lookup had no honest channel."""
+
+    def test_known_item_is_modelled(self) -> None:
+        schema = json.loads((ROOT / "schemas" / "search_log.json").read_text(encoding="utf-8"))
+        channels = schema["properties"]["channel"]["enum"]
+        for channel in ("keyword", "citation", "review", "known_item", "manual"):
+            with self.subTest(channel=channel):
+                self.assertIn(channel, channels)
+
+    def test_unknown_channel_is_rejected_by_the_schema(self) -> None:
+        schema = json.loads((ROOT / "schemas" / "search_log.json").read_text(encoding="utf-8"))
+        record = _query(channel="browsing")
+        errors = vs.validate_record(record, schema, "ResearchOS Search Log Entry")
+        self.assertTrue(any("not in" in e for e in errors), errors)
+
+    def test_round_one_records_are_valid(self) -> None:
+        """The first real round must stay loadable: two searches, one hypothesis."""
+        records, errors = vs.load_jsonl(ROOT / "state" / "search_log.jsonl")
+        self.assertEqual(errors, [], msg="\n".join(errors))
+        channels = {r.get("channel") for r in records}
+        self.assertIn("known_item", channels)
+
+
 class ExemptionFileTest(unittest.TestCase):
     def test_real_exemptions_resolve(self) -> None:
         exempt, errors = vs.load_cycle_exemptions(ROOT / vs.CYCLE_EXEMPTIONS)

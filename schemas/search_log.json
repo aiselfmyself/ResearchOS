@@ -3,26 +3,63 @@
   "title": "ResearchOS Search Log Entry",
   "description": "One search actually executed, so that 'we found nothing' can be distinguished from 'we did not look'. Written by the search step (S1) of the hypothesis cycle; a new source must point back at one of these records via source.query_id. A model cannot run this step from a script in this environment -- export.arxiv.org is not reachable from the sandbox -- so the record is written by the agent session that performed the fetch. See docs/2026-10-21_hypothesis-cycle-automation.md section 3 (S1).",
   "type": "object",
-  "required": ["query_id", "query", "executed_at", "channel", "hits"],
+  "required": [
+    "query_id",
+    "query",
+    "executed_at",
+    "channel",
+    "hits"
+  ],
   "properties": {
-    "query_id": {"type": "string"},
-    "query": {"type": "string"},
-    "executed_at": {"type": "string", "description": "YYYY-MM-DD (or full ISO timestamp)"},
+    "query_id": {
+      "type": "string"
+    },
+    "query": {
+      "type": "string"
+    },
+    "executed_at": {
+      "type": "string",
+      "description": "YYYY-MM-DD (or full ISO timestamp)"
+    },
     "channel": {
       "type": "string",
-      "enum": ["keyword", "citation", "review", "manual"],
-      "description": "keyword = full-text/abstract search; citation = forward or backward citation walk; review = survey/review article; manual = a human supplied the item (still recorded, so the route is visible)."
+      "enum": [
+        "keyword",
+        "citation",
+        "review",
+        "known_item",
+        "manual"
+      ],
+      "description": "keyword = full-text/abstract search; citation = forward or backward citation walk; review = survey/review article; known_item = a specific paper fetched by identifier (added 2026-10-21 in round 1: looking up a paper already known by arXiv ID is not a keyword search and was previously only expressible as 'manual'); manual = a human supplied the item (still recorded, so the route is visible)."
     },
-    "api": {"type": "string", "description": "tool or endpoint used, e.g. 'arxiv abs page via web fetch'"},
-    "hits": {"type": "integer"},
-    "screened": {"type": "integer"},
-    "included_source_ids": {"type": "array", "items": {"type": "string"}},
-    "excluded_reason": {"type": "string"},
+    "api": {
+      "type": "string",
+      "description": "tool or endpoint used, e.g. 'arxiv abs page via web fetch'"
+    },
+    "hits": {
+      "type": "integer"
+    },
+    "screened": {
+      "type": "integer"
+    },
+    "included_source_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "excluded_reason": {
+      "type": "string"
+    },
     "derived_from": {
       "type": "array",
-      "items": {"type": "string"},
+      "items": {
+        "type": "string"
+      },
       "description": "Ledger IDs (EVD/HYP/REL) whose gap produced this query. A query with no such link is an unplanned search; that is allowed but reported by the planner."
     },
-    "notes": {"type": "string"}
+    "notes": {
+      "type": "string"
+    }
   }
 }
