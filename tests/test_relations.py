@@ -114,14 +114,24 @@ class RelationLedgerFilesTest(unittest.TestCase):
         self.assertEqual(id_key, "relation_id")
         self.assertEqual(vs.ID_PREFIXES["relations"], "REL")
 
-    def test_empty_relation_ledger_is_valid(self) -> None:
+    def test_frozen_base_is_empty_and_the_union_is_valid(self) -> None:
+        """The base stays empty; R4 wrote the verdicts into a shard.
+
+        When this test was written the union was empty too ("until R4 writes
+        verdicts"). R4 ran on 2026-10-21, so asserting an empty union would
+        now pin a transient state instead of the rule: the frozen base is
+        never appended to, and the union view is what must be valid.
+        """
         path = ROOT / "state" / "relations.jsonl"
         self.assertTrue(path.exists(), "state/relations.jsonl must exist")
+        self.assertEqual(path.read_bytes(), b"", "the frozen base must stay empty")
         records, errors = vs.load_jsonl(path)
         self.assertEqual(errors, [])
-        self.assertEqual(records, [])
+        self.assertGreater(len(records), 0, "R4 wrote the verdicts into a shard")
+        for record in records:
+            self.assertIn(record["verdict"], ("support", "refute", "neutral", "unresolved"))
 
-    def test_real_repository_passes_with_empty_relation_ledger(self) -> None:
+    def test_real_repository_passes_with_the_relation_ledger(self) -> None:
         report = vs.run_all_checks(ROOT)
         self.assertEqual(report["errors"], [], msg="\n".join(report["errors"]))
 
@@ -409,7 +419,12 @@ class MemoRelReferenceTest(unittest.TestCase):
     def test_ledger_id_map_has_a_rel_bucket(self) -> None:
         ids = cm.load_ledger_ids()
         self.assertIn("REL", ids)
-        self.assertEqual(ids["REL"], set())  # empty until R4 writes verdicts
+        # R4 wrote the verdicts on 2026-10-21; the bucket must hold exactly the
+        # union view's relation IDs (not just the frozen base's, which is empty).
+        records, errors = vs.load_jsonl(ROOT / "state" / "relations.jsonl")
+        self.assertEqual(errors, [])
+        self.assertEqual(ids["REL"], {r["relation_id"] for r in records})
+        self.assertGreater(len(ids["REL"]), 0)
 
     def test_existing_rel_reference_resolves(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
