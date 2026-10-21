@@ -57,7 +57,7 @@ README の数値追随は、人間の例外許可に加えて `docs/parallel-wor
 | `scripts/holdout_eval.py` | `memo_citations` 検出器の JSON 直読を廃止し共通ローダーへ |
 | `scripts/ledger_digest.py`（新規） | レコード内容の SHA-256 を出力する計測器。`--raw-only` が移行前ビュー、既定が統合ビュー。両者の diff が空であることが集合一致の証明になる |
 | `tests/test_ledger_shards.py`（新規39件） | 読取・件数・参照整合性の回帰（§2.3） |
-| `README.md`・`docs/minimal-core-and-ci.md` | stale だったテスト数 280→332、`test_ledger_shards.py`・`test_merge_ledgers.py` の一覧行追加のみ |
+| `README.md`・`docs/minimal-core-and-ci.md` | stale だったテスト数を実測に追随（最終 342件）。`test_ledger_shards.py` の一覧行を追加（`test_merge_ledgers.py` は main 側で追加済み） |
 
 ### 2.3 シャード配置の規則（実装した契約）
 
@@ -174,18 +174,33 @@ CONFLICT (content): Merge conflict in state/evidence.jsonl
 
 これは移行前から存在する性質（件数を散文に書く限り、その行は共有される）であり、本移行で悪化はしていない。台帳ファイル側の衝突は消え、残るのは1行の数値だけである。対策案は §8 に記す。
 
+### 4.4 実リポジトリでの実例（`origin/main` の取り込み）
+
+本PRの作業中に main が進み（PR #55、抽出採点器の追加）、`git merge origin/main` を実行した。実測：
+
+```text
+Auto-merging README.md
+CONFLICT (content): Merge conflict in README.md
+Auto-merging docs/minimal-core-and-ci.md
+CONFLICT (content): Merge conflict in docs/minimal-core-and-ci.md
+```
+
+- 衝突したのは **`README.md` と `docs/minimal-core-and-ci.md` の現在値の数値行だけ**。`state/` の台帳、`tests/fixtures/` のスナップショット、`scripts/` のコードは**すべて自動マージ**された。
+- すなわち §4.3 の予測は合成実験だけでなく、実際の並行開発でも再現した。
+- 解決は「実測値（342 = 293 + 採点器10 + シャード39）に合わせ、main 側の一覧行を残し、`test_ledger_shards.py` の行を足す」だけだった。解決後のゲート8は 0 stale。
+
 ## 5. ゲート実測（移行後）
 
 | コマンド | 実測 |
 |---|---|
-| `python3 -m unittest discover -s tests` | `Ran 332 tests in 5.995s` / `OK`（終了0） |
+| `python3 -m unittest discover -s tests` | `Ran 342 tests in 5.936s` / `OK`（終了0） |
 | `python3 gitswarm/benchmarks/benchmark.py --check` | `PASS: benchmark artifact matches a fresh execution`（0） |
 | `python3 gitswarm/readout_sim.py --check` | `PASS: readout-sim artifact matches a fresh execution`（0） |
 | `python3 scripts/validate_state.py` | `PASS: research ledgers valid (sources=23, evidence=86, claims=9, verifications=34, hypotheses=2, relations=0)`（0） |
 | `python3 scripts/check_citations.py` | `summary: 22 arXiv source(s) checked, 1 skipped, 0 failure(s)`（0） |
-| `python3 scripts/check_memo_citations.py` | `summary: 27 memo(s) scanned, 61 arXiv citation(s) checked, 3 skipped, 0 failure(s)`（0） |
-| `python3 scripts/check_memo_ledger_refs.py` | `summary: 27 memo(s) scanned, 0 dangling reference(s), 5 archived ID reference(s)`（0） |
-| `python3 scripts/check_doc_numbers.py` | `actual: tests=332 gates=8 sources=23 evidence=86 claims=9 verifications=34 hypotheses=2` / `summary: 2 doc(s) scanned, 0 stale number(s)`（0） |
+| `python3 scripts/check_memo_citations.py` | `summary: 28 memo(s) scanned, 61 arXiv citation(s) checked, 3 skipped, 0 failure(s)`（0） |
+| `python3 scripts/check_memo_ledger_refs.py` | `summary: 28 memo(s) scanned, 0 dangling reference(s), 5 archived ID reference(s)`（0） |
+| `python3 scripts/check_doc_numbers.py` | `actual: tests=342 gates=8 sources=23 evidence=86 claims=9 verifications=34 hypotheses=2` / `summary: 2 doc(s) scanned, 0 stale number(s)`（0） |
 
 検査7（`check_memo_ledger_refs.py`）は旧パスを残したまま **0 dangling**。`contributions/*.md` が参照する `state/*.jsonl` のパスは引き続き実在し、意味だけが「凍結ベース」に変わる。
 
@@ -219,7 +234,7 @@ CONFLICT (content): Merge conflict in state/evidence.jsonl
 
 - `docs/record-id-scheme.md`：新規レコードの追記先を `state/<name>.d/` に変更。ID 採番は `new_id.py` のまま（統合ビューの ID と衝突確認する）。
 - `docs/parallel-work-ownership.md`：§2.1 の追記手順に「1セッション1シャードファイル、既存シャードを編集しない」を追加。`state/` の分類（`ANY_SESSION_APPEND`）はそのままで良い。
-- `docs/minimal-core-and-ci.md`：§2 のゲート4・8の説明に「台帳は統合ビュー」「件数は統合レコード数」を追記。テスト数は追随済み（332）。
+- `docs/minimal-core-and-ci.md`：§2 のゲート4・8の説明に「台帳は統合ビュー」「件数は統合レコード数」を追記。テスト数は追随済み（342）。
 
 ## 7. 取り消し（revert）手順
 
@@ -237,23 +252,18 @@ main（`352f8fe`）に本ブランチを `--no-ff` でマージした木で全�
 
 ```text
 === merge the migration branch ===
-merge commit: e41557b
+merge commit: 667184f
 === gates on the merged tree ===
-Ran 332 tests in 5.727s
+Ran 342 tests in 5.840s
 OK
 summary: 2 doc(s) scanned, 0 stale number(s)
-PASS: research ledgers valid (sources=23, evidence=86, ...)
+PASS: research ledgers valid (sources=23, evidence=86, claims=9, ...)
 === single revert of the merge ===
- delete mode 100644 scripts/ledger_digest.py
- delete mode 100644 scripts/ledger_store.py
- delete mode 100644 tests/test_ledger_shards.py
-revert commit: 6b4e4a4
+revert commit: c918165
 === tree identity with the pre-migration main ===
-diff_lines=0
+diff vs pre-migration main (352f8fe): 0 lines
 === gates after revert ===
-FAIL: test_main_exits_zero_on_the_real_repo (test_check_doc_numbers.RealRepoTest...)
-FAIL: test_repo_docs_have_no_stale_numbers (test_check_doc_numbers.RealRepoTest...)
-Ran 293 tests in 5.416s
+Ran 293 tests in 5.884s
 FAILED (failures=2)
 summary: 2 doc(s) scanned, 4 stale number(s)
 PASS: research ledgers valid (sources=23, evidence=86, claims=9, ...)
