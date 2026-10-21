@@ -13,7 +13,7 @@
 1. **未評価は全件。** 関係台帳 `state/relations.jsonl` は 0 レコード、EVD は 86 件。したがって `unassessed = 86 / 86（100.0%）`、`unexplained = 86 / 86（100.0%）` である。
 2. **反駁は 0 件。** `observation_key` を持つ EVD は 86 件中 **0 件**なので、provisional 導出（fail-closed）により全 86 件が provisional になる。非 provisional は 0 件で、`refute` は両仮説とも 0。将来 `refute` の REL が入っても、独立出典による再遭遇が無い限り「抑止」として計上される。
 3. **観測領域（source_id）23 個すべてが未評価。** 最大は `SRC-20261020-f295`（Agora）の 11 件、次いで `SRC-20261021-a3a2` の 8 件。EVD を持たない出典は 0 件。
-4. **SHELDON メモ §6.3 の予測（全件未評価・refutation 0 件）は形状として的中した。** ただし絶対値は 54 件ではなく 86 件である。§6.3 の 54 は**メモ執筆時点（PR #45 相当）のスナップショット**であり、その後の PR #46〜#54 で EVD が 32 件増えた。§6.1 の「12 領域」も現在は 23 領域。
+4. **SHELDON メモ §6.3 の予測（全件未評価・refutation 0 件）は形状として的中した。** ただし絶対値は 54 件ではなく 86 件である。§6.3 の 54 は**メモ執筆時点（PR #45 相当）のスナップショット**であり、その後の複数の PR の取り込みで EVD が 32 件増えた。§6.1 の「12 領域」も現在は 23 領域。
 5. **CI ゲートは 8 中 6 緑。** 赤の 2 つ（テスト・数値検査）は**本 PR の開始前から赤**であった（`README.md` の「合計 280件」に対し実測 293 件）。計測器の欠陥ではない。詳細は §7。**開始時点で CI が緑でないため、本 PR はマージせず統合役の判断に委ねる。**
 
 ---
@@ -163,7 +163,7 @@ python3 scripts/gap_scan.py --state-dir <dir>   # 合成台帳を指す（テス
 
 ---
 
-## 6. テスト（`tests/test_gap_scan.py`、45 件）
+## 6. テスト（`tests/test_gap_scan.py`、46 件）
 
 合成台帳（一時ディレクトリ）のみを使い、実台帳の数値には依存しない。固定した性質：
 
@@ -176,7 +176,7 @@ python3 scripts/gap_scan.py --state-dir <dir>   # 合成台帳を指す（テス
 - 終了コード：全件未評価でも 0、台帳欠落／不正 JSON／ディレクトリ欠落／引数不正は 2
 - 台帳を書き換えないこと、2 回の実行が同一であること
 
-実行：`python3 -m unittest tests.test_gap_scan -v` → **45 件 OK**（実測）。
+実行：`python3 -m unittest tests.test_gap_scan -v` → **46 件 OK**（実測）。
 
 ---
 
@@ -186,7 +186,7 @@ python3 scripts/gap_scan.py --state-dir <dir>   # 合成台帳を指す（テス
 
 | # | コマンド | 終了コード | 結果 |
 |---|---|---|---|
-| 1 | `python3 -m unittest discover -s tests` | **1** | 338 件中 2 件失敗（いずれも `test_check_doc_numbers.RealRepoTest`） |
+| 1 | `python3 -m unittest discover -s tests` | **1** | 339 件中 2 件失敗（いずれも `test_check_doc_numbers.RealRepoTest`） |
 | 2 | `python3 gitswarm/benchmarks/benchmark.py --check` | 0 | PASS |
 | 3 | `python3 gitswarm/readout_sim.py --check` | 0 | PASS |
 | 4 | `python3 scripts/validate_state.py` | 0 | PASS（`evidence=86` / `relations=0`） |
@@ -202,7 +202,7 @@ python3 scripts/gap_scan.py --state-dir <dir>   # 合成台帳を指す（テス
 - ゲート 1：`Ran 293 tests` → `FAILED (failures=2)`（失敗は同じ 2 件）
 - ゲート 8：`actual: tests=293 gates=8 sources=23 evidence=86 ...` に対し、文書側は 280 → 4 件 STALE
 
-つまり **`main` の `352f8fe` は既に赤**である。原因は、テストを追加した過去の PR が `README.md` と `docs/minimal-core-and-ci.md` の件数（280）を更新しなかったこと。本 PR はテストを 45 件足すため、実測は 338 になり**差は 280 対 338 に広がる**（新たな種類の失敗ではなく、同じ陳腐化の拡大）。
+つまり **`main` の `352f8fe` は既に赤**である。原因は、テストを追加した過去の PR が `README.md` と `docs/minimal-core-and-ci.md` の件数（280）を更新しなかったこと。本 PR はテストを 46 件足すため、実測は 339 になり**差は 280 対 339 に広がる**（新たな種類の失敗ではなく、同じ陳腐化の拡大）。
 
 この陳腐化の修正は `README.md` と `docs/minimal-core-and-ci.md` の**既存ファイル編集**を伴う。本 PR の依頼条件（成果物は新規作成のみ、既存ファイル・`state/` は変更しない）に反するため**行っていない**。統合役の判断を仰ぐ（R1 は同じ状況を承認を得て件数更新込みで解消した：`contributions/2026-10-21_relation_ledger_impl.md` §9）。
 

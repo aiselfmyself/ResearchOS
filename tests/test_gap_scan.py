@@ -368,6 +368,23 @@ class ProvisionalRefuteTest(unittest.TestCase):
         # A record exists, so the observation is not unassessed.
         self.assertEqual(report["unassessed"]["count"], 0)
 
+    def test_internal_counter_names_are_not_valid_verdicts(self):
+        # Guards the VERDICTS membership test: "other" and
+        # "refute_suppressed_provisional" are counter names, not verdicts, so a
+        # REL carrying one is unknown, not silently counted in that bucket.
+        for name in ("other", "refute_suppressed_provisional"):
+            report = report_for(
+                [evd("EVD-001", "SRC-A")],
+                [rel("REL-1", "HYP-001", "EVD-001", name)],
+            )
+            row = hypothesis_row(report, "HYP-001")
+            self.assertEqual(row["other"], 1)
+            self.assertEqual(row["refute_suppressed_provisional"], 0)
+            self.assertEqual(
+                report["anomalies"]["unknown_verdict"],
+                [f"REL-1: verdict={name}"],
+            )
+
     def test_duplicate_pairs_are_reported(self):
         report = report_for(
             [evd("EVD-001", "SRC-A")],

@@ -266,9 +266,11 @@ def analyse(
                 counts["refute_suppressed_provisional"] += 1
             else:
                 counts["refute"] += 1
-        elif verdict in counts:
+        elif verdict in VERDICTS:
             counts[verdict] += 1
         else:
+            # Includes an empty verdict and any out-of-enum string, even one
+            # that happens to name an internal counter ("other").
             counts["other"] += 1
             anomalies["unknown_verdict"].append(
                 f"{rid}: verdict={verdict or '<missing>'}"
