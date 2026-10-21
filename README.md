@@ -15,6 +15,10 @@
 >
 > **同日の整理**：監査 ID 11（旧ブランチのアーカイブ）を完了した。人間の承認を得て `arena/*` のリモートブランチ **36 本すべてを削除**し、**リモートのブランチは `main` のみ**になった。あわせて ID 12（記録数値のドリフト是正）を人間の判断で撤回した。これで `docs/incomplete-work-audit-2026-10-20.md` の**未対応項目はゼロ**になった。
 >
+> **証拠の紐付け完了**：`scripts/check_memo_ledger_refs.py` の新設に伴い調べたところ、
+> **47 件中 18 件の EVD がどのメモからも参照されていなかった**（`task/TASK.md` §3 は
+> 「主張には必ず証拠と出典を紐付けること」を要求する）。全件を紐付け、**未参照 EVD は 0** になった。
+>
 > **マージ方針（2026-10-21 以降）**：**CI が緑の PR は、人間の承認を待たずに各セッションが `main` へマージしてよい。** 取り消しが安価なためである。破壊的操作（リモートブランチの削除、`--force` を伴う push、台帳レコードの削除、リポジトリ設定の変更）は**引き続き人間の明示的な承認を要する**。根拠・境界・前提は `docs/autonomous-merge-policy-2026-10-21.md`。
 
 ## 構成
@@ -29,6 +33,7 @@ scripts/
   check_citations.py   書誌のarXiv照合（オフラインfixture、--liveは手動専用）
   check_memo_citations.py 調査メモ内引用のarXiv照合（オフラインfixture、--liveは手動専用）
   check_ownership.py   並行作業の所有マップによるパス分類（助言専用・CI非接続）
+  check_memo_ledger_refs.py メモ内の台帳ID・パス参照の存在検査（CI7番目のゲート）
 gitswarm/
   problem.py solvers/  30都市TSPの決定論的ソルバ群（greedy/random/two_opt/SA）
   benchmarks/          複数シード実行＋成果物照合（--write/--check）
@@ -43,7 +48,8 @@ tests/
   test_measure_agreement.py    並列セッション間一致度の測定テスト（25件）
   test_ownership.py            所有マップによるパス分類テスト（16件）
   test_readout_sim.py          共通モード障害シミュレータの回帰テスト（20件）
-                               ── 合計 145件
+  test_check_memo_ledger_refs.py メモ内ID・パス参照の検査テスト（12件）
+                               ── 合計 157件
   test_check_memo_citations.py メモ引用照合テスト（33件・ネットワーク非依存）
   test_ownership.py       所有マップ分類テスト（16件・ネットワーク非依存）
   test_readout_sim.py     投票スイープの回帰・閾値予測テスト（20件・ネットワーク非依存）

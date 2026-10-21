@@ -28,6 +28,7 @@
 | `scripts/new_id.py`、`docs/record-id-scheme.md` | **新規**（2026-10-20） | 非連番IDの採番器と規約。並行ブランチが同じ連番を採番して衝突する問題（A5と同型）を、ID側で原理的に解消する。役割・パス制限は導入しない |
 | `scripts/check_citations.py`、`tests/fixtures/arxiv_metadata_snapshot.json`、`tests/test_check_citations.py` | **新規**（2026-10-20） | README「次の段階」2の最小実装。台帳書誌とarXivスナップショット（2026-10-20取得）の照合は標準ライブラリのみ・ネットワーク不要。実API照合（`--live`）は手動専用でCIゲートにしない |
 | `scripts/check_memo_citations.py`、`tests/test_check_memo_citations.py`、fixture追記7件 | **新規**（2026-10-20） | 調査メモ（`contributions/*.md`）の参考文献・本文中arXiv引用と同梱スナップショットの照合。標準ライブラリのみ・ネットワーク不要、`--live` は手動専用。**CIゲート（core-check の6番目）に 2026-10-20 追加済み**（監査 ID 8）。同時に、arXiv ID もURLも持たない参照を黙って SKIP せず MALFORMED として失敗させるよう変更した（折り返し行の未検証を防ぐため） |
+| `scripts/check_memo_ledger_refs.py`、`tests/test_check_memo_ledger_refs.py` | **新規**（2026-10-21、12テスト） | 調査メモ内の台帳ID参照（`SRC-`/`EVD-`/`CLM-`/`VER-`/`HYP-`）とリポジトリパス参照の存在検査。トークンパターンは `validate_state.py` から import しており、台帳側とメモ側の規則がずれることはない。**CIゲート（core-check の7番目）に 2026-10-21 追加済み**。動機と限界（意味的誤りは検出できない）は §2.1。アーカイブ済みIDは ARCHIVED として報告し失敗にしない。`--coverage`（未参照レコードの報告）はゲートにしない |
 | `tests/test_minimal_core.py` | **新規**（28テスト） | 履歴非依存テスト。旧 `test_integrity.py` はコミット数・SHA・ガバナンス台帳に結合していたため不採用（詳細は §3） |
 | `.gitignore` | PR #9そのまま | — |
 
@@ -48,12 +49,15 @@
 
 ## 2. 最小CIの設計（`.github/workflows/core-check.yml`）
 
-ゲートするのは決定論的・再実行可能な4検査のみ：
+ゲートするのは決定論的・再実行可能な**7検査**（2026-10-21 時点。初版は4検査で、2026-10-20 に 5・6 を、2026-10-21 に 7 を追加した）：
 
-1. `python3 -m unittest discover -s tests -v` — 74テスト（約2秒）
+1. `python3 -m unittest discover -s tests -v` — **157テスト**（約3〜5秒）
 2. `python3 gitswarm/benchmarks/benchmark.py --check` — 成果物と fresh run の照合（許容誤差0.01）
-3. `python3 scripts/validate_state.py` — 研究台帳のスキーマ・ID一意・参照整合性
-4. `python3 scripts/check_citations.py` — 台帳書誌と同梱arXivスナップショットの照合（**オフライン・ネットワーク不要**。実API照合の `--live` は手動専用でゲートしない）
+3. `python3 gitswarm/readout_sim.py --check` — 投票シミュレーション成果物と fresh run の照合
+4. `python3 scripts/validate_state.py` — 研究台帳のスキーマ・ID一意・参照整合性（**台帳内の** ID・パス参照の存在検査を含む）
+5. `python3 scripts/check_citations.py` — 台帳書誌と同梱arXivスナップショットの照合（**オフライン・ネットワーク不要**。実API照合の `--live` は手動専用でゲートしない）
+6. `python3 scripts/check_memo_citations.py` — 調査メモ（`contributions/*.md`）の参考文献・本文中arXiv引用と同梱スナップショットの照合（オフライン）
+7. `python3 scripts/check_memo_ledger_refs.py` — 調査メモ内の**台帳ID参照とリポジトリパス参照の存在検査**（オフライン。2026-10-21 追加。後述 §2.1）
 
 設計上の決定：
 
@@ -62,6 +66,35 @@
 - **readout CLIはゲートしない**：履歴にworkerコミットがない間は exit 1 が正常であり、freshな `main` を赤くする理由にならない（A7の教訓：正常状態を失敗として検出するゲートを作らない）
 - **arXiv APIへの実ネットワーク照合はゲートしない**：CIはネットワークなしだけで再実行できる同梱fixture照合（検査4）のみ。`--live` はarXivのレート制限も含め手動実行専用
 - **何を足さないか**：trailer検査、役割検査、append-only検査、landゲート、成果物アップロード、動作確認用の計算テスト。これらは凍結であり、欠落ではない
+
+## 2.1 検査7（メモ内の台帳ID・パス参照）を足した理由と限界
+
+**動機**：`contributions/2026-10-20_integrated_survey_report.md` §3.4 が記録した
+「理解と生成の非対称」——現在のモデルは複雑な文脈の**理解**には熟達するが、同等に洗練された
+**長文の生成**には限界を示す——は、本リポジトリに直接当てはまる。本リポジトリは長文の執筆
+（調査メモ・監査文書・統合レポート・PR本文）をエージェントに委任している。
+
+実際に 2026-10-21 までに、エージェントが書いた長文から**機械検査でしか検出できない問題**が
+3 件出ている。
+
+| # | 内容 | 検出したもの |
+|---|---|---|
+| a | 文献メモが arXiv:2605.23950 を「実験を持たない」と記述（実際は自前の 3×3 実験を持つ） | 並列照合セッションの逐語照合 |
+| b | context engineering の 3 構成要素を「階層」と記述（原典は平坦な列挙） | 同上 |
+| c | メモに記載されたコマンドが存在しないファイル名（日付テンプレート `2026-10-2X`）を指す | **検査7**（本検査） |
+
+**検査7は (a)(b) を検出できない。** これらは意味的な誤りであり、原典と突き合わせなければ
+分からない。検査7が検出できるのは**参照が解決しない**こと——存在しない台帳IDの引用
+（誤記または幻覚）、存在しないパスの参照——だけである。
+**何を検出しないかを明示したうえで置く。** 検出範囲を過大に宣言しない。
+
+**アーカイブ済みIDの扱い**：2026-10-20 に台帳から除いたレコード（CLM-004/005/007 ほか）は
+`docs/archived-ledger-records-2026-10-20.md` に原文が残る。統合レポートはこれらを
+「除外した」旨の記述で正当に参照しているため、**失敗ではなく ARCHIVED として報告**する。
+
+**`--coverage` はゲートにしない**：どのメモからも参照されていない台帳レコードを報告する機能だが、
+新規に起こした EVD は報告へ反映されるまで一時的に未参照になる。
+**正常な状態を失敗として検出するゲートは作らない**（A7 の教訓）。
 
 ---
 
