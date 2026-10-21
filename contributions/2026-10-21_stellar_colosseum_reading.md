@@ -25,7 +25,7 @@
 ### 2.2 書誌照合（引継ぎ資料の誤記を1件訂正）
 
 - title、著者6名、v1/v2 の日付は abs ページ・fixture・引継ぎ資料の3者で一致。fixture の `published: 2026-09-14` も v1 投稿日と一致するため、**fixture の修正は不要**。
-- **カテゴリの誤記を訂正**：`docs/worker-handoff-literature-2026-10-21.md` は「cs.AI / cs.CL / cs.CL」と記すが、abs ページの実体は **cs.AI / cs.CL / cs.LG**（Machine Learning）である。同じ誤記が他のドキュメントにないか grep で確認したところ、該当は引継ぎドキュメントの1箇所のみで、`docs/literature-triage-2026-10-21.md` にはカテゴリ列挙自体がない。fixture にカテゴリ欄はないため fixture 側の変更はなく、`SRC-20261021-2b88` の venue 欄に正しい cs.LG を記録した。引継ぎドキュメントは人間が管理する文書であり、本レポートでは訂正せず報告のみとする（§8.4）。
+- **カテゴリの誤記を訂正**：`docs/worker-handoff-literature-2026-10-21.md` は「cs.AI / cs.CL / cs.CL」と記すが、abs ページの実体は **cs.AI / cs.CL / cs.LG**（Machine Learning）である。同じ誤記が他のドキュメントにないか grep で確認したところ、該当は引継ぎドキュメントの1箇所のみで、`docs/literature-triage-2026-10-21.md` にはカテゴリ列挙自体がない。fixture にカテゴリ欄はないため fixture 側の変更はなく、`SRC-20261021-2b88` の venue 欄に正しい cs.LG を記録した。本レポート作成時点では引継ぎドキュメントを報告のみとしていたが、人間の承認を得て同日中に当該箇所（174行目）を訂正し、訂正注記を残した（§8.4）。
 - ライセンス：arXiv.org perpetual non-exclusive license。
 - 主な数値（抄録・本文）：TCS-Bench 71.0%、Codeforces 218/222。TCS-Bench の他の値（直接 Pro 30.3%／DeepThink 52.0%／GPT-5.6 Pro 68.0%、Colosseum Pro 54.0%・Flash 55.0%、oracle 77.3%）と Codeforces の実行 probe 有無（218/222・rating 4263 と 213/222・3918）は本レポートの主題（修復ループのデータ構造）との関連が薄いため、§6.3 では選択規則の検証に必要な値だけを引用する。
 
@@ -243,9 +243,9 @@ Colosseum のデータモデルのうち、本リポジトリの欠け目（VER 
 - 段階 A に相当する自前測定は新規に行っていない。`readout_sim.py` 側の記述は既存の `EVD-20261020-ffec`（段階 A の決定論的測定）に依拠した。
 - §6.3 の「Colosseum には共通モード測定がない」、§7 の転用判定は**段階 C**（原典記述からの導出・解釈）。
 
-### 8.4 人間判断を要する事項（報告のみ、操作していない）
+### 8.4 人間判断を要する事項（1 は解消済み、2 は提案のみで操作していない）
 
-1. `docs/worker-handoff-literature-2026-10-21.md` のカテゴリ誤記（「cs.AI / cs.CL / cs.CL」→ 正は cs.AI / cs.CL / **cs.LG**。該当はこの1箇所のみで、`docs/literature-triage-2026-10-21.md` にはカテゴリ列挙なし）。ドキュメントの改訂を伴うため、本レポートでは訂正していない。
+1. **（2026-10-21 解消済み）** `docs/worker-handoff-literature-2026-10-21.md` のカテゴリ誤記（「cs.AI / cs.CL / cs.CL」→ 正は cs.AI / cs.CL / **cs.LG**。該当はこの1箇所のみで、`docs/literature-triage-2026-10-21.md` にはカテゴリ列挙なし）。人間の承認を得て同ドキュメント174行目を訂正し、訂正注記を残した。
 2. §7.2 の VER スキーマ拡張案。台帳スキーマの変更であり、人間の承認と DoD の先行記述を要する。
 3. 削除・撤回に該当する操作は一切行っていない。台帳は追記のみ（sources 11→12、evidence 49→55、verifications 29→30）。
 
