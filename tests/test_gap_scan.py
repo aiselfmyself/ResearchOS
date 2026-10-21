@@ -11,6 +11,10 @@ history or on another session's artefacts):
     unexplained (100%);
   * a support REL removes the observation from unexplained (but not from
     unassessed, which asks for a REL of any kind);
+  * a support REL with derived_from=true does NOT count as independent support
+    (2026-10-21 round 1): it is reported as support_derived_from instead, and
+    the observation stays unexplained unless another support REL exists;
+    --include-derived-from restores the old counting;
   * a refute is counted only when the observation is corroborated -- a second
     EVD with the same observation_key from a DIFFERENT source_id. No key, no
     second record, same source, or a missing source all stay provisional, and
@@ -403,6 +407,100 @@ class ProvisionalRefuteTest(unittest.TestCase):
 # --------------------------------------------------------------------------
 # 4. Per-region (source_id) aggregation and ordering
 # --------------------------------------------------------------------------
+class DerivedFromTest(unittest.TestCase):
+    """Support from a hypothesis's own generation input is not support.
+
+    Round 1 of the hypothesis cycle (2026-10-21) recorded derived_from on the
+    relation, and the four hypotheses added that day had 94-100% of their
+    "support" come from their own generation inputs. Counting that again is
+    the exact defect the flag exists to stop.
+    """
+
+    def setUp(self):
+        self.evidence = [evd("EVD-001"), evd("EVD-002")]
+
+    def _report(self, derived, exclude=True):
+        relations = [
+            rel("REL-1", "HYP-001", "EVD-001", "support", derived_from=derived),
+            rel("REL-2", "HYP-001", "EVD-002", "support"),
+        ]
+        return gs.analyse(self.evidence, relations,
+                          [hyp("HYP-001"), hyp("HYP-002")],
+                          exclude_derived_from=exclude)
+
+    def test_derived_support_is_not_counted_by_default(self):
+        report = self._report(True)
+        row = hypothesis_row(report, "HYP-001")
+        self.assertEqual(row["support"], 1)
+        self.assertEqual(row["support_derived_from"], 1)
+
+    def test_derived_support_can_be_counted_explicitly(self):
+        report = self._report(True, exclude=False)
+        row = hypothesis_row(report, "HYP-001")
+        self.assertEqual(row["support"], 2)
+        self.assertEqual(row["support_derived_from"], 1)
+
+    def test_absent_flag_counts_as_not_derived(self):
+        row = hypothesis_row(self._report(None), "HYP-001")
+        self.assertEqual(row["support"], 2)
+        self.assertEqual(row["support_derived_from"], 0)
+
+    def test_non_boolean_flag_counts_as_not_derived(self):
+        row = hypothesis_row(self._report("yes"), "HYP-001")
+        self.assertEqual(row["support"], 2)
+        self.assertEqual(row["support_derived_from"], 0)
+
+    def test_observation_supported_only_by_its_generation_input_stays_unexplained(self):
+        relations = [rel("REL-1", "HYP-001", "EVD-001", "support", derived_from=True)]
+        report = gs.analyse(self.evidence, relations, [hyp("HYP-001")])
+        self.assertIn("EVD-001", report["unexplained"]["evidence_ids"])
+        self.assertNotIn("EVD-001", report["unassessed"]["evidence_ids"])
+
+    def test_an_independent_support_still_explains_it(self):
+        relations = [
+            rel("REL-1", "HYP-001", "EVD-001", "support", derived_from=True),
+            rel("REL-2", "HYP-002", "EVD-001", "support"),
+        ]
+        report = gs.analyse(self.evidence, relations,
+                            [hyp("HYP-001"), hyp("HYP-002")])
+        self.assertNotIn("EVD-001", report["unexplained"]["evidence_ids"])
+
+    def test_totals_report_both_counts(self):
+        report = self._report(True)
+        self.assertEqual(report["totals"]["support_derived_from"], 1)
+        self.assertEqual(report["totals"]["support_independent"], 1)
+        self.assertTrue(report["totals"]["excludes_derived_from"])
+
+    def test_per_source_unexplained_follows_the_same_rule(self):
+        relations = [rel("REL-1", "HYP-001", "EVD-001", "support", derived_from=True)]
+        report = gs.analyse(self.evidence, relations, [hyp("HYP-001")])
+        rows = {row["source_id"]: row for row in report["per_source"]}
+        self.assertEqual(rows["SRC-A"]["unexplained"], 2)
+
+    def test_human_output_shows_the_derived_count(self):
+        text = gs.format_human(self._report(True))
+        self.assertIn("うち生成元=1", text)
+        self.assertIn("derived_from", text)
+
+    def test_cli_flag_restores_the_old_counting(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            state = make_state(
+                tmp,
+                self.evidence,
+                [rel("REL-1", "HYP-001", "EVD-001", "support", derived_from=True)],
+            )
+            buffer = io.StringIO()
+            with contextlib.redirect_stdout(buffer):
+                code = gs.main(["--state-dir", str(state), "--json",
+                                "--include-derived-from"])
+        self.assertEqual(code, 0)
+        payload = json.loads(buffer.getvalue())
+        row = payload["per_hypothesis"][0]
+        self.assertEqual(row["support"], 1)
+        self.assertEqual(row["support_derived_from"], 1)
+        self.assertFalse(payload["totals"]["excludes_derived_from"])
+
+
 class RegionOrderingTest(unittest.TestCase):
     def setUp(self):
         self.evidence = [

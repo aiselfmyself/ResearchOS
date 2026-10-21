@@ -21,7 +21,17 @@
       "properties": {
         "observable": {"type": "string"},
         "would_refute": {"type": "string"},
-        "expected_if_true": {"type": "string"}
+        "expected_if_true": {"type": "string"},
+        "threshold": {
+          "type": "object",
+          "description": "OPTIONAL machine-readable half of the refutation condition. A prediction that carries one is scorable without a human reading the prose; one that does not is still valid but is reported as 'not machine-checkable'. Same shape and strict checks as the hypothesis-level threshold (docs/2026-10-21_hypothesis-cycle-automation.md section 13).",
+          "required": ["metric", "operator", "value"],
+          "properties": {
+            "metric": {"type": "string"},
+            "operator": {"type": "string", "enum": ["<", "<=", ">", ">=", "==", "!="]},
+            "value": {"type": "number"}
+          }
+        }
       }
     },
     "status": {

@@ -62,15 +62,19 @@
 以下は**実測値**であり、`scripts/check_doc_numbers.py`（CI の 8 番目のゲート）が本文書の記述と
 リポジトリからの再計算値を突き合わせて検査する。算出コマンドは下記「使い方」節。
 
-- 台帳: sources=25 / evidence=92 / claims=9 / verifications=40 / hypotheses=7 / relations=246
+- 台帳: sources=25 / evidence=93 / claims=9 / verifications=40 / hypotheses=7 / relations=247
 - 仮説サイクル台帳（2026-10-21 新設）: search_log=2 / runs=1 / predictions=1
 - 関係台帳の中身（`scripts/gap_scan.py` の実測・ゲート対象外）:
-  unassessed **1 / 92 (1.1%)**、unexplained **22 / 92 (23.9%)**、unresolved のみ 0 件、
-  provisional **62 / 92**（`observation_key` の注釈 30 件により non-provisional 30 件）。
-  **`gap_scan` の `support` はまだ `derived_from` を除外していない**ので、支持の証拠数としては
-  引用しない（`contributions/2026-10-21_round1_hypothesis_cycle.md` §3-6）
+  unassessed **1 / 93 (1.1%)**、unexplained **25 / 93 (26.9%)**、unresolved のみ 0 件、
+  provisional **63 / 93**（`observation_key` の注釈 30 件により non-provisional 30 件）。
+  `support` は**既定で `derived_from` を除外した独立支持**を数え、除外した件数は
+  `support_derived_from` として併記する（2026-10-21。`--include-derived-from` で旧来の
+  数え方を再現できる）。生成元からの支持しか無い観測は `unexplained` に残る
+  （`contributions/2026-10-21_phase2_prerequisites.md` §4）。ただし `derived_from` は
+  ラウンド1以降の記録にしか無いため、**既存 4 仮説の support は生成元を含んだまま**である
+  （同 §4.4。遡っての同定は Phase 3 の `self_support.py`）
 - 観測キーの注釈: `state/evidence_keys.jsonl`（凍結ベース・空）＋`state/evidence_keys.d/*.jsonl` の **30 件**（30 EVD）
-- テスト: 合計 480件（`tests/` の 21 ファイル。内訳は下記 §構成）
+- テスト: 合計 504件（`tests/` の 21 ファイル。内訳は下記 §構成）
 - CI ゲート: 8ゲート（`.github/workflows/core-check.yml` の `run:` を持つステップ数）
 - 監査 ID 18: **凍結**（2026-10-21、人間の決定）。科学的には未解決のまま、ID 18 の解決を目的とした
   探索・追加抽出・モデル×ハーネス統制比較は割り当てない。正本は `docs/id18-freeze-2026-10-21.md`
@@ -81,7 +85,7 @@
 
 **関係台帳（REL）は 2026-10-21 に投入された。** 初回投入は既存 2 仮説への裁定 172 行と
 新仮説 4 件（`HYP-20261021-*`）への 63 行の計 235 行。その後、ID18 本文確認で追加された
-新規 EVD 2 件へ 6 行を backfill した。2026-10-21 のラウンド1が 5 行を追加し、現在は **246 行**である（`HYP-001` 12/0/65/11、
+新規 EVD 2 件へ 6 行を backfill した。2026-10-21 のラウンド1が 5 行、Phase 2 の前提整備が 1 行を追加し、現在は **247 行**である（`HYP-001` 12/0/65/11、
 `HYP-002` 12/0/73/4。順に support/refute/neutral/unresolved）。`refute` は **0 件**だが、
 これは「反駁が無い」ではなく、`observation_key` の無い単独出典の反駁が `provisional` として
 数えられないため（fail-closed）。判断の記録は
@@ -96,10 +100,12 @@
 **したがって現況の数値は必ずこの節に追記する**こと。
 
 参考（ゲートの検査対象外。算出方法は `contributions/2026-10-21_current-status-audit.md` §1.2 と
-`scripts/gap_scan.py`）：出典 25 件のうち EVD を持たないものは 0 件。EVD 92 件のうち support の REL を
-持たないものは **22 件（23.9%）**。この 22 件は「書誌監査など仮説の対象外 6 件」「外部化しても
+`scripts/gap_scan.py`）：出典 25 件のうち EVD を持たないものは 0 件。EVD 93 件のうち独立した support の
+REL を持たないものは **25 件（26.9%）**。この 25 件は「書誌監査など仮説の対象外 6 件」「外部化しても
 再現性が崩れた負の開示 3 件」「統制欠如・検出力不足による保留 12 件」「ラウンド1で予測設計の
-基準線として取得し、意図的に未裁定のまま残した 1 件」に分かれ、support を付けるべき観測ではない。
+基準線として取得し、意図的に未裁定のまま残した 1 件」「生成元からの支持しか持たない 2 件
+（`EVD-20261021-539a` / `-970a`。`derived_from` を除外した結果、独立支持なしと数えられる）」
+「ラウンド0の測定 `EVD-20261021-d88a`（neutral のみ）」に分かれ、独立した support を付けるべき観測ではない。
 ID18 本文確認で追加された新規 EVD 2 件のうち、1 件は support、もう 1 件は
 検出力不足のため unresolved と裁定した
 （`contributions/2026-10-21_relation_backfill_id18_new_evidence.md`）。
@@ -173,13 +179,13 @@ tests/
   test_holdout_eval.py         hold-out 分割と過適合判定のテスト（18件）
   test_prune_candidates.py     低寄与コンポーネント報告のテスト（19件）
   test_relations.py            関係台帳（REL）の検査・採番・メモ参照解決のテスト（37件）
-  test_gap_scan.py             仮説カバレッジの穴（unassessed / unexplained / provisional ゲート）の報告テスト（46件）
+  test_gap_scan.py             仮説カバレッジの穴（unassessed / unexplained / provisional ゲート）の報告テスト（56件）
   test_ledger_shards.py        台帳シャード（凍結ベース＋サイドカー）の読取・件数・参照整合性（39件）
   test_new_ledger_shard.py     シャード作成道具（命名規則・作成・警告）のテスト（16件）
   test_sync_doc_counts.py      文書内数値の機械同期のテスト（16件）
   test_evidence_keys.py        observation_key 注釈（overlay）の付与・非上書き・重複検出・gap_scan 連携のテスト（17件）
-  test_cycle_records.py        仮説サイクルの記録（QRY/RUN/PRD）と3つの来歴ゲートのテスト（43件）
-                               ── 合計 480件
+  test_cycle_records.py        仮説サイクルの記録（QRY/RUN/PRD）と3つの来歴ゲートのテスト（57件）
+                               ── 合計 504件
 contributions/         研究ノート（統合レポート・調査メモ・全文読解レポート・共通モード測定）
 docs/                  分析レポートと設計記録（並行作業の所有マップは docs/parallel-work-ownership.md。強制力なし）
 .github/workflows/
@@ -190,7 +196,7 @@ docs/                  分析レポートと設計記録（並行作業の所有
 ## 使い方
 
 ```sh
-# 1. テスト（約5秒・480件）
+# 1. テスト（約5秒・504件）
 python3 -m unittest discover -s tests -v
 
 # 2. ベンチマークの再現性確認（fresh実行と成果物の照合）

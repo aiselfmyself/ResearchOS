@@ -14,8 +14,9 @@ about quality:
 
   * a source in a new file must name its QRY, and the QRY must list it back;
   * a hypothesis in a new file must declare `round`,
-    `derived_from_evidence_ids`, `refutation_condition` and
-    `next_observations`;
+    `derived_from_evidence_ids`, `refutation_condition` and the two
+    next_* lists (split on 2026-10-21: one undifferentiated list held no
+    searchable question);
   * a relation in a new file must declare `derived_from` and
     `searched_refutation`, and `derived_from=true` must agree with the
     hypothesis's own list.
@@ -104,7 +105,10 @@ def _hypothesis(**overrides) -> dict:
             "would_refute": "no ranking reversal at R < 1",
             "expected_if_true": "ranking reversal at R < 1",
         },
-        "next_observations": ["a third benchmark with a known model gap"],
+        "next_literature_questions": [
+            "a third benchmark with a known model gap"
+        ],
+        "next_internal_measurements": [],
     }
     record.update(overrides)
     return record
@@ -140,9 +144,12 @@ def _data(**overrides) -> dict:
     return data
 
 
-def _check(data: dict, origins=None, exempt=frozenset(), root: Path = ROOT):
+def _check(data: dict, origins=None, exempt=frozenset(), root: Path = ROOT,
+           pre_split=frozenset()):
     """Run only the cycle gates. No origins means 'every file is new'."""
-    return vs.check_cycle_fields(data, origins or {}, set(exempt), root)
+    return vs.check_cycle_fields(
+        data, origins or {}, set(exempt), root, set(pre_split)
+    )
 
 
 def _exempt_origins(*names: str) -> dict:
@@ -216,16 +223,24 @@ class SearchChannelTest(unittest.TestCase):
 
 class ExemptionFileTest(unittest.TestCase):
     def test_real_exemptions_resolve(self) -> None:
-        exempt, errors = vs.load_cycle_exemptions(ROOT / vs.CYCLE_EXEMPTIONS)
+        exempt, pre_split, errors = vs.load_cycle_exemptions(
+            ROOT / vs.CYCLE_EXEMPTIONS
+        )
         self.assertEqual(errors, [])
         self.assertIn("state/sources.jsonl", exempt)
         self.assertIn("state/hypotheses.d/2026-10-21-3990b64b4fdb.jsonl", exempt)
+        self.assertIn(
+            "state/hypotheses.d/2026-10-21-00a42038e2b6.jsonl", pre_split
+        )
 
     def test_missing_file_is_an_error(self) -> None:
         """Fail closed: without it legacy and new records cannot be told apart."""
         with tempfile.TemporaryDirectory() as tmp:
-            exempt, errors = vs.load_cycle_exemptions(Path(tmp) / "absent.json")
+            exempt, pre_split, errors = vs.load_cycle_exemptions(
+                Path(tmp) / "absent.json"
+            )
         self.assertEqual(exempt, set())
+        self.assertEqual(pre_split, set())
         self.assertTrue(any("file not found" in e for e in errors), errors)
 
     def test_malformed_list_is_an_error(self) -> None:
@@ -233,9 +248,22 @@ class ExemptionFileTest(unittest.TestCase):
             path = Path(tmp) / "bad.json"
             path.write_text(json.dumps({"legacy_files": "state/sources.jsonl"}),
                             encoding="utf-8")
-            exempt, errors = vs.load_cycle_exemptions(path)
+            exempt, pre_split, errors = vs.load_cycle_exemptions(path)
         self.assertEqual(exempt, set())
         self.assertTrue(any("list of strings" in e for e in errors), errors)
+
+    def test_pre_split_and_legacy_must_not_overlap(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "bad.json"
+            path.write_text(
+                json.dumps({
+                    "legacy_files": ["state/sources.jsonl"],
+                    "pre_split_files": ["state/sources.jsonl"],
+                }),
+                encoding="utf-8",
+            )
+            _exempt, _pre, errors = vs.load_cycle_exemptions(path)
+        self.assertTrue(any("appear in both" in e for e in errors), errors)
 
     def test_origin_line_suffix_is_stripped(self) -> None:
         origin = str(ROOT / "state" / "sources.jsonl") + ":12"
@@ -327,15 +355,68 @@ class HypothesisProvenanceTest(unittest.TestCase):
                     any(f"refutation_condition.{field}" in e for e in errors), errors
                 )
 
-    def test_missing_next_observations_is_rejected(self) -> None:
+    def test_missing_literature_questions_is_rejected(self) -> None:
         record = _hypothesis()
-        del record["next_observations"]
+        del record["next_literature_questions"]
         errors = _check(_data(hypotheses=[record]))
-        self.assertTrue(any("'next_observations'" in e for e in errors), errors)
+        self.assertTrue(
+            any("'next_literature_questions'" in e for e in errors), errors
+        )
 
-    def test_empty_next_observations_is_rejected(self) -> None:
-        errors = _check(_data(hypotheses=[_hypothesis(next_observations=[])]))
-        self.assertTrue(any("'next_observations'" in e for e in errors), errors)
+    def test_empty_literature_questions_is_rejected(self) -> None:
+        """Round 1: an empty searchable list means the planner has nothing to do."""
+        errors = _check(
+            _data(hypotheses=[_hypothesis(next_literature_questions=[])])
+        )
+        self.assertTrue(
+            any("'next_literature_questions'" in e for e in errors), errors
+        )
+
+    def test_blank_literature_question_is_rejected(self) -> None:
+        errors = _check(
+            _data(hypotheses=[_hypothesis(next_literature_questions=["  "])])
+        )
+        self.assertTrue(
+            any("next_literature_questions item" in e for e in errors), errors
+        )
+
+    def test_missing_internal_measurements_is_rejected(self) -> None:
+        record = _hypothesis()
+        del record["next_internal_measurements"]
+        errors = _check(_data(hypotheses=[record]))
+        self.assertTrue(
+            any("'next_internal_measurements'" in e for e in errors), errors
+        )
+
+    def test_empty_internal_measurements_is_allowed(self) -> None:
+        """'Nothing to measure internally' is a decision, not a schema error."""
+        errors = _check(
+            _data(hypotheses=[_hypothesis(next_internal_measurements=[])])
+        )
+        self.assertEqual(errors, [])
+
+    def test_legacy_next_observations_does_not_satisfy_the_split(self) -> None:
+        record = _hypothesis()
+        del record["next_literature_questions"]
+        del record["next_internal_measurements"]
+        record["next_observations"] = ["the old single list"]
+        errors = _check(_data(hypotheses=[record]))
+        self.assertTrue(any("next_literature_questions" in e for e in errors), errors)
+
+    def test_pre_split_file_keeps_the_legacy_list_requirement(self) -> None:
+        record = {"hypothesis_id": "HYP-20261021-00b4", "statement": "s",
+                  "status": "proposed", "round": 1,
+                  "derived_from_evidence_ids": [],
+                  "refutation_condition": dict(_hypothesis()["refutation_condition"]),
+                  "next_observations": ["a third benchmark"]}
+        origin = {"hypotheses": ["state/hypotheses.d/2026-10-21-00a42038e2b6.jsonl:1"]}
+        errors = _check(_data(hypotheses=[record]), origins=origin,
+                        pre_split={"state/hypotheses.d/2026-10-21-00a42038e2b6.jsonl"})
+        self.assertEqual(errors, [])
+        record["next_observations"] = []
+        errors = _check(_data(hypotheses=[record]), origins=origin,
+                        pre_split={"state/hypotheses.d/2026-10-21-00a42038e2b6.jsonl"})
+        self.assertTrue(any("pre-split record" in e for e in errors), errors)
 
     def test_legacy_hypothesis_stays_exempt(self) -> None:
         record = {"hypothesis_id": "HYP-001", "statement": "old", "status": "supported"}
@@ -383,6 +464,62 @@ class RelationProvenanceTest(unittest.TestCase):
             exempt={"state/hypotheses.jsonl"},
         )
         self.assertEqual(errors, [])
+
+
+class ThresholdTest(unittest.TestCase):
+    """The optional machine-readable half of a refutation condition."""
+
+    def _with_threshold(self, **threshold):
+        condition = dict(_hypothesis()["refutation_condition"])
+        condition["threshold"] = threshold
+        return _check(_data(hypotheses=[_hypothesis(refutation_condition=condition)]))
+
+    def test_absent_threshold_is_fine(self) -> None:
+        self.assertEqual(_check(_data()), [])
+
+    def test_well_formed_threshold_passes(self) -> None:
+        errors = self._with_threshold(
+            metric="residual_support_rate", operator="<=", value=0.7
+        )
+        self.assertEqual(errors, [])
+
+    def test_unknown_operator_is_rejected(self) -> None:
+        errors = self._with_threshold(
+            metric="residual_support_rate", operator="~=", value=0.7
+        )
+        self.assertTrue(any("operator" in e for e in errors), errors)
+
+    def test_missing_threshold_field_is_rejected(self) -> None:
+        errors = self._with_threshold(metric="m", operator="<")  # no value
+        self.assertTrue(any("threshold.value is missing" in e for e in errors), errors)
+
+    def test_non_numeric_value_is_rejected(self) -> None:
+        errors = self._with_threshold(metric="m", operator="<", value="0.7")
+        self.assertTrue(any("must be a number" in e for e in errors), errors)
+
+    def test_boolean_value_is_rejected(self) -> None:
+        """bool is an int subclass in Python; a threshold of True is nonsense."""
+        errors = self._with_threshold(metric="m", operator="<", value=True)
+        self.assertTrue(any("must be a number" in e for e in errors), errors)
+
+    def test_empty_metric_is_rejected(self) -> None:
+        errors = self._with_threshold(metric="  ", operator="<", value=0.7)
+        self.assertTrue(any("metric" in e for e in errors), errors)
+
+    def test_threshold_applies_to_predictions_too(self) -> None:
+        record = {
+            "prediction_id": "PRD-20261021-2222",
+            "hypothesis_id": HYPOTHESIS,
+            "registered_at": "2026-10-21",
+            "probability": 0.6,
+            "statement": "s",
+            "refutation_condition": {
+                "observable": "o", "would_refute": "w", "expected_if_true": "e",
+                "threshold": {"metric": "m", "operator": "??", "value": 1},
+            },
+        }
+        errors = _check(_data(predictions=[record]))
+        self.assertTrue(any("operator" in e for e in errors), errors)
 
 
 class CycleLedgerFieldTest(unittest.TestCase):
