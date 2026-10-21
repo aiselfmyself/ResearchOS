@@ -78,6 +78,10 @@ SNAPSHOT_SHARD_NAME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}-[0-9a-f]{12}\.json$")
 #: ``"path:line"`` origin of one record in the union view.
 Origin = str
 
+#: A file whose name starts like a shard but is not read (wrong suffix or
+#: wrong entropy) must be reported: silently skipping it would drop records.
+DATE_PREFIX_RE = re.compile(r"^\d{4}-\d{2}-\d{2}")
+
 
 def shard_dir(base: Path) -> Path:
     """Return the shard directory that belongs to a base file.
@@ -105,6 +109,28 @@ def shard_files(base: Path, suffix: str) -> List[Path]:
         for path in directory.glob("*" + suffix)
         if path.is_file() and not path.name.startswith(".")
     )
+
+
+def unread_shard_like_files(base: Path, suffix: str, pattern: re.Pattern) -> List[Path]:
+    """Date-named files in the shard directory that the loader will NOT read.
+
+    They are almost certainly a shard misspelt (``2026-10-21-<hex>`` without
+    ``.jsonl``, uppercase hex, too few characters). Reading nothing and saying
+    nothing would lose records, so callers report these.
+    """
+    directory = shard_dir(base)
+    if not directory.is_dir():
+        return []
+    unread: List[Path] = []
+    for path in sorted(directory.iterdir()):
+        if not path.is_file() or path.name.startswith("."):
+            continue
+        if not DATE_PREFIX_RE.match(path.name):
+            continue  # README.md and other notes are not shard attempts
+        if path.name.endswith(suffix) and pattern.match(path.name):
+            continue  # read normally
+        unread.append(path)
+    return unread
 
 
 def read_jsonl_file(path: Path) -> Tuple[List[Dict[str, Any]], List[str], List[Origin]]:
@@ -160,6 +186,11 @@ def load_ledger(
         records.extend(part_records)
         errors.extend(part_errors)
         origins.extend(part_origins)
+    for path in unread_shard_like_files(base, SHARD_SUFFIX, SHARD_NAME_RE):
+        errors.append(
+            f"{path}: ignored: a shard must be named "
+            f"YYYY-MM-DD-<12 hex>{SHARD_SUFFIX}; its records are NOT in the view"
+        )
     return records, errors, origins
 
 
@@ -246,6 +277,11 @@ def load_snapshot(
         entries, part_header = _read_snapshot_file(path, errors)
         documents.append((path, entries))
         part_headers[str(path)] = part_header
+    for path in unread_shard_like_files(base, SNAPSHOT_SUFFIX, SNAPSHOT_SHARD_NAME_RE):
+        errors.append(
+            f"{path}: ignored: a snapshot part must be named "
+            f"YYYY-MM-DD-<12 hex>{SNAPSHOT_SUFFIX}; its entries are NOT in the view"
+        )
 
     entries_by_id: Dict[str, Dict[str, Any]] = {}
     origins: Dict[str, str] = {}

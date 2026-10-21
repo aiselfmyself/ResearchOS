@@ -199,6 +199,21 @@ class UnionViewTest(unittest.TestCase):
         self.assertIn("EVD-20261021-eeee", [r["evidence_id"] for r in records])
         self.assertTrue(any(str(shard) in e and "does not match" in e for e in errors), errors)
 
+    def test_date_named_file_without_shard_suffix_is_reported(self):
+        """A shard misspelt without `.jsonl` must not vanish silently."""
+        shard = self._shard("2026-10-21-ffffffffffff", _jsonl(_evidence("EVD-20261021-ffff")))
+        records, errors, _ = ledger_store.load_ledger(self.base)
+        self.assertNotIn("EVD-20261021-ffff", [r["evidence_id"] for r in records])
+        self.assertTrue(any(str(shard) in e and "NOT in the view" in e for e in errors), errors)
+
+    def test_notes_in_a_shard_directory_are_not_reported(self):
+        directory = self.dir / "evidence.d"
+        directory.mkdir()
+        (directory / "README.md").write_text("how to add a shard\n", encoding="utf-8")
+        records, errors, _ = ledger_store.load_ledger(self.base)
+        self.assertEqual(errors, [])
+        self.assertEqual(len(records), 1)
+
     def test_missing_base_file_is_reported(self):
         missing = self.dir / "absent.jsonl"
         records, errors, _ = ledger_store.load_ledger(missing)
@@ -437,6 +452,16 @@ class SnapshotShardTest(unittest.TestCase):
         with self.assertRaises(ValueError) as raised:
             ledger_store.load_fixture(self.base)
         self.assertIn("does not match", str(raised.exception))
+
+    def test_part_with_bad_suffix_is_rejected(self):
+        directory = self.dir / "snapshot.d"
+        directory.mkdir()
+        (directory / "2026-10-21-3f9ac21b7d40.jsonl").write_text(
+            json.dumps({"entries": []}), encoding="utf-8"
+        )
+        with self.assertRaises(ValueError) as raised:
+            ledger_store.load_fixture(self.base)
+        self.assertIn("NOT in the view", str(raised.exception))
 
     def test_part_without_entries_list_is_rejected(self):
         directory = self.dir / "snapshot.d"
