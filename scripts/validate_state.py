@@ -27,6 +27,11 @@ Scope (deliberately small -- see docs/minimal-core-and-ci.md):
       relation.observation_id   -> evidence
       relation.source_id        -> sources               (optional field)
 
+  * The next_literature_questions overlay state/hypothesis_questions.jsonl
+    plus its shards, for hypotheses written before the 2026-10-21 split. Every
+    entry must name a known hypothesis, and it must not shadow a hypothesis
+    that already carries the field in its own record (two sources of truth
+    drift apart). See scripts/hypothesis_questions.py.
   * The observation_key overlay state/evidence_keys.jsonl (frozen base, empty
     until 2026-10-21) plus its shards state/evidence_keys.d/*.jsonl. It adds
     an optional ``observation_key`` to an existing EVD without rewriting the
@@ -120,9 +125,11 @@ ROOT = Path(__file__).resolve().parents[1]
 
 try:
     import ledger_store
+    import hypothesis_questions
 except ImportError:  # running as scripts/validate_state.py
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import ledger_store
+    import hypothesis_questions
 
 # collection -> (ledger file, schema file, id key)
 COLLECTIONS: Dict[str, Tuple[str, str, str]] = {
@@ -205,6 +212,12 @@ LEGACY_PATTERN = re.compile(r"^(?P<prefix>[A-Z]{3})-(?P<num>\d{3})$")
 #: The observation_key overlay (see the module docstring). It is *not* one of
 #: COLLECTIONS: it has no IDs of its own, it only annotates existing EVDs.
 EVIDENCE_KEYS_LEDGER = "state/evidence_keys.jsonl"
+
+#: The next_literature_questions overlay for hypotheses whose records predate
+#: the 2026-10-21 split (see scripts/hypothesis_questions.py). Like the key
+#: overlay it is *not* one of COLLECTIONS: it adds a field to a frozen record
+#: rather than a new record with an ID.
+HYPOTHESIS_QUESTIONS_LEDGER = hypothesis_questions.LEDGER
 
 #: Files whose records predate the 2026-10-21 cycle gates (see the module
 #: docstring). Exemption is by *origin file*, so no per-record list is needed.
@@ -1027,6 +1040,13 @@ def run_all_checks(root: Path = ROOT) -> Dict[str, List[str]]:
         )
         data[name] = records
     errors.extend(check_evidence_keys(data.get("evidence", []), key_mapping))
+    questions_overlay, questions_errors = hypothesis_questions.load(
+        root / HYPOTHESIS_QUESTIONS_LEDGER
+    )
+    errors.extend(questions_errors)
+    errors.extend(
+        hypothesis_questions.check(questions_overlay, data.get("hypotheses", []))
+    )
     errors.extend(check_references(data))
     exempt_files, pre_split, exempt_errors = load_cycle_exemptions(
         root / CYCLE_EXEMPTIONS

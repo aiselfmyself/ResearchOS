@@ -51,7 +51,7 @@
 
 ゲートするのは決定論的・再実行可能な**8検査**（2026-10-21 時点。初版は4検査で、2026-10-20 に 5・6 を、2026-10-21 に 7 を、同日 8 を追加した）：
 
-1. `python3 -m unittest discover -s tests -v` — **504テスト**（約3〜5秒）
+1. `python3 -m unittest discover -s tests -v` — **559テスト**（約3〜5秒）
 2. `python3 gitswarm/benchmarks/benchmark.py --check` — 成果物と fresh run の照合（許容誤差0.01）
 3. `python3 gitswarm/readout_sim.py --check` — 投票シミュレーション成果物と fresh run の照合
 4. `python3 scripts/validate_state.py` — 研究台帳のスキーマ・ID一意・参照整合性（**台帳内の** ID・パス参照の存在検査を含む）。台帳は**凍結ベース（`state/*.jsonl`）＋セッション別シャード（`state/<台帳名>.d/*.jsonl`）の統合ビュー**として検証される（`scripts/ledger_store.py`）。2026-10-21 から**来歴ゲート**（§2.5）も同じ検査に入った
@@ -263,6 +263,38 @@ S0 の「穴に紐づかないクエリは採らない」が空文化するた�
 **何を検出しないか**：支持が汚染されているか（自己支持率）、仮説が良いか、refute が十分か。
 いずれも計測器（Phase 3 の `scripts/self_support.py`）が報告し、人間が判断する。
 ゲートは「記録が無いこと」だけを失敗させる。
+
+---
+
+## 2.6 計測器：S0/S7 のクエリ計画（2026-10-21 追加）
+
+**動機**——仮説サイクルの S7 は「`next_observations` と反証条件からクエリを機械生成する。
+人が書かない（人が書くと人がボトルネックに戻る）」と定めている。Phase 2 はその生成器
+`scripts/next_queries.py` である。
+
+**生成規則は決定的**：小文字化 → 英数字とハイフン以外で分割 → stopword と重複を除去 →
+先頭 `--max-terms` 語（既定 10）を連結。モデルもネットワークも使わない。同じ台帳に対して
+2 回実行すると同じ出力になる。ハイフン化合物は 1 語として残し、内容語が残らない問いは
+空クエリにせず `no_terms` として報告する。
+
+**入力は 2 つ**：仮説レコードの `next_literature_questions`、無ければ overlay
+`state/hypothesis_questions.jsonl`（＋シャード）。overlay は分割前のレコードに問いを
+足すための sidecar で、`state/evidence_keys.jsonl` と同じ base + parts の形をとる。
+**レコードが問いを持つ場合は overlay がそれを影にしてはならない**（エラー）。
+`validate_state.py` がこの 2 条件（既知の仮説・非 shadowing）だけを検査する。
+
+**重みは `gap_scan` から取る**：`unresolved` の多い仮説を先に検索し、`unexplained` の
+観測は `observation_key` がある場合に限り coverage クエリにする。`unexplained` の定義は
+`gap_scan.analyse` をそのまま呼ぶので、計測器と 1 か所で共有される。既に実行したクエリは
+`search_log` との完全一致・部分集合一致で `already_searched` に落とし、再提案しない。
+
+**ゲートにしない**：CI 非接続。計画が 0 件でも終了コード 0、台帳を読めないときだけ 2。
+生成されたクエリの良し悪しは測っていない（次ラウンドの `hits` / `screened` が測る）。
+
+**初回実測**は 7 仮説・14 クエリ。`unexplained` 25 件のうち `observation_key` を持つものは
+**0 件**で、coverage クエリは生成されなかった——未説明観測を検索で攻めるには S3 の注釈が
+先に要る、という発見である。詳細は設計 §14 と
+`contributions/2026-10-21_phase2_next_queries.md`。
 
 ---
 
