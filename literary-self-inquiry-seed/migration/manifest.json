@@ -1,0 +1,128 @@
+{
+  "counts": {
+    "material_records": 14,
+    "memo_references_not_copied": 7,
+    "selected_evidence": 14,
+    "selected_sources": 10
+  },
+  "coverage_note": "選定素材はAIエージェント設計・LLM評価研究に偏っている。元リポジトリには人間の自己・身体性・文学作品を直接扱う人文学資料がほぼなく、Q-001はその欠落を認識した開かれた入口である。",
+  "evidence_record_origins": {
+    "EVD-001": "state/evidence.jsonl",
+    "EVD-002": "state/evidence.jsonl",
+    "EVD-008": "state/evidence.jsonl",
+    "EVD-20261020-40dc": "state/evidence.jsonl",
+    "EVD-20261021-539a": "state/evidence.d/2026-10-21-864d00d4e847.jsonl",
+    "EVD-20261021-6249": "state/evidence.d/2026-10-21-6778eab92241.jsonl",
+    "EVD-20261021-68d8": "state/evidence.d/2026-10-21-3b82064b51ed.jsonl",
+    "EVD-20261021-7cb3": "state/evidence.d/2026-10-21-864d00d4e847.jsonl",
+    "EVD-20261021-8bc6": "state/evidence.d/2026-10-21-3b82064b51ed.jsonl",
+    "EVD-20261021-90a7": "state/evidence.d/2026-10-21-6778eab92241.jsonl",
+    "EVD-20261021-94d6": "state/evidence.d/2026-10-21-6778eab92241.jsonl",
+    "EVD-20261021-970a": "state/evidence.d/2026-10-21-864d00d4e847.jsonl",
+    "EVD-20261021-c4d0": "state/evidence.d/2026-10-21-3b82064b51ed.jsonl",
+    "EVD-20261021-dabf": "state/evidence.d/2026-10-21-3b82064b51ed.jsonl"
+  },
+  "excluded_by_design": [
+    "ResearchOSの科学仮説・予測・support/refute判定は、文芸的な結論として移さない。",
+    "長期文脈・自己選好と無関係な出典・証拠・監査・TSPベンチマーク・CI履歴は移さない。",
+    "元リポジトリのGit履歴、全文PDF、未選定の文章、未保存の会話は移さない。"
+  ],
+  "manifest_version": 1,
+  "material_id_map": {
+    "EVD-001": "MAT-EVD-001",
+    "EVD-002": "MAT-EVD-002",
+    "EVD-008": "MAT-EVD-008",
+    "EVD-20261020-40dc": "MAT-EVD-20261020-40dc",
+    "EVD-20261021-539a": "MAT-EVD-20261021-539a",
+    "EVD-20261021-6249": "MAT-EVD-20261021-6249",
+    "EVD-20261021-68d8": "MAT-EVD-20261021-68d8",
+    "EVD-20261021-7cb3": "MAT-EVD-20261021-7cb3",
+    "EVD-20261021-8bc6": "MAT-EVD-20261021-8bc6",
+    "EVD-20261021-90a7": "MAT-EVD-20261021-90a7",
+    "EVD-20261021-94d6": "MAT-EVD-20261021-94d6",
+    "EVD-20261021-970a": "MAT-EVD-20261021-970a",
+    "EVD-20261021-c4d0": "MAT-EVD-20261021-c4d0",
+    "EVD-20261021-dabf": "MAT-EVD-20261021-dabf"
+  },
+  "reference_memos": [
+    {
+      "copied": false,
+      "path": "contributions/2026-10-20_stateless_vs_gitswarm.md",
+      "role": "記録を外部化する設計の概観"
+    },
+    {
+      "copied": false,
+      "path": "contributions/2026-10-20_sla_fulltext_reading.md",
+      "role": "ステートと文脈・セッション継続に関する読解"
+    },
+    {
+      "copied": false,
+      "path": "contributions/2026-10-20_git_swarm_fulltext_reading.md",
+      "role": "共有リポジトリと成果の再利用に関する読解"
+    },
+    {
+      "copied": false,
+      "path": "contributions/2026-10-20_agora_integrated_reading.md",
+      "role": "共有記憶と介入・記録の限界に関する読解"
+    },
+    {
+      "copied": false,
+      "path": "contributions/2026-10-21_phase4_round3.md",
+      "role": "外部記憶と長文脈の異なる比較結果"
+    },
+    {
+      "copied": false,
+      "path": "contributions/2026-10-21_round1_hypothesis_cycle.md",
+      "role": "自己選好を扱う文献・作業記録"
+    },
+    {
+      "copied": false,
+      "path": "contributions/2026-10-21_sheldon_reading.md",
+      "role": "問いと観測を分けて保持する設計の参考"
+    }
+  ],
+  "selected_evidence_ids": [
+    "EVD-001",
+    "EVD-002",
+    "EVD-008",
+    "EVD-20261020-40dc",
+    "EVD-20261021-90a7",
+    "EVD-20261021-6249",
+    "EVD-20261021-94d6",
+    "EVD-20261021-7cb3",
+    "EVD-20261021-539a",
+    "EVD-20261021-970a",
+    "EVD-20261021-68d8",
+    "EVD-20261021-8bc6",
+    "EVD-20261021-c4d0",
+    "EVD-20261021-dabf"
+  ],
+  "selected_source_ids": [
+    "SRC-001",
+    "SRC-002",
+    "SRC-20261020-f295",
+    "SRC-20261021-0a74",
+    "SRC-20261021-2276",
+    "SRC-20261021-5bb4",
+    "SRC-20261021-aa4e",
+    "SRC-20261021-d652",
+    "SRC-20261021-e315",
+    "SRC-20261021-fe40"
+  ],
+  "selection_file": "migration/selection.json",
+  "selection_sha256": "db40d8a42a7b51243d40b3c28a20c854d1af2dd8d7ca994ad794e72c9990777c",
+  "source_record_origins": {
+    "SRC-001": "state/sources.jsonl",
+    "SRC-002": "state/sources.jsonl",
+    "SRC-20261020-f295": "state/sources.jsonl",
+    "SRC-20261021-0a74": "state/sources.d/2026-10-21-593fd8ebdaeb.jsonl",
+    "SRC-20261021-2276": "state/sources.d/2026-10-21-441c34e6dabc.jsonl",
+    "SRC-20261021-5bb4": "state/sources.d/2026-10-21-593fd8ebdaeb.jsonl",
+    "SRC-20261021-aa4e": "state/sources.d/2026-10-21-0c4de16d541b.jsonl",
+    "SRC-20261021-d652": "state/sources.d/2026-10-21-593fd8ebdaeb.jsonl",
+    "SRC-20261021-e315": "state/sources.d/2026-10-21-0c4de16d541b.jsonl",
+    "SRC-20261021-fe40": "state/sources.d/2026-10-21-441c34e6dabc.jsonl"
+  },
+  "upstream_commit": "6dbf27e9daf2289b9b9d73b430a1f98611620643",
+  "upstream_repository": "https://github.com/aiselfmyself/ResearchOS"
+}

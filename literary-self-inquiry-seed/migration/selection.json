@@ -1,0 +1,118 @@
+{
+  "selection_version": 1,
+  "upstream_repository": "https://github.com/aiselfmyself/ResearchOS",
+  "purpose": "文芸的探究のため、外部記憶・継続性・自己認識・自己／他者のラベルに関する資料だけを参照素材として選ぶ。科学的な判定を文学的な結論へ移植しない。",
+  "coverage_note": "選定素材はAIエージェント設計・LLM評価研究に偏っている。元リポジトリには人間の自己・身体性・文学作品を直接扱う人文学資料がほぼなく、Q-001はその欠落を認識した開かれた入口である。",
+  "selected_sources": [
+    "SRC-001",
+    "SRC-002",
+    "SRC-20261020-f295",
+    "SRC-20261021-0a74",
+    "SRC-20261021-5bb4",
+    "SRC-20261021-d652",
+    "SRC-20261021-aa4e",
+    "SRC-20261021-e315",
+    "SRC-20261021-2276",
+    "SRC-20261021-fe40"
+  ],
+  "selected_evidence": [
+    {
+      "evidence_id": "EVD-001",
+      "motif_ids": ["MOTIF-001", "MOTIF-002"],
+      "literary_invitation": "会話の履歴を引き継がない主体が、外部に保存された状態から再開するとき、連続性はどこに宿るのか。",
+      "scope_note": "長期タスク用エージェント設計の記述であり、人間の記憶やAIの主観的経験を直接調べたものではない。"
+    },
+    {
+      "evidence_id": "EVD-002",
+      "motif_ids": ["MOTIF-001", "MOTIF-002", "MOTIF-005"],
+      "literary_invitation": "後続の仕事が先行する記録の上に築かれることを、継承・記憶・系譜のどれとして読むことができるか。",
+      "scope_note": "貢献の再利用を測る研究結果であり、個人の自己同一性を示すものではない。"
+    },
+    {
+      "evidence_id": "EVD-008",
+      "motif_ids": ["MOTIF-001", "MOTIF-006"],
+      "literary_invitation": "否定された記録が後から参照されるとき、失敗は忘却されるのか、それとも別の形で記憶になるのか。",
+      "scope_note": "特定タスクのコミット引用率であり、全ての失敗が有益だという意味ではない。"
+    },
+    {
+      "evidence_id": "EVD-20261020-40dc",
+      "motif_ids": ["MOTIF-002", "MOTIF-005"],
+      "literary_invitation": "互いの活動が見える複数の主体は、どこまで独立した声でいられるのか。",
+      "scope_note": "Agora論文の特定実行環境の記述。集団の自己や人間関係に一般化しない。"
+    },
+    {
+      "evidence_id": "EVD-20261021-90a7",
+      "motif_ids": ["MOTIF-001", "MOTIF-002", "MOTIF-006"],
+      "literary_invitation": "全てを覚えていることと、必要なものを選んで覚えていることは、同じ自己を作るのか。",
+      "scope_note": "特定の複数セッション課題では外部記憶が常に優位ではないという限定的な結果。人間の自伝的記憶とは異なる。"
+    },
+    {
+      "evidence_id": "EVD-20261021-6249",
+      "motif_ids": ["MOTIF-001", "MOTIF-002"],
+      "literary_invitation": "記憶が事実の保管ではなく、行為の状態や次の手順を支えるとき、自己像はどう変わるのか。",
+      "scope_note": "特定ベンチマークでのエージェント記憶手法の比較であり、人格や意識の測定ではない。"
+    },
+    {
+      "evidence_id": "EVD-20261021-94d6",
+      "motif_ids": ["MOTIF-001", "MOTIF-003", "MOTIF-006"],
+      "literary_invitation": "長い履歴が事実をよく保つとしても、それは人の声や関係まで保つのか。",
+      "scope_note": "会話QAの事実再生に関する結果。事実の想起を人間らしさの尺度とみなさない。"
+    },
+    {
+      "evidence_id": "EVD-20261021-7cb3",
+      "motif_ids": ["MOTIF-004", "MOTIF-005"],
+      "literary_invitation": "自分の声を自分のものと認めることと、それを良いものとして選ぶことは、何によって結びつくのか。",
+      "scope_note": "LLM評価者の自己選好を扱う。自己評価バイアスは、主観的な自己の証拠ではない。"
+    },
+    {
+      "evidence_id": "EVD-20261021-539a",
+      "motif_ids": ["MOTIF-004", "MOTIF-005"],
+      "literary_invitation": "作者を見分けることは、作者であることを知ることなのか、それとも見分けの物語を作ることなのか。",
+      "scope_note": "自己生成文の認識と評価バイアスの関連を扱う。認識能力と主観的経験を同一視しない。"
+    },
+    {
+      "evidence_id": "EVD-20261021-970a",
+      "motif_ids": ["MOTIF-004", "MOTIF-006"],
+      "literary_invitation": "ある課題で『自分への偏り』が見つからないとき、自己は消えたのか、それとも問い方が変わったのか。",
+      "scope_note": "機械学習実験の数値予測課題で自己選好の証拠が見つからなかったという報告。あらゆる課題への不在を意味しない。"
+    },
+    {
+      "evidence_id": "EVD-20261021-68d8",
+      "motif_ids": ["MOTIF-004", "MOTIF-005"],
+      "literary_invitation": "盲検や他者の視点は自己評価をほどくのか、それとも別の評価者の声を導入するだけなのか。",
+      "scope_note": "特定の裁定課題での統制結果。全ての盲検評価に一般化しない。"
+    },
+    {
+      "evidence_id": "EVD-20261021-8bc6",
+      "motif_ids": ["MOTIF-004", "MOTIF-005"],
+      "literary_invitation": "同じ文章に『私のもの』『他者のもの』というラベルを付け替えると、読む経験はどう変わるのか。",
+      "scope_note": "評価者に提示するラベルの影響を扱う。作品の作者性や人間の自己認識を直接測ったものではない。"
+    },
+    {
+      "evidence_id": "EVD-20261021-c4d0",
+      "motif_ids": ["MOTIF-004", "MOTIF-005"],
+      "literary_invitation": "声の持ち主は文章の中にあるのか、提示形式や読み手の期待が作るのか。",
+      "scope_note": "モデルが自己生成文を認識する課題の形式・領域依存性であり、自己同一性の直接測定ではない。"
+    },
+    {
+      "evidence_id": "EVD-20261021-dabf",
+      "motif_ids": ["MOTIF-004", "MOTIF-005"],
+      "literary_invitation": "『自分の声らしさ』と『質が高いらしさ』は、読み手の中でどう混ざりうるのか。",
+      "scope_note": "自己生成文認識の交絡要因についての記述。品質判断だけで自己選好の全てを説明するものではない。"
+    }
+  ],
+  "reference_memos": [
+    {"path": "contributions/2026-10-20_stateless_vs_gitswarm.md", "role": "記録を外部化する設計の概観", "copy": false},
+    {"path": "contributions/2026-10-20_sla_fulltext_reading.md", "role": "ステートと文脈・セッション継続に関する読解", "copy": false},
+    {"path": "contributions/2026-10-20_git_swarm_fulltext_reading.md", "role": "共有リポジトリと成果の再利用に関する読解", "copy": false},
+    {"path": "contributions/2026-10-20_agora_integrated_reading.md", "role": "共有記憶と介入・記録の限界に関する読解", "copy": false},
+    {"path": "contributions/2026-10-21_phase4_round3.md", "role": "外部記憶と長文脈の異なる比較結果", "copy": false},
+    {"path": "contributions/2026-10-21_round1_hypothesis_cycle.md", "role": "自己選好を扱う文献・作業記録", "copy": false},
+    {"path": "contributions/2026-10-21_sheldon_reading.md", "role": "問いと観測を分けて保持する設計の参考", "copy": false}
+  ],
+  "excluded_by_design": [
+    "ResearchOSの科学仮説・予測・support/refute判定は、文芸的な結論として移さない。",
+    "長期文脈・自己選好と無関係な出典・証拠・監査・TSPベンチマーク・CI履歴は移さない。",
+    "元リポジトリのGit履歴、全文PDF、未選定の文章、未保存の会話は移さない。"
+  ]
+}

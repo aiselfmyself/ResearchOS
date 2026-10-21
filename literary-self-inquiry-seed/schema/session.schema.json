@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "session.schema.json",
+  "title": "Inquiry Session",
+  "description": "A compact continuity record. Save visible prompts, decisions, and outputs; do not store hidden chain-of-thought.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["session_id", "started_at", "human_direction", "question_ids", "context_material_ids", "produced_fragment_ids", "new_question_ids", "prompt_template"],
+  "properties": {
+    "session_id": {"type": "string", "minLength": 1},
+    "started_at": {"type": "string", "minLength": 4},
+    "human_direction": {"type": "string"},
+    "question_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "context_material_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "produced_fragment_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "new_question_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "prompt_template": {"type": "string"},
+    "generator": {"type": "string", "description": "Model/tool label if known; omit if unknown."},
+    "notes": {"type": "string"}
+  }
+}
