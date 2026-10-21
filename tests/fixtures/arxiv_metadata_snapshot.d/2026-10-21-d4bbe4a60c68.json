@@ -1,0 +1,47 @@
+{
+  "schema": "researchos/arxiv-metadata-snapshot-part/v1",
+  "captured_at": "2026-10-21",
+  "capture_method": "Arena fetch_page of versioned arXiv abs pages https://arxiv.org/abs/2610.23839v1 and https://arxiv.org/abs/2610.18616v2",
+  "capture_note": "Metadata only for the fourth-edition integrated report's explicit literature references. Original submission dates, titles and ordered authors transcribed from the versioned abs pages; DiscoveryRSI v2 results are not substituted for the requested v1. These items are NOT new Phase 4 SRC/EVD/REL records or an independent selection/adjudication. Frozen snapshot base and previous parts remain unchanged.",
+  "entries": [
+    {
+      "arxiv_id": "2610.23839",
+      "source_url": "https://arxiv.org/abs/2610.23839v1",
+      "title": "DiscoveryRSI: Recursively Learning to Discover Valuable Hypotheses",
+      "authors": [
+        "Jianyuan Zhong",
+        "Chenwei Wu",
+        "Zhaochen Yu",
+        "Xixian Jiang",
+        "Xuewei Li",
+        "Hao Xiao",
+        "Xilin Dai",
+        "Junyang Wang",
+        "Jiaru Zou",
+        "Zhiqing Cui",
+        "Boyuan Zheng",
+        "Jing Xiong",
+        "Zhen Zhang",
+        "Qiang Gao",
+        "Michael Morley",
+        "Luis Nakayama",
+        "Qiang Xu",
+        "Liyue Shen",
+        "Tao Gui",
+        "Leo Anthony Celi",
+        "James Zou",
+        "Zhenfei Yin",
+        "Yingcheng Wu",
+        "Ling Yang"
+      ],
+      "published": "2026-10-16"
+    },
+    {
+      "arxiv_id": "2610.18616",
+      "source_url": "https://arxiv.org/abs/2610.18616v2",
+      "title": "Knowledge Graphs as Files: An Agent Harness Where Tool Creation and Tool Use Co-Evolve",
+      "authors": ["Yuyang Bai", "Yu Wang", "Yu Zhang"],
+      "published": "2026-10-13"
+    }
+  ]
+}

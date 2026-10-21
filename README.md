@@ -77,6 +77,7 @@
 - 観測キーの注釈: `state/evidence_keys.jsonl`（凍結ベース・空）＋`state/evidence_keys.d/*.jsonl` の **32 件**（旧30件＋S3の未説明観測2件）。新 EVD はレコードに直接キー7件を持つ。単一出典のキーは検索の種にはなるが独立再観測ではない
 - 仮説の問いの注釈: `state/hypothesis_questions.jsonl`（凍結ベース・空）＋`state/hypothesis_questions.d/*.jsonl` の **7 件**（7 仮説・14 問い。分割前のレコード用）
 - ラウンド3（`RUN-20261021-0f00`、Phase 4 の最初の1件）：新 SRC 3・EVD 3・REL 3（限定的support 1、neutral 2）・HYP 0。`unexplained` 27→29、refute 0のままsupport増で `cycle_readout.py` が停止を助言。**Phase 4 の3ラウンドDoDは未達、ラウンド4・5は未実行**（`contributions/2026-10-21_phase4_round3.md`）。独立二重選別・新RELの二重裁定は未実施。判断イベント率18/19は単位依存の参考値で、時間ベースの実質自動化率は未測定
+- 統合レポート（[`contributions/2026-10-20_integrated_survey_report.md`](contributions/2026-10-20_integrated_survey_report.md)）を**第4版**に更新。DiscoveryRSI v1・DKGI v2 の対象課題と成績を、Naam の評論とともに既存の停止結果へ対照した（報告 §5.8）。研究台帳・停止判定・監査 ID 18 の凍結は変えていない
 - テスト: 合計 616件（`tests/` の 24 ファイル。内訳は下記 §構成）
 - CI ゲート: 8ゲート（`.github/workflows/core-check.yml` の `run:` を持つステップ数）
 - 監査 ID 18: **凍結**（2026-10-21、人間の決定）。科学的には未解決のまま、ID 18 の解決を目的とした
