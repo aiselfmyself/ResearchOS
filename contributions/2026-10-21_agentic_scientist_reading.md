@@ -27,10 +27,10 @@
 
 | 項目 | 内容 |
 |---|---|
-| abs ページ | `https://arxiv.org/abs/` に続けて `2610.18933` を付けたURLを 2026-10-21 に取得。v1 のみ（submission history は v1 一件） |
+| abs ページ | `https://arxiv.org/abs/2610.18933` を 2026-10-21 に取得。v1 のみ（submission history は v1 一件） |
 | 本文 | **`https://arxiv.org/html/2610.18933v1`（HTML v1）を全34チャンク取得して読了**。読んだ版は **v1（2026-10-13 投稿）** |
 | サンドボックスからの直接取得 | **不可**（`curl` / `python3` から arxiv.org へは到達できない）。Arena の fetch ツールは到達可 |
-| 版の確認 | abs ページで当該IDの最新版が **v1**（2026-10-13 投稿）であることを確認（v2 以降なし） |
+| 版の確認 | abs ページで `arXiv:2610.18933v1` が最新版であることを確認（v2 以降なし） |
 | 未読 | PDF 版（HTML v1 で読了したため同一内容と判断）、Figure の画像そのもの（キャプションと本文の記述のみ読了）、付録 C・D の生成論文 PDF の中身 |
 
 **証拠段階**（本リポジトリの4段階基準に準拠）：
@@ -40,15 +40,23 @@
 - **C：要旨・メタデータ確認** — 書誌（著者・投稿日・ページ数・ライセンス）のみ。
 - 本メモに **D（伝聞・未検証）は無い**。論文の主張はすべて本文で裏付けて引用した。
 
-### 1.1 書誌IDの表記について（重要な但し書き）
+### 1.1 書誌IDの表記について（履歴）
 
-本メモでは、対象論文のIDを `arXiv:NNNN.NNNNN` 形式でも `arxiv.org/abs/NNNN.NNNNN` 形式でも書いていない（**ID そのものは `2610.18933`**）。理由は機械的である。
+#### 経緯：初稿は正規形式を避けていた
+
+初稿（同日・先行コミット）では、対象論文のIDを `arXiv:NNNN.NNNNN` 形式でも `arxiv.org/abs/NNNN.NNNNN` 形式でも書かなかった。理由は機械的である。
 
 - `scripts/check_memo_citations.py`（**CIゲート6**）は、`contributions/*.md` 内に出現する**すべての arXiv ID** を `tests/fixtures/arxiv_metadata_snapshot.json` と照合し、スナップショットに無いIDがあれば失敗する。
-- 当該スナップショット（2026-10-20 取得、13件）には **2610.18933 が含まれていない**。
-- 今回の指示は「`tests/fixtures/arxiv_metadata_snapshot.json` を変更しない」である。
+- 当該スナップショット（2026-10-20 取得、当時13件）には **2610.18933 が含まれていなかった**。
+- その時点の指示は「`tests/fixtures/arxiv_metadata_snapshot.json` を変更しない」であった。
 
-したがって **ID を正規形式で書くとゲート6が赤になる**。これを避けるため、本メモでは HTML 版の URL（`https://arxiv.org/html/2610.18933v1`）と DOI（`https://doi.org/10.48550/arXiv.2610.18933`）で原典を指す。これは**回避ではなく、制約の下での記録である**ことを明記する。スナップショットへの追記は §9 の提案に含めた（追記後の正規表記への書き換えは別作業）。
+したがって **ID を正規形式で書くとゲート6が赤になる**状態だった。初稿ではこれを避けるため、HTML 版の URL（`https://arxiv.org/html/2610.18933v1`）と DOI（`https://doi.org/10.48550/arXiv.2610.18933`）で原典を指し、その旨を明記した。
+
+#### 現状：スナップショット追記により解消（2026-10-21、本PR）
+
+**指示に基づき `tests/fixtures/arxiv_metadata_snapshot.json` に 2610.18933 を追記した（14件目）。** 手順は既存エントリと同一——abs ページを実際に取得して読んだうえで追記し、`capture_note` にその旨を残した。メタデータ（タイトル・著者5名・投稿日 2026-10-13）は abs ページの記述と一致させ、本文の逐語引用は HTML v1 の全34チャンクから取得した。
+
+これにより本メモは**正規形式 `arXiv:2610.18933` および `https://arxiv.org/abs/2610.18933` を使用できるようになり**、実際に使用している。ゲート6は [AS] の書誌（タイトル・著者・年）を**スキップではなく照合**するようになった（§10 の参考文献エントリ）。初稿の回避は**記録の改変ではなく、制約の下での一時的な表記**であった。
 
 ### 1.2 論文の位置づけ（要約）
 
@@ -406,15 +414,15 @@ PY
 | title | The Agentic Scientist: Orchestrating Coding Agents for Automated Scientific (Co-)Discovery |
 | authors | Robert Tjarko Lange; Luca Grillotti; Yutaro Yamada; Rujikorn Charakorn; David Ha（全員 Sakana AI。Lange / Grillotti / Yamada は equal contribution、Ha は advising） |
 | year | 2026 |
-| url | **現状は `https://arxiv.org/html/2610.18933v1` のみ使用可能**。正規の abs 形式（`https://arxiv.org/abs/` に続けて `2610.18933`）はスナップショット追記後に使えるようになる（§1.1） |
+| url | `https://arxiv.org/abs/2610.18933`（**本PRでスナップショットに追記済み**。§1.1 参照） |
 | type | preprint |
 | venue | arXiv 2610.18933v1 (cs.AI; cs.CL; cs.LG), submitted 2026-10-13, 88 pages, Comments: 88 pages, license CC BY 4.0 |
 | doi | `10.48550/arXiv.2610.18933` |
 | metadata_checked_at | 2026-10-21 |
-| metadata_source | `https://arxiv.org/abs/` + `2610.18933`（スナップショット追記後に正規表記で使用可） |
+| metadata_source | `https://arxiv.org/abs/2610.18933` |
 | 関連 | コード `https://github.com/SakanaAI/AI-Scientist-v3`、図生成 `https://github.com/SakanaAI/autoillustrate` |
 
-**前提作業**：`tests/fixtures/arxiv_metadata_snapshot.json` に 2610.18933 を追記すること。追記しない限り、本メモを含む `contributions/*.md` で正規の `arXiv:` 形式を使うと**CIゲート6が失敗する**（§1.1）。追記後、本メモの表記を正規形式へ書き換える作業が別途要る。
+**前提作業：完了済み。** `tests/fixtures/arxiv_metadata_snapshot.json` への 2610.18933 追記は**本PRで実施した**（§1.1）。これに伴い本メモの表記も正規形式へ書き換え済みである。**未完了なのは SRC レコードの台帳登録と EVD / VER の採番だけ**であり、それらは本PRの範囲外として提案のまま残す（次作業への申し送り）。
 
 ### 9.2 EVD 候補（証拠段階 B、5件を提案）
 
@@ -434,10 +442,17 @@ PY
 
 ## 10. 参考文献
 
-[AS] Robert Tjarko Lange, Luca Grillotti, Yutaro Yamada, Rujikorn Charakorn, David Ha（Sakana AI）. "The Agentic Scientist: Orchestrating Coding Agents for Automated Scientific (Co-)Discovery." 2026. 88 pages, license CC BY 4.0. https://arxiv.org/html/2610.18933v1 （HTML v1、全34チャンクを読了）/ DOI: https://doi.org/10.48550/arXiv.2610.18933 / コード: https://github.com/SakanaAI/AI-Scientist-v3 / 図生成: https://github.com/SakanaAI/autoillustrate
+[AS] Robert Tjarko Lange, Luca Grillotti, Yutaro Yamada, Rujikorn Charakorn, David Ha. "The Agentic Scientist: Orchestrating Coding Agents for Automated Scientific (Co-)Discovery." arXiv:2610.18933v1 [cs.AI; cs.CL; cs.LG], 2026（投稿 2026-10-13、88 pages、CC BY 4.0、全員 Sakana AI）. https://arxiv.org/abs/2610.18933 / HTML: https://arxiv.org/html/2610.18933v1 / DOI: 10.48550/arXiv.2610.18933 / コード: https://github.com/SakanaAI/AI-Scientist-v3 / 図生成: https://github.com/SakanaAI/autoillustrate
 
 （以下は文献引用ではなく、本メモが言及した既存資料である。いずれも**原典または既存文書の記述を経由して参照したのみ**で、本メモの作業としては本文を検証していない。(a) ALIFE 2026 採択論文 "Diffusing blame: Task-dependent credit assignment in biologically plausible dual-stream networks."（Yamada ら、2026）— 原典 §4 が参照。**未読**。(b) RRSI — 本リポジトリの計測器2種の出典。`docs/literature-triage-2026-10-21.md` 経由で言及したのみ。(c) SHELDON 読解メモ `contributions/2026-10-21_sheldon_reading.md` §7 — 本メモ §6.3 で「LLM 判定器を採用しない理由」として参照。内部記録 `state/`・`contributions/`・`docs/`・`scripts/` への参照は文献引用ではない。）
 
 ---
 
-**作業ログ**：abs ページ取得 1回、HTML v1 を34チャンク全取得（`fetch_page`）。リポジトリ側の実測 2回（未知キー抽出・キー種類集計）。変更ファイル：本メモのみ（`contributions/2026-10-21_agentic_scientist_reading.md` の新規作成）。
+**作業ログ**：abs ページ取得 1回、HTML v1 を34チャンク全取得（`fetch_page`）。リポジトリ側の実測 2回（未知キー抽出・キー種類集計）。
+
+**変更ファイル（本PR）**：
+
+1. `contributions/2026-10-21_agentic_scientist_reading.md` — 新規作成（初稿）＋正規書誌表記への書き換え
+2. `tests/fixtures/arxiv_metadata_snapshot.json` — 2610.18933 を14件目として追記、`capture_note` に手順を記録
+
+**未変更**：`state/*.jsonl`（SRC / EVD / VER の登録は提案のまま）、`docs/`、すべてのスクリプト。全8ゲート green を確認済み。
