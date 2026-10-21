@@ -51,7 +51,7 @@
 
 ゲートするのは決定論的・再実行可能な**8検査**（2026-10-21 時点。初版は4検査で、2026-10-20 に 5・6 を、2026-10-21 に 7 を、同日 8 を追加した）：
 
-1. `python3 -m unittest discover -s tests -v` — **332テスト**（約3〜5秒）
+1. `python3 -m unittest discover -s tests -v` — **342テスト**（約3〜5秒）
 2. `python3 gitswarm/benchmarks/benchmark.py --check` — 成果物と fresh run の照合（許容誤差0.01）
 3. `python3 gitswarm/readout_sim.py --check` — 投票シミュレーション成果物と fresh run の照合
 4. `python3 scripts/validate_state.py` — 研究台帳のスキーマ・ID一意・参照整合性（**台帳内の** ID・パス参照の存在検査を含む）
