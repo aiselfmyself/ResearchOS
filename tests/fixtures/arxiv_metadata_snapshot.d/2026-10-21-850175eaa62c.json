@@ -1,0 +1,25 @@
+{
+  "schema": "researchos/arxiv-metadata-snapshot-part/v1",
+  "captured_at": "2026-10-21",
+  "capture_method": "arxiv abs page (https://arxiv.org/abs/2609.37633) read via the web fetch tool",
+  "capture_note": "2026-10-21: 2609.37633 を追加。contributions/2026-10-21_svm_single.md が本文中で引用しているが同梱スナップショットに無く、ゲート6（scripts/check_memo_citations.py）が赤だったため。abs ページを実際に取得し、title・著者9名・投稿日を確認した（v1: 2026-09-29、v2: 2026-10-19 改訂）。published は初版の投稿日。ベースの tests/fixtures/arxiv_metadata_snapshot.json は凍結のまま変更せず、方式Bのシャードとして追加する。",
+  "entries": [
+    {
+      "arxiv_id": "2609.37633",
+      "source_url": "https://arxiv.org/abs/2609.37633",
+      "title": "RLTLDR: Self-improvement by Internalizing Self-generated Feedback",
+      "authors": [
+        "Michael Kirchhof",
+        "Eleonora Gualdoni",
+        "Andrew Szot",
+        "Khashayar Gatmiry",
+        "Aryo Lotfi",
+        "Abbas Kazerouni",
+        "Omar Attia",
+        "Sanjoy Chowdhury",
+        "Alexander Toshev"
+      ],
+      "published": "2026-09-29"
+    }
+  ]
+}

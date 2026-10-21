@@ -197,12 +197,12 @@ CONFLICT (content): Merge conflict in docs/minimal-core-and-ci.md
 
 | コマンド | 実測 |
 |---|---|
-| `python3 -m unittest discover -s tests` | `Ran 388 tests` 中 **3件失敗（main 由来、下記 §5.1）** |
+| `python3 -m unittest discover -s tests` | `Ran 388 tests in 7.181s` / `OK`（終了0。`origin/main` 由来の赤は §5.1.1 で解消） |
 | `python3 gitswarm/benchmarks/benchmark.py --check` | `PASS: benchmark artifact matches a fresh execution`（0） |
 | `python3 gitswarm/readout_sim.py --check` | `PASS: readout-sim artifact matches a fresh execution`（0） |
 | `python3 scripts/validate_state.py` | `PASS: research ledgers valid (sources=23, evidence=86, claims=9, verifications=34, hypotheses=2, relations=0)`（0） |
 | `python3 scripts/check_citations.py` | `summary: 22 arXiv source(s) checked, 1 skipped, 0 failure(s)`（0） |
-| `python3 scripts/check_memo_citations.py` | `summary: 30 memo(s) scanned, 61 arXiv citation(s) checked, 3 skipped, **1 failure**（main 由来、下記 §5.1）` |
+| `python3 scripts/check_memo_citations.py` | `summary: 30 memo(s) scanned, 62 arXiv citation(s) checked, 3 skipped, 0 failure(s)`（0） |
 | `python3 scripts/check_memo_ledger_refs.py` | `summary: 30 memo(s) scanned, 0 dangling reference(s), 5 archived ID reference(s)`（0） |
 | `python3 scripts/check_doc_numbers.py` | `actual: tests=388 gates=8 sources=23 evidence=86 claims=9 verifications=34 hypotheses=2` / `summary: 2 doc(s) scanned, 0 stale number(s)`（0） |
 
@@ -227,7 +227,17 @@ FAILED (failures=3)
 原因は `contributions/2026-10-21_svm_single.md`（PR #58 が追加）が引用する `2609.37633`（arXiv ID） が `tests/fixtures/arxiv_metadata_snapshot.json` に無いこと。`gh api .../commits/ccf76aa/check-runs` でも `conclusion: failure` であり、main の CI は既に赤でマージされている。
 
 - 本移行はこれを**導入していない**し、**修正もしていない**。スナップショットのエントリは「abs ページを実際に読んだ後にのみ追加する」運用（fixture の `capture_note`）であり、当該論文のメタデータを本作業では検証できないため、推測で追加すると引用検査の ground truth を汚す。修正は当該メモの作成セッション（または統合役）が行うべき。
-- したがって本PRをマージしても main の赤は解消しない（赤→赤で、悪化もしない）。この判断は人間の指示（マージ実行）に基づく。
+- この赤は移行PR #57 のマージ時点で main に残っていた（赤→赤で、悪化はしていない）。
+
+#### 5.1.1 解決（2026-10-21、人間の承認を得て実施）
+
+人間の承認を得て、当該論文のメタデータを確認し、**シャードとして**スナップショットへ追加した。
+
+1. `https://arxiv.org/abs/2609.37633` を web fetch で取得して内容を確認した。得られた事実：title = "RLTLDR: Self-improvement by Internalizing Self-generated Feedback"、著者9名（Michael Kirchhof, Eleonora Gualdoni, Andrew Szot, Khashayar Gatmiry, Aryo Lotfi, Abbas Kazerouni, Omar Attia, Sanjoy Chowdhury, Alexander Toshev）、v1 投稿 2026-09-29、v2 改訂 2026-10-19、cs.LG（DOI 10.48550/arXiv.2609.37633）。
+2. 既存エントリと同じ形（`arxiv_id` / `source_url` / `title` / `authors` / `published`）で、`published` は**初版の投稿日 2026-09-29**（既存エントリの規約どおり）。
+3. 追加先は `tests/fixtures/arxiv_metadata_snapshot.d/2026-10-21-850175eaa62c.json`。**ベースの `tests/fixtures/arxiv_metadata_snapshot.json` は凍結のまま無変更**であり、これは方式Bのスナップショット・シャード機構が実運用で最初に使われた例である。取得日・取得方法・理由はパーツ側の `captured_at` / `capture_method` / `capture_note` に残した（ベースのヘッダーは上書きしない）。
+4. 実測：`check_memo_citations.py` は `OK 2026-10-21_svm_single.md 2609.37633 (inline mention found in snapshot)` となり、`30 memo(s) scanned, 62 arXiv citation(s) checked, 3 skipped, 0 failure(s)`。**8ゲートすべて終了コード0**、`Ran 388 tests` は `OK`。
+5. 台帳（`state/`）は変更していない。この論文を文献台帳へ登録するかは、`2026-10-21_svm_single.md` 自身が「比較実験の全出力固定・評価後に別の判断と別 PR で扱う」と提案しており、本作業の範囲外である。
 - 本メモではこの ID を `arXiv:` 接頭辞なしで記す。ゲート6は**全メモ**の arXiv ID 言及を検査するため、接頭辞つきで書くと本メモ自身が新しい `MISSING` を生み、原因の切り分けを濁す（実際に一度そうなったので、接頭辞を外して再実測し、失敗が当該メモ1件だけであることを確認した）。
 
 ## 6. 統合役へ渡す更新文案（README・docs）
@@ -308,7 +318,7 @@ PASS: research ledgers valid (sources=23, evidence=86, claims=9, ...)
 5. **旧パスが統合ビューそのものではないことの注記**（S1 §7）は未実施。§6.1 の文案で README に入れる想定。
 6. **シャードに書かれなかった／マージされなかったレコードは検出できない**（S1 の既知の限界）。期待一覧のマニフェストは持たない。
 7. **同一 ID・同一内容の重複もエラー**にしたため、意図的に同じレコードを2箇所へ置く運用はできない（意図した厳格化）。
-8. **`contributions/2026-10-21_svm_single.md` の `2609.37633`（arXiv ID） がスナップショットに無く、main のゲート6が赤**（§5.1）。修正はスナップショットへの検証済みエントリ追加か当該メモの修正。本PRの範囲外。
+8. ~~`contributions/2026-10-21_svm_single.md` の `2609.37633`（arXiv ID） がスナップショットに無く、main のゲート6が赤~~ → **解決済み**（§5.1.1。abs ページを取得して検証し、スナップショット・シャードとして追加）。
 9. 並行追記の実証は合成クローンのみ。実リポジトリでの使い捨てブランチ実験は行っていないため、**削除承認が必要なブランチは無い**。
 
 ## 9. 変更ファイル一覧
@@ -326,4 +336,5 @@ PASS: research ledgers valid (sources=23, evidence=86, claims=9, ...)
 | `scripts/check_doc_numbers.py` | 変更（件数＝統合レコード数） |
 | `scripts/holdout_eval.py` | 変更（JSON 直読の廃止） |
 | `README.md` / `docs/minimal-core-and-ci.md` | 変更（テスト数のみ。§0 の例外許可と §2.2 に基づく） |
+| `tests/fixtures/arxiv_metadata_snapshot.d/2026-10-21-850175eaa62c.json` | 新規（§5.1.1。`2609.37633` の検証済みエントリ。ベースは凍結のまま） |
 | `state/*.jsonl` / `tests/fixtures/arxiv_metadata_snapshot.json` | **無変更** |
