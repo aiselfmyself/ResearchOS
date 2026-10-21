@@ -1,0 +1,22 @@
+{
+  "schema": "researchos/arxiv-metadata-snapshot-part/v1",
+  "captured_at": "2026-10-21",
+  "capture_method": "Arena fetch_page, versioned arXiv abs pages https://arxiv.org/abs/2606.24775v1 and https://arxiv.org/abs/2604.08224v1",
+  "capture_note": "Phase 4 round 3: abstract-screened but NOT included as primary SRC. Metadata is kept solely for offline validation of explicit excluded-candidate links in the round memo. Original submission dates transcribed; no publication-status claim.",
+  "entries": [
+    {
+      "arxiv_id": "2606.24775",
+      "source_url": "https://arxiv.org/abs/2606.24775v1",
+      "title": "Are We Ready For An Agent-Native Memory System?",
+      "authors": ["Wei Zhou", "Xuanhe Zhou", "Shaokun Han", "Hongming Xu", "Guoliang Li", "Zhiyu Li", "Feiyu Xiong", "Fan Wu"],
+      "published": "2026-06-23"
+    },
+    {
+      "arxiv_id": "2604.08224",
+      "source_url": "https://arxiv.org/abs/2604.08224v1",
+      "title": "Externalization in LLM Agents: A Unified Review of Memory, Skills, Protocols and Harness Engineering",
+      "authors": ["Chenyu Zhou", "Huacan Chai", "Wenteng Chen", "Zihan Guo", "Rong Shan", "Yuanyi Song", "Tianyi Xu", "Yingxuan Yang", "Aofan Yu", "Weiming Zhang", "Congming Zheng", "Jiachen Zhu", "Zeyu Zheng", "Zhuosheng Zhang", "Xingyu Lou", "Changwang Zhang", "Zhihui Fu", "Jun Wang", "Weiwen Liu", "Jianghao Lin", "Weinan Zhang"],
+      "published": "2026-04-09"
+    }
+  ]
+}
