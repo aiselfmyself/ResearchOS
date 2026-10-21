@@ -43,6 +43,10 @@ scripts/
   harness_regime.py     「ハーネスは順位を変えるか」を R = モデル間/ハーネス間の
                         広がり比で判定し、[8] と [9] の見かけの矛盾を両立させる
                         （計測器・閾値 R ~ 1、リファレンス3ケースで一致）
+  check_doc_numbers.py  文書内の陳腐化した数値（テスト件数・ゲート数・台帳件数）を
+                        実測値と突き合わせて検出する（**CI8番目のゲート**。
+                        監査 ID 19。監査は ID 12 と ID 14 で同型の欠陥を
+                        2 回とも手作業で見つけていた）
 gitswarm/
   problem.py solvers/  30都市TSPの決定論的ソルバ群（greedy/random/two_opt/SA）
   benchmarks/          複数シード実行＋成果物照合（--write/--check）
@@ -60,20 +64,19 @@ tests/
   test_check_memo_ledger_refs.py メモ内ID・パス参照の検査テスト（12件）
   test_estimate_rho.py         rho 推定器の回帰テスト（13件）
   test_harness_regime.py       R の単位変換と閾値判定の回帰テスト（14件）
-                               ── 合計 184件
-  test_check_memo_citations.py メモ引用照合テスト（33件・ネットワーク非依存）
-  test_ownership.py       所有マップ分類テスト（16件・ネットワーク非依存）
-  test_readout_sim.py     投票スイープの回帰・閾値予測テスト（20件・ネットワーク非依存）
+  test_check_doc_numbers.py    文書内の陳腐化した数値の検査テスト（21件）
+                               ── 合計 205件
 contributions/         研究ノート（統合レポート・調査メモ・全文読解レポート・共通モード測定）
 docs/                  分析レポートと設計記録（並行作業の所有マップは docs/parallel-work-ownership.md。強制力なし）
 .github/workflows/
-  core-check.yml       最小CI（テスト＋ベンチマーク再現性＋投票シミュレーション再現性＋台帳検証＋書誌照合）
+  core-check.yml       最小CI（全8ゲート：テスト・ベンチマーク再現性・投票シミュレーション
+                       再現性・台帳検証・書誌照合・メモ引用照合・メモ内ID参照・文書内数値）
 ```
 
 ## 使い方
 
 ```sh
-# 1. テスト（約5秒・110件）
+# 1. テスト（約5秒・205件）
 python3 -m unittest discover -s tests -v
 
 # 2. ベンチマークの再現性確認（fresh実行と成果物の照合）
@@ -96,7 +99,8 @@ python3 gitswarm/benchmarks/benchmark.py --write
 python3 gitswarm/readout_sim.py --write
 ```
 
-CI（`core-check.yml`）は上記1〜6をゲートする。Python 3.12固定。
+CI（`core-check.yml`）は上記1〜6に加え、**7. メモ内の台帳ID・パス参照の存在検査**と
+**8. 文書内の陳腐化した数値の検査**をゲートする。Python 3.12固定。
 
 ## 意図的に含まれないもの（ガバナンス凍結）
 
