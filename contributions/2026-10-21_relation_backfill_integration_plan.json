@@ -1,0 +1,1751 @@
+{
+  "plan": "relation_backfill_integration",
+  "created_at": "2026-10-21",
+  "status": "awaiting_human_approval",
+  "source_candidates": [
+    "contributions/2026-10-21_relation_backfill_ALL.json"
+  ],
+  "base_commit": "3574790c73ae2abe95378a2c5e2dff169c4d97ee",
+  "counts": {
+    "items": 172,
+    "by_hypothesis": {
+      "HYP-001": 86,
+      "HYP-002": 86
+    },
+    "by_verdict": {
+      "support": 23,
+      "neutral": 134,
+      "unresolved": 15
+    },
+    "adjudicated": {
+      "as_proposed": 168,
+      "refute_to_unresolved": 4
+    }
+  },
+  "excluded": {
+    "new_hypothesis_rows": 63,
+    "reason": "NEW-* は HYP レコードではないため REL の hypothesis_id 参照が成立しない（validate_state が unknown hypothesis_id で赤）"
+  },
+  "items": [
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-001",
+      "source_id": "SRC-001",
+      "verdict": "support",
+      "confidence": "high",
+      "basis": "memo:2026-10-20_sla_fulltext_reading.md",
+      "adjudication": "as_proposed",
+      "rationale": "会話履歴を持ち越さずハーネスが研究状態を外部保持して毎回役割別文脈を再構成する設計であり、HYP-001の外部化状態優位を直接支持する。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-001",
+      "source_id": "SRC-001",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "ワーカー間の多数決ノミネーションや共通モード誤り増幅は扱っていない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-002",
+      "source_id": "SRC-002",
+      "verdict": "support",
+      "confidence": "medium",
+      "basis": "memo:2026-10-20_git_swarm_fulltext_reading.md",
+      "adjudication": "as_proposed",
+      "rationale": "ProgramBenchで貢献の94.7%が後続に継承され最終解の推移的祖先がグラフの82-93%を占めており、Git共有状態上の累積探索を支持する（因果留保はEVD-20261020-e4a7参照）。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-002",
+      "source_id": "SRC-002",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "貢献グラフの再利用構造の報告であり、多数決投票の誤り相関は扱っていない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-003",
+      "source_id": "SRC-002",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "候補選択方式（検証スコア選択対ノミネーション選択）の記述であり、外部化メモリの有無比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-003",
+      "source_id": "SRC-002",
+      "verdict": "support",
+      "confidence": "medium",
+      "basis": "memo:2026-10-20_git_swarm_fulltext_reading.md",
+      "adjudication": "as_proposed",
+      "rationale": "検証スコアが使える全実験で著者自身が多数決ノミネーション選択を意図的に除去しており、客観検証器がない場面での投票頼みの限界を裏づける。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-004",
+      "source_id": "SRC-003",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "代理指標（yardstick）の忠実度再検査に関する記述であり、外部化メモリの比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-004",
+      "source_id": "SRC-003",
+      "verdict": "support",
+      "confidence": "medium",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "探索が代理指標と真の目的の乖離を悪用してドリフトするため真の評価確認を必須としており、主観的合議のみでは局所解悪用を防げないことを間接支持する。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-007",
+      "source_id": "SRC-001",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "SRC-001の著者名メタデータ転写誤りを訂正した監査記録であり（VER-006のfailは転写誤り検出）、HYP-001の内容真偽には中立。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-007",
+      "source_id": "SRC-001",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "書誌著者名の訂正監査記録であり、HYP-002には無関係。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-008",
+      "source_id": "SRC-002",
+      "verdict": "support",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "負ラベル付き研究コミットの70.1%（497/709件）が後の採用コミットに引用されており、失敗を含むGit構造化履歴の累積探索への寄与を支持する。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-008",
+      "source_id": "SRC-002",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "負のコミットの事後参照率の報告であり、多数決投票の共通モード障害は扱っていない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-009",
+      "source_id": "SRC-003",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "SRC-003の著者名メタデータ訂正記録であり（VER-010のfailは書誌転写誤り）、HYP-001には中立。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-009",
+      "source_id": "SRC-003",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "書誌著者名の訂正監査記録であり、HYP-002には無関係。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-010",
+      "source_id": "SRC-001",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "監査前のEVD-001抜粋文言を原文照合で訂正した記録であり（VER-015のfailは引用文言不一致の検出）、仮説反駁ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-010",
+      "source_id": "SRC-001",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "SRC-001の引用文言訂正記録であり、HYP-002には無関係。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-011",
+      "source_id": "SRC-003",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "監査前のEVD-004引用文言の不実在を確認した記録であり、HYP-001には無関係。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-011",
+      "source_id": "SRC-003",
+      "verdict": "unresolved",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "監査前の『Swarm consensus reinforces deceptive local optima』文言が原典に存在しないことを確認した監査記録であり（VER-011）、これ単独ではHYP-002を支持も反駁もしないためunresolvedに留保する。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261020-0641",
+      "source_id": "SRC-002",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "GitSwarm付録G.3の投票推薦の性質に関する注意書きであり、外部化メモリの効果比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-0641",
+      "source_id": "SRC-002",
+      "verdict": "support",
+      "confidence": "high",
+      "basis": "memo:2026-10-20_git_swarm_fulltext_reading.md",
+      "adjudication": "as_proposed",
+      "rationale": "ノミネーションはワーカーの選好・協調信号であって正しさの独立検証ではないと著者自身が明記しており、HYP-002の機構的前提を直接支持する。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261020-72ee",
+      "source_id": "SRC-001",
+      "verdict": "unresolved",
+      "confidence": "high",
+      "basis": "memo:2026-10-20_sla_fulltext_reading.md",
+      "adjudication": "as_proposed",
+      "rationale": "SLA主結果が各手法1回走行（n=1）かつ実験計算コスト未統制であり、『会話を持ち越すか否か』自体も未分離と明記されるため因果判定を保留する。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-72ee",
+      "source_id": "SRC-001",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "SLAの評価予算・反復数の方法論的制約であり、多数決ノミネーションは扱っていない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261020-e4a7",
+      "source_id": "SRC-002",
+      "verdict": "unresolved",
+      "confidence": "high",
+      "basis": "memo:2026-10-20_git_swarm_fulltext_reading.md",
+      "adjudication": "as_proposed",
+      "rationale": "GitSwarmの貢献グラフ分析は再利用の観測であって履歴あり／なしの直接介入による因果寄与を分離していないと明記されるため保留する。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-e4a7",
+      "source_id": "SRC-002",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "貢献グラフ再利用の因果識別限界に関する記述であり、多数決投票は扱っていない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261020-ffec",
+      "source_id": "SRC-004",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "決定論的多数決投票シミュレーションであり、外部化メモリの比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-ffec",
+      "source_id": "SRC-004",
+      "verdict": "support",
+      "confidence": "high",
+      "basis": "memo:2026-10-20_git_swarm_fulltext_reading.md",
+      "adjudication": "as_proposed",
+      "rationale": "偶然未満精度（p=0.15）や誤共有見解（p=0.60, rho=0.6で誤り率0.964・増幅1.270）および正の誤り相関下で多数決が誤りを増幅することを定量実証しており、HYP-002を強く支持する。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261020-932f",
+      "source_id": "SRC-002",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "GitSwarmのreadout適用範囲に関する二次記述と原典§2.5/§3.3/H.1の照合記録であり、外部化メモリの比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-932f",
+      "source_id": "SRC-002",
+      "verdict": "support",
+      "confidence": "medium",
+      "basis": "memo:2026-10-20_git_swarm_fulltext_reading.md",
+      "adjudication": "as_proposed",
+      "rationale": "原典が検証スコア利用可能課題ではnominationプロンプト自体を除去し、readoutを検証不能時の代替規則に限定していることを確認しており、HYP-002を支持する。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261020-ba70",
+      "source_id": "SRC-20261020-f295",
+      "verdict": "unresolved",
+      "confidence": "medium",
+      "basis": "memo:2026-10-20_agora_integrated_reading.md",
+      "adjudication": "as_proposed",
+      "rationale": "Git共有メモリ上で3.3923→1.899044 bpbの改善を達成したが単一プロンプト対照群がなく、最終改善幅3e-7も異機材変動未満のため因果判定を保留する。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-ba70",
+      "source_id": "SRC-20261020-f295",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "単一200テキスト開発評価器による数値選抜であり、主観的多数決ノミネーションではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261020-40dc",
+      "source_id": "SRC-20261020-f295",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "同一ノード上のコンテナ間プロセス一覧可視性という情報漏洩経路の記述であり、外部化メモリの優位性証明ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-40dc",
+      "source_id": "SRC-20261020-f295",
+      "verdict": "support",
+      "confidence": "medium",
+      "basis": "memo:2026-10-20_agora_integrated_reading.md",
+      "adjudication": "as_proposed",
+      "rationale": "独立のはずのH100ワーカーが隣接ワーカーの実行スクリプトを覗き見て実験を選択しており、実質的な独立性喪失・行動同期経路の実在を示す。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261020-bea0",
+      "source_id": "SRC-20261020-f295",
+      "verdict": "unresolved",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "refute_to_unresolved",
+      "rationale": "外部化台帳を持ちながら評価器・機材が自由記述のみで未投稿の再現試行が一切痕跡を残さず、外部化メモリだけでは再現性が担保されない反例である（単一ソースにつきprovisional）。 【統合役裁定 2026-10-21】HYP-001 は『単一セッションの巨大プロンプトより優れる』という比較命題であり、本観測は外部化単独アームの失敗のみで対照アームが無いため命題の反駁にはならない。境界条件として rationale に保存し verdict は unresolved とする。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-bea0",
+      "source_id": "SRC-20261020-f295",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "検証レコードのスキーマ不備と未投稿試行の不可視性の問題であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261020-221a",
+      "source_id": "SRC-20261020-f295",
+      "verdict": "unresolved",
+      "confidence": "medium",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "同一機材再現はビット一致する一方、勝者祖先で許容閾値1e-3超の1.2e-3異機材乖離が定数オフセット扱いで承認されており、再現性評価は両義的なため保留する。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-221a",
+      "source_id": "SRC-20261020-f295",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "同一・異ハードウェア間の数値再現誤差の報告であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261020-137b",
+      "source_id": "SRC-20261020-f295",
+      "verdict": "unresolved",
+      "confidence": "high",
+      "basis": "memo:2026-10-20_agora_integrated_reading.md",
+      "adjudication": "refute_to_unresolved",
+      "rationale": "外部化Git状態があっても5日間局所探索に停滞し、最良解の祖先を含む人間手動の3セッション介入と可視化注入を要したうえ専用介入ログも残っておらず、自律的探索効率・再現性の反例となる。 【統合役裁定 2026-10-21】HYP-001 は『単一セッションの巨大プロンプトより優れる』という比較命題であり、本観測は外部化単独アームの失敗のみで対照アームが無いため命題の反駁にはならない。境界条件として rationale に保存し verdict は unresolved とする。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-137b",
+      "source_id": "SRC-20261020-f295",
+      "verdict": "support",
+      "confidence": "medium",
+      "basis": "memo:2026-10-20_agora_integrated_reading.md",
+      "adjudication": "as_proposed",
+      "rationale": "複数ワーカーが5日間にわたり同一領域に集中停滞し外部からの未開拓枝ビュー注入まで脱出できなかった事実は、集団探索の同質化停滞を裏づける。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261020-2609",
+      "source_id": "SRC-20261020-f295",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "探索集中度ビューのクラスタリング閾値設定（0.80対0.90）の感度報告であり、外部化メモリの有無比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-2609",
+      "source_id": "SRC-20261020-f295",
+      "verdict": "unresolved",
+      "confidence": "high",
+      "basis": "memo:2026-10-20_agora_integrated_reading.md",
+      "adjudication": "as_proposed",
+      "rationale": "探索集中診断が閾値0.80設定に強く依存し既定値0.90では最大クラスタが約8%に下がるため、集中度の大きさ自体は設定依存としてunresolvedに留保する。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261020-2336",
+      "source_id": "SRC-20261020-f295",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "異アカウント間の同一スコア投稿タイミングの集計であり、外部化メモリの優位性検証ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-2336",
+      "source_id": "SRC-20261020-f295",
+      "verdict": "unresolved",
+      "confidence": "high",
+      "basis": "memo:2026-10-20_agora_integrated_reading.md",
+      "adjudication": "as_proposed",
+      "rationale": "同一スコア523組の90%が6時間以内に集中するが、共有親の再実行か別手法かの区別がつかず独立再発見ではないと明記されるためunresolvedとする。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261020-78b6",
+      "source_id": "SRC-20261020-f295",
+      "verdict": "unresolved",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "refute_to_unresolved",
+      "rationale": "コミット先行・索引書き込み失敗時ロールバック欠如によりGit履歴と索引の間に45コミットの不整合が生じており、素朴なGit外部化だけでは状態整合性が崩れる反例である。 【統合役裁定 2026-10-21】HYP-001 は『単一セッションの巨大プロンプトより優れる』という比較命題であり、本観測は外部化単独アームの失敗のみで対照アームが無いため命題の反駁にはならない。境界条件として rationale に保存し verdict は unresolved とする。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-78b6",
+      "source_id": "SRC-20261020-f295",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "サーバのコミット／索引トランザクション欠陥の報告であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261020-d515",
+      "source_id": "SRC-20261020-f295",
+      "verdict": "unresolved",
+      "confidence": "high",
+      "basis": "memo:2026-10-20_agora_integrated_reading.md",
+      "adjudication": "as_proposed",
+      "rationale": "著者自身が最良手法を再実行しておらず保存済み評価出力とエージェント再現に依拠しているため、最終再現性の直接検証としては保留する。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-d515",
+      "source_id": "SRC-20261020-f295",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "勝者手法の再実行有無に関する検証手続き開示であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261020-80cf",
+      "source_id": "SRC-20261020-f295",
+      "verdict": "unresolved",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "refute_to_unresolved",
+      "rationale": "評価器ログ・A100ワーカーのモデル／プロンプト・サンプリング設定・依存版・データ版がいずれも未記録で完全再現不能であり、外部化ストア単独で再現性が得られるとする読みを反駁する。 【統合役裁定 2026-10-21】HYP-001 は『単一セッションの巨大プロンプトより優れる』という比較命題であり、本観測は外部化単独アームの失敗のみで対照アームが無いため命題の反駁にはならない。境界条件として rationale に保存し verdict は unresolved とする。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-80cf",
+      "source_id": "SRC-20261020-f295",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "実行環境・プロンプト・依存関係の版固定欠落の開示であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261020-3554",
+      "source_id": "SRC-20261020-f295",
+      "verdict": "unresolved",
+      "confidence": "high",
+      "basis": "memo:2026-10-20_agora_integrated_reading.md",
+      "adjudication": "as_proposed",
+      "rationale": "Agoraなしや単純リーダーボードとの同一計算量比較を実施しておらず発見効率への因果効果は未決着と著者自身が結論づけているためunresolvedとする。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-3554",
+      "source_id": "SRC-20261020-f295",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "Agora全体の統制比較欠如に関する結論記述であり、多数決投票の検証ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261020-e9fb",
+      "source_id": "SRC-20261020-303f",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "タスクの長期性・モデルの長文脈・システムの長期記憶を区別する概念定義であり、直接の比較実験値ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-e9fb",
+      "source_id": "SRC-20261020-303f",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "用語定義の整理であり、多数決ノミネーションは扱っていない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261020-0766",
+      "source_id": "SRC-20261020-303f",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "長期タスクにおける報酬・評価信号の希薄化に関するサーベイ知見であり、外部化メモリの直接比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-0766",
+      "source_id": "SRC-20261020-303f",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "過程報酬・軌跡診断の必要性を論じるものであり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261020-aa81",
+      "source_id": "SRC-20261020-303f",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "長期能力の所在（モデル対ハーネス）と共有評価前提バイアスの問題提起であり、外部化メモリの実験ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-aa81",
+      "source_id": "SRC-20261020-303f",
+      "verdict": "support",
+      "confidence": "low",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "訓練信号と評価信号が『何が前進か』の共有前提に依存することによる相関測定バイアスを指摘しており、同質評価の共通モード脆弱性と整合する。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261020-f880",
+      "source_id": "SRC-20261020-303f",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "1,547本のarXiv論文収集・2段階フィルタリング手順のコーパス記述であり、HYP-001には中立。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-f880",
+      "source_id": "SRC-20261020-303f",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "サーベイ対象文献の選定統計であり、HYP-002には無関係。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261020-4c61",
+      "source_id": "SRC-20261020-875e",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "長期エージェント評価の可観測性包絡線と4つの評価課題を定義したものであり、外部化メモリの比較実験ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-4c61",
+      "source_id": "SRC-20261020-875e",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "評価の不透明性・検出力不足・帰属不確実性の整理であり、多数決投票は扱っていない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261020-04b2",
+      "source_id": "SRC-20261020-875e",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "1,300万トークン規模のAI R&D評価トランスクリプトの事例規模記述であり、単一セッション対外部化メモリの比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-04b2",
+      "source_id": "SRC-20261020-875e",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "単一オーケストレータ＋サブエージェント委譲の実行統計であり、多数決投票は扱っていない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261020-b733",
+      "source_id": "SRC-20261020-875e",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "オーケストレータ出力580件の活動内訳分析であり、外部化メモリの有無比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-b733",
+      "source_id": "SRC-20261020-875e",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "単一実行内のトークン配分偏りの観測であり、ワーカー間多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-66d4",
+      "source_id": "SRC-20261020-05de",
+      "verdict": "support",
+      "confidence": "low",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "コンテキスト検索・構造化統合・メモリ階層管理を体系化するサーベイ総括であり、外部化された構造化状態管理の有効性を概念面から支持する。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-66d4",
+      "source_id": "SRC-20261020-05de",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "コンテキスト工学の3構成要素の体系整理であり、多数決投票は扱っていない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-bbb8",
+      "source_id": "SRC-20261020-05de",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "LLMの複雑文脈理解と長文生成の能力非対称性の指摘であり、外部化メモリの直接比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-bbb8",
+      "source_id": "SRC-20261020-05de",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "単一モデルの理解対長文生成の非対称性であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-088c",
+      "source_id": "SRC-20261020-05de",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "1,400本超の論文を対象としたサーベイ規模・書誌履歴の記述であり、仮説の真偽には中立。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-088c",
+      "source_id": "SRC-20261020-05de",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "サーベイの文献件数メタデータであり、HYP-002には無関係。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-45e2",
+      "source_id": "SRC-20261020-787b",
+      "verdict": "support",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "全文脈保持（完遂71.0%・148万トークン）に対し直近剪定＋自動要約（完遂91.6%・55.3万トークン）が大幅優位を示し、巨大会話履歴より構造化要約状態が優れるとするHYP-001を支持する。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-45e2",
+      "source_id": "SRC-20261020-787b",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "単一エージェントのコンテキスト管理4条件の統制比較であり、多数決投票は扱っていない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-8fa6",
+      "source_id": "SRC-20261020-787b",
+      "verdict": "support",
+      "confidence": "medium",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "追加設定でも剪定上に構造化要約を重ねることで完遂率が92.0%→94.5%へ一貫して向上しており、要約状態の有効性を支持する。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-8fa6",
+      "source_id": "SRC-20261020-787b",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "コンテキスト剪定と要約の順序頑健性の検証であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-baef",
+      "source_id": "SRC-20261020-787b",
+      "verdict": "unresolved",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "著者自身が1クラスの業務ツール利用ワークフローでの証拠であり普遍的一般化の証明ではないと明記しているため、外的妥当性を保留する。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-baef",
+      "source_id": "SRC-20261020-787b",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "コンテキスト剪定実験の適用範囲留保であり、多数決投票には無関係。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-3d5a",
+      "source_id": "SRC-20261020-07a3",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "SWE-bench Verifiedにおける3モデル×3ハーネス直交要因実験であり、外部化メモリの有無比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-3d5a",
+      "source_id": "SRC-20261020-07a3",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "単一エージェントのモデル×ハーネス分散比較であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-cdf7",
+      "source_id": "SRC-20261020-07a3",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "ハーネス構成が性能分散の拘束条件であるとする定式化であり、外部化メモリ単体の仮説ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-cdf7",
+      "source_id": "SRC-20261020-07a3",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "リーダーボード比較におけるハーネス交絡の指摘であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-48c6",
+      "source_id": "SRC-20261020-07a3",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "ハーネス変更単独でのベンチマーク通過率変動の集計であり、外部化メモリ比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-48c6",
+      "source_id": "SRC-20261020-07a3",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "ベンチマーク上の足場効果量の報告であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-8319",
+      "source_id": "SRC-20261020-07a3",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "公正なエージェント評価プロトコル要件の提言であり、外部化メモリの実験ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-8319",
+      "source_id": "SRC-20261020-07a3",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "評価プロトコル開示基準の議論であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-c1b4",
+      "source_id": "SRC-20261020-4cff",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "7フロンティアモデル×36長期課題の過程評価設計の記述であり、外部化メモリの有無比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-c1b4",
+      "source_id": "SRC-20261020-4cff",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "LLM主観判定を排した決定論的評価設計の記述であり、多数決ノミネーションの実験ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-1564",
+      "source_id": "SRC-20261020-4cff",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "長期課題における走行間分散と過程ボトルネック多様性の報告であり、外部化メモリの比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-1564",
+      "source_id": "SRC-20261020-4cff",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "単一エージェント走行間のばらつき分析であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-7dd6",
+      "source_id": "SRC-20261020-4cff",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "7モデル間のハーネス比較および新規性分析であり、外部化メモリの有無比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-7dd6",
+      "source_id": "SRC-20261020-4cff",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "モデル順位保存と方法論的新規性の希少性の報告であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-d833",
+      "source_id": "SRC-003",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "DuoDiscoverのベンチマーク到達速度・順位報告であり、単一セッション対外部化メモリの統制比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-d833",
+      "source_id": "SRC-003",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "忠実度検証付き並列探索の性能結果であり、多数決ノミネーションの実験ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-2aad",
+      "source_id": "SRC-003",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "実世界エンジン最適化におけるDuoDiscover対ArchAgent v2の到達性能・候補数比較であり、外部化メモリ単独の比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-2aad",
+      "source_id": "SRC-003",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "性能最適化ベンチマークの実測比較であり、主観的多数決は扱っていない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-4c6f",
+      "source_id": "SRC-004",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "ワーカー間誤り相関ρの標本サイズ検出力計算であり、外部化メモリの検証ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-4c6f",
+      "source_id": "SRC-004",
+      "verdict": "unresolved",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "Agora再読解ペアn=8では誤り0件のため独立帰無仮説p1*p2=0となり誤り相関ρが識別不能（ρ=0.20検出に7,359項目必要）であるため、実データ上の相関推定はunresolvedとする。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-c38d",
+      "source_id": "SRC-004",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "モデル対ハーネス効果比Rの統合計算であり、外部化メモリ仮説とは別軸である。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-c38d",
+      "source_id": "SRC-004",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "ハーネス効果比Rの分析であり、多数決投票は扱っていない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-7cdb",
+      "source_id": "SRC-20261021-2384",
+      "verdict": "support",
+      "confidence": "medium",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "仮説と観測の関係行列E_tおよびretained/setaside状態を明示的な外部構造として保持・更新する設計であり、構造化外部状態の有効性を支持する。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-7cdb",
+      "source_id": "SRC-20261021-2384",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "H×O関係状態と終了条件の定式化であり、多数決ノミネーションは扱っていない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-4ad6",
+      "source_id": "SRC-20261021-2384",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "仮説空間・観測空間の軸と領域による構造化表現の定義であり、単一プロンプトとの直接比較数値は含まない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-4ad6",
+      "source_id": "SRC-20261021-2384",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "双空間の軸・領域表現と未踏領域優先選択プロンプトの記述であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-59ab",
+      "source_id": "SRC-20261021-2384",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "観測のProvisional属性による誤反駁抑止規則の定義であり、外部化メモリの有無比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-59ab",
+      "source_id": "SRC-20261021-2384",
+      "verdict": "support",
+      "confidence": "low",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "LLMの単発判断誤りや曖昧さを前提に再確認前の観測で仮説を棄却させない保護規則であり、LLM評価の誤り脆弱性に対する構造的防御として整合する。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-6ec4",
+      "source_id": "SRC-20261021-2384",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "未説明観測の発見が新系統の仮説生成を駆動する機構の分析であり、単一プロンプトとの直接比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-6ec4",
+      "source_id": "SRC-20261021-2384",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "観測駆動の系統横断的探索の分析であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-572c",
+      "source_id": "SRC-20261021-2384",
+      "verdict": "support",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "構造化された観測空間と複数仮説横断の共有観測を除去するとDiagnosisArenaで-14.0pt、ORCA-Benchで-13.34pt低下しており、外部化された構造化観測台帳の寄与を実証する。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-572c",
+      "source_id": "SRC-20261021-2384",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "観測空間アブレーションと共有観測の影響度分析であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-a8af",
+      "source_id": "SRC-20261021-2b88",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "証明探索から分解段階へ進むreadiness gateの判定基準の記述であり、外部化メモリの比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-a8af",
+      "source_id": "SRC-20261021-2b88",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "単一戦略の分解準備完了判定であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-12a7",
+      "source_id": "SRC-20261021-2b88",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "4値readiness-gateプロンプト仕様の記述であり、外部化メモリの有無比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-12a7",
+      "source_id": "SRC-20261021-2b88",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "戦略分類と義務重大度判定のプロンプト仕様であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-ea49",
+      "source_id": "SRC-20261021-2b88",
+      "verdict": "support",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "証明骨格を有向非巡回グラフ（DAG）の節単位サブ問題へ分解し欠陥箇所のみ局所再試行して他節の完了成果を保持する構造であり、構造化状態による効率的探索を支持する。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-ea49",
+      "source_id": "SRC-20261021-2b88",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "DAG分解と局所再試行の機構記述であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-5d88",
+      "source_id": "SRC-20261021-2b88",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "大域検証器による欠陥箇所特定と差し戻し規則の記述であり、外部化メモリの有無比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-5d88",
+      "source_id": "SRC-20261021-2b88",
+      "verdict": "support",
+      "confidence": "high",
+      "basis": "memo:2026-10-21_stellar_colosseum_reading.md",
+      "adjudication": "as_proposed",
+      "rationale": "『多数決ではなく具体的な致命的欠陥1つで棄却に十分であり漫然とした承認はそれを覆せない』と明記しており、学術・証明課題での多数決合議の脆弱性を直接支持する。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-cd59",
+      "source_id": "SRC-20261021-2b88",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "候補と反証記録束の木構造集約アルゴリズムの定式化であり、外部化メモリの比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-cd59",
+      "source_id": "SRC-20261021-2b88",
+      "verdict": "support",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "中間集約を投票や順位付けではなく構成的統合とし不一致や反証証拠を平均化せず次段へ引き継ぐ設計であり、単純多数決の欠陥回避を強く支持する。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-30ed",
+      "source_id": "SRC-20261021-2b88",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "戦略カードと標的型反証プロンプトの構造記述であり、単一プロンプトとの直接比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-30ed",
+      "source_id": "SRC-20261021-2b88",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "個別候補への反証テスト付与手順の記述であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-f7f8",
+      "source_id": "SRC-20261021-7419",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "研究課題ドラフティングと契約・評価分離検査のパイプライン記述であり、外部化メモリの比較実験ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-f7f8",
+      "source_id": "SRC-20261021-7419",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "設計・契約検証パイプラインの記述であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-6094",
+      "source_id": "SRC-20261021-7419",
+      "verdict": "support",
+      "confidence": "medium",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "ワーカー履歴を統合し反証可能な仮説・順序付き計画・対象ルーブリックを持つ構造化アイデア束で試行を管理しており、構造化外部状態の有効性を支持する（SRC-20261021-8452のEVD-20261021-05edと同一原典重複）。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-6094",
+      "source_id": "SRC-20261021-7419",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "多数決ではなく正当性確認と最高評価スコアに基づく候補選択である。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-f75d",
+      "source_id": "SRC-20261021-7419",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "選抜プログラムに対する統制ベースライン・単一変更アブレーション生成手順の記述であり、外部化メモリの比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-f75d",
+      "source_id": "SRC-20261021-7419",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "事後アブレーション実験の自動実行手順であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-a1fa",
+      "source_id": "SRC-20261021-7419",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "凍結プログラムに対するpost-hoc診断パイプラインの記述であり、外部化メモリの比較ではない（EVD-20261021-a6fdと逐語重複）。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-a1fa",
+      "source_id": "SRC-20261021-7419",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "凍結モデル診断のプログラム的検査の記述であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-9959",
+      "source_id": "SRC-20261021-7419",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "論文執筆段階の検証・監査修復ループの記述であり、外部化メモリの有無比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-9959",
+      "source_id": "SRC-20261021-7419",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "読み取り専用ワークスペース上の独立監査ループであり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-13f8",
+      "source_id": "SRC-20261021-a3a2",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "1提案あたりの独立編集数上限の設定根拠であり、外部化メモリの有無比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-13f8",
+      "source_id": "SRC-20261021-a3a2",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "単一提案者の編集バンドル容量制限であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-5b0d",
+      "source_id": "SRC-20261021-a3a2",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "フル評価前のdiffリーク審査criticの記述であり、外部化メモリの比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-5b0d",
+      "source_id": "SRC-20261021-a3a2",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "個別候補diffの事前リーク検査であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-71a3",
+      "source_id": "SRC-20261021-a3a2",
+      "verdict": "support",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "原子的編集ごとにコンポーネント・仮説・diff・ΔS・ΔCを構造化履歴として記録し次ラウンド提案に条件づけており、構造化外部状態の探索効率寄与を直接支持する。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-71a3",
+      "source_id": "SRC-20261021-a3a2",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "編集単位の信用割当履歴の設計であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-6347",
+      "source_id": "SRC-20261021-a3a2",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "非生産的コンポーネントの構造剪定規則の記述であり、外部化メモリの有無比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-6347",
+      "source_id": "SRC-20261021-a3a2",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "ハーネス要素の剪定規則であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-b089",
+      "source_id": "SRC-20261021-a3a2",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "安定性フロアと推論コスト見合い受容規則の定式化であり、外部化メモリの比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-b089",
+      "source_id": "SRC-20261021-a3a2",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "候補受容閾値の設計であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-de29",
+      "source_id": "SRC-20261021-a3a2",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "基底ハーネス反復評価スプレッドによるノイズ許容幅δの測定手順であり、外部化メモリ比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-de29",
+      "source_id": "SRC-20261021-a3a2",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "評価ノイズ幅δの実測校正であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-0417",
+      "source_id": "SRC-20261021-a3a2",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "正則化進化ハーネス対非正則化進化ハーネスのOOD汎化比較であり、外部化メモリの有無比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-0417",
+      "source_id": "SRC-20261021-a3a2",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "OODベンチマーク汎化成績の比較であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-6951",
+      "source_id": "SRC-20261021-a3a2",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "RRSIの受容制約アブレーション結果であり、外部化メモリの有無比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-6951",
+      "source_id": "SRC-20261021-a3a2",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "正則化除去アブレーションの比較であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-c1a2",
+      "source_id": "SRC-20261021-065a",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "GAIAにおける同一モデル内スキャフォールド変更効果の測定であり、外部化メモリの比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-c1a2",
+      "source_id": "SRC-20261021-065a",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "スキャフォールド選択による単一モデル精度変動であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-43a0",
+      "source_id": "SRC-20261021-065a",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "GAIA Level 1におけるモデル別スキャフォールド差の報告であり、外部化メモリの比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-43a0",
+      "source_id": "SRC-20261021-065a",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "モデル能力帯別の足場感度比較であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-e06c",
+      "source_id": "SRC-20261021-fb4a",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "SWE-benchリーダーボードのモデル内足場レンジ分析であり、外部化メモリの比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-e06c",
+      "source_id": "SRC-20261021-fb4a",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "リーダーボード上の足場変動幅と上位群スプレッドの比較であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-589c",
+      "source_id": "SRC-20261021-9a02",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "一般化可能性理論（G-theory）によるモデル×足場順位信頼性の分析であり、外部化メモリ比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-589c",
+      "source_id": "SRC-20261021-9a02",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "ベンチマーク順位の信頼性係数推定であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-d78f",
+      "source_id": "SRC-20261021-f186",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "ペネトレーションテスト課題における足場対比較であり、外部化メモリの比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-d78f",
+      "source_id": "SRC-20261021-f186",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "ペア課題ブートストラップ信頼区間の報告であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-1026",
+      "source_id": "SRC-20261021-a714",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "スキャフォールドフラグ（act対react）切り替え実験であり、外部化メモリの比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-1026",
+      "source_id": "SRC-20261021-a714",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "単一エージェントの足場フラグ変更実験であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-887d",
+      "source_id": "SRC-20261021-7176",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "検索スタックを固定したフレームワーク効果分離分析であり、外部化メモリの比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-887d",
+      "source_id": "SRC-20261021-7176",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "二重測定交絡の分離分析であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-c029",
+      "source_id": "SRC-20261021-4172",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "モデル世代強化に伴うハーネス優位幅の変化の報告であり、外部化メモリの比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-c029",
+      "source_id": "SRC-20261021-4172",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "単一モデル系列内の足場利得比較であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-05ed",
+      "source_id": "SRC-20261021-8452",
+      "verdict": "support",
+      "confidence": "medium",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "append-only候補変種と評価結果を蓄積しながら探索する設計であり、外部化された構造化履歴の有効性を支持する（SRC-20261021-7419のEVD-20261021-6094と同一原典重複）。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-05ed",
+      "source_id": "SRC-20261021-8452",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "固定予算内のedit-evaluate-verifyループと二重ゲートであり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-a6fd",
+      "source_id": "SRC-20261021-8452",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "凍結選抜プログラムに対するpost-hoc診断パイプライン記述であり、外部化メモリの有無比較ではない（SRC-20261021-7419のEVD-20261021-a1faと逐語重複）。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-a6fd",
+      "source_id": "SRC-20261021-8452",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "凍結モデル診断のプログラム的検査の記述であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-e31f",
+      "source_id": "SRC-20261021-8452",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "ルーブリック検証の仕様漏れを突いたテスト時評価手順改変の失敗事例であり、外部化メモリの比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-e31f",
+      "source_id": "SRC-20261021-8452",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "単一実行内の報酬ハッキング失敗事例であり、ワーカー間多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-5607",
+      "source_id": "SRC-20261021-8452",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "MNIST誤差拡散実験における手法妥当性ルーブリック厳格度アブレーションであり、外部化メモリの比較ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-5607",
+      "source_id": "SRC-20261021-8452",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "ルーブリック文言厳格度の比較実験であり、多数決投票ではない。"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-2804",
+      "source_id": "SRC-20261021-8452",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "MNIST誤差拡散モデルにおける負バイアスの第1畳み込み層閾値シフト機構という個別ドメイン知見であり、HYP-001には中立。"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-2804",
+      "source_id": "SRC-20261021-8452",
+      "verdict": "neutral",
+      "confidence": "high",
+      "basis": "excerpt",
+      "adjudication": "as_proposed",
+      "rationale": "神経回路網の符号保存と閾値シフトの事後解析結果であり、多数決投票には無関係。"
+    }
+  ]
+}
