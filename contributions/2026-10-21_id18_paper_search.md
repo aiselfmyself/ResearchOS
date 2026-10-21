@@ -49,7 +49,7 @@
 | arXiv:2605.23950（[8] 本体、既存 SRC-20261020-07a3） | 既存の比較対象そのもの。第3論文ではない |
 | arXiv:2607.13085（Baselines Before Architecture, XBOW pentest） | 同一モデル（GPT-5）で Codex/OpenCode/Pi を比べる harness 研究。**モデル能力の水準を変えた対照がハーネス格子と組になっていない**。ペンテスト領域で [8] と別 |
 | arXiv:2609.09218（Double Measurement Confound） | 検索スニペットに 7 モデル × 2 × 2 の表と τ-bench の scaffold 比較があるが、本文は未精読。主題は「scaffold と scorer の二重の測定交絡」で、モデル差とハーネス差の分散比を主目的としない。**未精読のため判定保留** |
-| arXiv:2606.27898（Unified Framework for Agentic Capabilities） | 15 モデル・7 ベンチマークで scaffold の影響を示すが、スニペットのみ。ハーネス格子ではなく統一 scaffold の比較。**未精読** |
+| arXiv:2605.27898（A Unified Framework for the Evaluation of LLM Agentic Capabilities） | 15 モデル・7 ベンチマーク（24 ドメイン）。固定 smolagents/ReAct の統一 scaffold で、原実装 vs 統一の比較は一部のペアのみ。モデル × ハーネスの格子も分散分解もなし。**本文一部精読（§2.4・§3.1・§3.3・§3.4 の表と Finding）**。※旧表記 2606.27898 は誤り（確率論の別論文） |
 | arXiv:2607.22585 | 次点として精読（§3.3）。2 モデルのみで R の分母・分子を比較する設計として弱い |
 | arXiv:2610.00651 | 次点として精読（§3.4）。観測データの分散分解。決定的な数値ではない |
 
@@ -219,7 +219,7 @@
 2. **A の交絡が多い**：ツール面の不一致（S1）、推論オフ、SDK 不具合、Anthropic 側の欠損、validation 集合の汚染、単著プレプリント、モデルがプロバイダと能力を混ぜている。
 3. **R の定義の揺れ**：[8] は HV/MV（分散比）、B は fitted range 比、C は σ²の差、A は範囲と MS 比。単位と定義をそろえずに比べられない。本書の R（A）は私が [8] と同じ SD 比の定義に換算したもので、論文の値ではない。
 4. **観測データ（B・C）は因果を識別しない**：著者自身が明記している。
-5. **未精読の候補**：arXiv:2609.09218（double measurement confound）と arXiv:2606.27898（unified framework）は、検索スニペットしか読んでいない。次の探索で本文の表を確認すべき。
+5. **精読の範囲**：arXiv:2609.09218 と arXiv:2605.27898 は本文の一部（§8 参照）。全 chunk・付録表の網羅的確認は未了。arXiv:2609.32459 の SWE-bench Pro 結果は図にのみあり、本文テキストから数値を取れない（§8）。
 6. **検索範囲の限界**：探索は英語の Web 検索 3 本と、既存文献集の範囲に限られる。SWE-bench 系の未発見論文（例：公式の model × scaffold 表を持つ技術報告）は残っている可能性がある。
 7. **事前登録の確認なし**：A の「pre-registered」は論文の記述に基づく。事前登録文書（Starace 2026）は未確認。
 
@@ -227,7 +227,58 @@
 
 ## 7. 次の一手（提案。実行は人間の判断）
 
-1. **arXiv:2609.09218 と arXiv:2606.27898 の本文精読**（未精読の候補を閉じる）。
-2. **SWE-bench 系で、モデル能力の階層と scaffold の格子を同時に持つ論文の再探索**（検索語：「SWE-bench Verified」「model tier」「scaffold grid」「factorial」）。
+1. **arXiv:2609.32459 の図の数値取得**（SWE-bench Pro の 5+5 モデル × 2 ハーネス）。取得できれば、同一モデルファミリ内の model range と harness range を R 型に計算できる候補になる。TeX ソースは未取得。
+2. **未確認の次候補**：arXiv:2608.18389（A Jagged Frontier、4 モデル × mini-SWE-agent / OpenCode、SWE-bench Verified・Pro。検索スニペットのみ）、arXiv:2610.00917（Finding the Right Fit、モデル × 5 ハーネスの行列、TUA-Bench 等。スニペットのみ）。両者とも本文の表で格子と分散の要件を確認する必要がある。
 3. A を登録する場合、**R の値を論文の数値として書かない**。タスク領域の違いを必ず併記する。
 4. ID 18 の状態は「部分的に前進」とし、「解決」には変更しない。
+
+---
+
+## 8. 追補（2026-10-21）：未精読 2 本の本文確認と新候補
+
+### 8.1 arXiv:2609.09218（Zhang et al., "The Double Measurement Confound in Agent Benchmarks", v1 2026-09-06, cs.SE 系）
+
+読了範囲：abstract、§1、§5.3–5.5、§6、§7、Appendix A.2–A.7（HTML v1、chunk 0・6・7・9・10）。
+
+- **ID 18 での位置づけ**：タスクは ComtradeBench（trade-data 抽出、単一の seeded generator）。コーディング／SWE 系ではない。主題は「scaffold が実行判断を握るとき、スコアは model を識別しない」という測定の交絡の指摘である。モデル能力差とハーネス差の分散比を主張する論文ではない。
+- **逐語（§5.4）**："Changing nothing but the scaffold flag moves the same model's reward by up to 0.267 and reorders the models (GPT-4o ties Sonnet under act yet finishes last under react)"（τ-bench、3 モデル × 4 scaffold、n=15/cell、符号検定は非有意）。
+- **逐語（§5.4）**："the same slice attributes η²=0.0293 to the scaffold main effect against 0.0080 for the model."。著者は "Both shares are small against the task-level residual, and the design is single-trial, so we read only their ratio and only as an ordering" と限定している。
+- **私の算出（論文の報告値ではない）**：scaffold/model の η² 比は 0.0293 / 0.0080 ≈ 3.7。単一試行・3 モデル・τ-bench の 1 スライスであり、R の証拠としては使えない。
+- **2×2 本体（Table 1 相当）**：序文の要約「production scaffold では 7 モデルの payload が byte-identical」は本文で確認。Table 1 の数値は未確認。
+- **制限（§6）**：Single domain（trade-data）、B1 は大効果にしか検出力がない（power 0.998 at n=20 for Δ=0.209）。
+
+判定：**ID 18 の候補としては不適合（主題・領域が異なる）**。ただし「モデル差とハーネス差を分離する設計」と、η² を用いた順序の読み方は参考になる。
+
+### 8.2 arXiv:2605.27898（A Unified Framework for the Evaluation of LLM Agentic Capabilities, v1 2026-05-27, cs.AI）
+
+読了範囲：§2.4、§2.5、§3.1 の Table 2（Orig. vs Ours）、§3.3 の Finding 1–2、§3.4 の Finding 1–3、Table 3（抜粋）。
+
+- **設計**：smolagents を標準 scaffold に固定。原実装（Orig.）と統一実装（Ours）を、ベンチマーク × モデルの一部のペアで比較。
+- **逐語（§3.3 Finding 2）**："Comparing Orig. to Online isolates the framework effect, since both share the same live retrieval stack. The gaps remain large and directionally inconsistent: Qwen3-30B-A3B on BFCL rises from 17.5 to 24.5, while Llama-3.1-70B on MAB drops from 80.8 to 26.3."
+- **逐語（§3.4 Finding 1）**："Under a unified scaffold, model-intrinsic capability differs in kind, not just in degree"。
+- **欠けている要件**：モデル × ハーネスの格子がない。Orig. と Ours は各モデルで一部のみ。モデル差とハーネス差の分散比や R 型の指標を論文は出していない。Table 3 は統一 scaffold 下の 4 モデル（単一ハーネス）であり、ハーネス軸を含まない。
+
+判定：**不適合（格子がない）**。ハーネス効果が「方向も大きさも不一致」だという定性的な証拠として、§5 の「既存比較」に補助的に引ける。
+
+### 8.3 arXiv:2609.32459（Hu et al., "Beyond the Model: Demystifying Harness Effects in SE Agents", v1 2026-09-26, cs.SE）
+
+読了範囲：abstract、§1、§3.2、§4.1–4.4、§5.1（Table 3–5）、§5.2（Table 6）、§5.3 冒頭（HTML v1、chunk 0, 2–5）。
+
+- **設計**：SWE-bench Pro（N=300 ランダム抽出、RQ1.1）で、Qwen 5 モデル（Qwen3-Max〜Qwen3.7-Max）と DeepSeek 5 モデル（R1〜V4-Pro）を、mini-SWE-agent と OpenCode の 2 ハーネスで評価。temperature 0.0、non-thinking。モデルは同一ファミリ内で能力差をつけている（著者の論点）。
+- **ID 18 に対して有利な点**：同一タスク（SWE-bench Pro）・同一ハーネス対の下で、能力階層を持つ。モデル軸とハーネス軸の両方を持つ「格子」の設計である。
+- **不利な点（重要）**：
+  - Figure 1 の「19.4 pt（ハーネス範囲）」と「22.8 pt（Claude モデル範囲）」は、**公開 SWE-bench Verified リーダーボードからの引用**であり、本論文の統制実験ではない。
+  - SWE-bench Pro の 10 モデル × 2 ハーネスの各セルの数値は**図（Figure 5・6）にのみ**あり、本文テキストからは取れない。テキストにあるのは、Qwen の OpenCode 優位の縮小（6.00 → 2.67 pt）と、DeepSeek-V4-Pro の 34.3（OpenCode）vs 33.7（mini-SWE）の 2 点のみ。
+  - 分散分解や R 型の指標は論文にない。
+  - ProgramBench の結果（N=70）と GitTaskBench（N=54）はタスクが異なり、ID 18 の領域外（ただし SWE 系は ProgramBench 以外）。
+  - 単一の実行（seed は未報告）。
+- **逐語（§5.1.1）**："the OpenCode advantage decreases from about 6 pp for Qwen3-Max to 2.67 pp for Qwen3.7-Max, indicating that stronger Qwen models rely less on the additional scaffolding provided by the product-level harness."
+- **逐語（§5.1.1）**："OpenCode brings little improvement for DeepSeek-R1, larger gains for intermediate models ... and then converges with mini-SWE-agent again for DeepSeek-V4-Pro, where the final scores are 34.3 for OpenCode and 33.7 for mini-SWE-agent."
+
+判定：**部分的に適合（最有力の新候補）**。SWE-bench Pro の 10 モデル格子は ID 18 の要件に近い。ただし R を計算するには、図の数値（または TeX ソース内の表）が必要である。図の数値を読んだ時点で、再判定する。
+
+### 8.4 本追補のまとめ（ID 18 の判定）
+
+- 検証済みの一次資料で ID 18 の要件（同一タスク × 能力水準の複数 × ハーネスの格子 × 数値）を**完全に満たす論文はまだない**。
+- 候補の状況：GAIA（2606.08529、部分的）、SWE-bench Pro（2609.32459、部分的、数値は図）。
+- 「R ≈ 1」を検証済みとは言わない。既存の交絡（タスク領域、評価方式、予算、provider）は未解消。
