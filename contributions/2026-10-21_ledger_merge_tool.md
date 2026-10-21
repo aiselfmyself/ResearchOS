@@ -30,7 +30,7 @@ PR #49 の「main取り込み」コミット `1e042a1cc07a6962ca1755376ffc00f541
 - ours（PR側）: `fae2ef55d2804ca0499e015ee508f2cb0dee78eb`
 - theirs（当時のmain側）: `773391d284ce12671a020ea1ff97d29c93da62ee`
 
-`git show REV:state/NAME.jsonl` で各版を `/tmp/researchos-ledger-diverged-3l6nxia4/` に抽出し、上記CLIを5台帳それぞれのIDキーで実行した。出力も同じ `/tmp` 配下の `NAME-merged.jsonl`。期待件数は別途 `json.loads` で読んだ3入力のID集合和から計算した。作業ツリーの実台帳は変更していない。
+`git show REV:<台帳パス>` で各版を `/tmp/researchos-ledger-diverged-3l6nxia4/` に抽出し、上記CLIを5台帳それぞれのIDキーで実行した。出力も同じ `/tmp` 配下の `NAME-merged.jsonl`。期待件数は別途 `json.loads` で読んだ3入力のID集合和から計算した。作業ツリーの実台帳は変更していない。
 
 | 台帳 | base | ours | theirs | ours新規 | theirs新規 | 期待和集合 | 出力実測 | 終了 |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -55,8 +55,8 @@ PR #49 の「main取り込み」コミット `1e042a1cc07a6962ca1755376ffc00f541
 | `python3 gitswarm/readout_sim.py --check` | 終了0、fresh execution一致 |
 | `python3 scripts/validate_state.py` | 終了0、台帳正常 |
 | `python3 scripts/check_citations.py` | 終了0、22件照合・失敗0 |
-| `python3 scripts/check_memo_citations.py` | 終了0、61引用照合・失敗0（本メモ追加前） |
-| `python3 scripts/check_memo_ledger_refs.py` | 終了0、dangling 0（本メモ追加前） |
+| `python3 scripts/check_memo_citations.py` | 終了0、25メモ・61引用照合・失敗0 |
+| `python3 scripts/check_memo_ledger_refs.py` | 終了0、25メモ・dangling 0 |
 | `python3 scripts/check_doc_numbers.py` | 終了1、既存文書の総テスト数4箇所が古い |
 
 ### DoDと変更範囲の衝突（未解決）
