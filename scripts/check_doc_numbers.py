@@ -97,6 +97,12 @@ LEDGERS = {
     # COLLECTIONS and R3/R4 are about to write to it, so a documented
     # `relations=N` must be checked like the other five (not silently ignored).
     "relations": "relations.jsonl",
+    # Hypothesis-cycle ledgers (2026-10-21). They start empty, and a documented
+    # count of 0 that later grows must not go stale silently -- that is exactly
+    # the defect class this checker exists for.
+    "search_log": "search_log.jsonl",
+    "runs": "runs.jsonl",
+    "predictions": "predictions.jsonl",
 }
 
 SKIP_MARKER = "drift-ok"
@@ -318,7 +324,9 @@ def main(argv: Optional[list] = None) -> int:
     a = report["actual"]
     print(f"actual: tests={a['total_tests']} gates={a['gates']} "
           f"sources={a['sources']} evidence={a['evidence']} claims={a['claims']} "
-          f"verifications={a['verifications']} hypotheses={a['hypotheses']}")
+          f"verifications={a['verifications']} hypotheses={a['hypotheses']} "
+          f"relations={a['relations']} search_log={a['search_log']} "
+          f"runs={a['runs']} predictions={a['predictions']}")
     for f in report["findings"]:
         print(f"  STALE {f['file']}:{f['line']} [{f['kind']}] "
               f"found {f['found']}, expected {f['expected']}")

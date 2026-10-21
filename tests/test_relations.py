@@ -96,8 +96,11 @@ def _synthetic_root(tmp: str, relation_lines: list) -> Path:
         os.symlink(entry, root / entry.name)
     state = root / "state"
     state.mkdir()
-    for ledger in ("sources", "evidence", "claims", "verifications", "hypotheses"):
-        shutil.copy(ROOT / "state" / f"{ledger}.jsonl", state / f"{ledger}.jsonl")
+    for _name, (ledger_rel, _schema, _id_key) in vs.COLLECTIONS.items():
+        target = root / ledger_rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(ROOT / ledger_rel, target)
+    shutil.copy(ROOT / vs.CYCLE_EXEMPTIONS, root / vs.CYCLE_EXEMPTIONS)
     (state / "relations.jsonl").write_text(
         "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in relation_lines),
         encoding="utf-8",

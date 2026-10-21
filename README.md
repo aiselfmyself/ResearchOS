@@ -63,11 +63,12 @@
 リポジトリからの再計算値を突き合わせて検査する。算出コマンドは下記「使い方」節。
 
 - 台帳: sources=23 / evidence=88 / claims=9 / verifications=40 / hypotheses=6 / relations=241
+- 仮説サイクル台帳（2026-10-21 新設・空で開始）: search_log=0 / runs=0 / predictions=0
 - 関係台帳の中身（`scripts/gap_scan.py` の実測・ゲート対象外）:
   unassessed **0 / 88 (0.0%)**、unexplained **21 / 88 (23.9%)**、unresolved のみ 0 件、
   provisional **58 / 88**（`observation_key` の注釈 30 件により non-provisional 30 件）
 - 観測キーの注釈: `state/evidence_keys.jsonl`（凍結ベース・空）＋`state/evidence_keys.d/*.jsonl` の **30 件**（30 EVD）
-- テスト: 合計 437件（`tests/` の 20 ファイル。内訳は下記 §構成）
+- テスト: 合計 477件（`tests/` の 21 ファイル。内訳は下記 §構成）
 - CI ゲート: 8ゲート（`.github/workflows/core-check.yml` の `run:` を持つステップ数）
 - 監査 ID 18: **凍結**（2026-10-21、人間の決定）。科学的には未解決のまま、ID 18 の解決を目的とした
   探索・追加抽出・モデル×ハーネス統制比較は割り当てない。正本は `docs/id18-freeze-2026-10-21.md`
@@ -104,12 +105,17 @@
 
 ```text
 task/                  研究課題定義（Long-Horizon Agent Architectures 文献調査）
-schemas/               研究オブジェクトのスキーマ（source/evidence/claim/verification/hypothesis）
+schemas/               研究オブジェクトのスキーマ（source/evidence/claim/verification/hypothesis/
+                       relation/search_log/run/prediction）
 state/                 研究台帳。凍結ベース（state/*.jsonl）＋セッション別シャード
                        （state/<台帳名>.d/*.jsonl）の統合ビューとして読む（scripts/ledger_store.py。
                        追記はシャードへ。ベースは書き換えない）
                        evidence_keys.jsonl(+.d/) は EVD に observation_key を足す注釈
                        （既存キーは上書きしない。validate_state / gap_scan が同じ view を読む）
+                       search_log/runs/predictions は仮説サイクルの記録（2026-10-21 新設・空で開始。
+                       derived_from / refutation_condition / next_observations を必須にする来歴ゲートは
+                       docs/minimal-core-and-ci.md §2.5）。cycle_exemptions.json は
+                       2026-10-21 以前のレコードを持つファイルの一覧（免除は ID ではなくファイル単位）
 scripts/
   validate_state.py    研究台帳の決定論的検証器（標準ライブラリのみ）
   new_id.py            非連番レコードIDの採番器（並行作業のID衝突対策。統合ビューのIDと衝突確認）
@@ -169,7 +175,8 @@ tests/
   test_new_ledger_shard.py     シャード作成道具（命名規則・作成・警告）のテスト（16件）
   test_sync_doc_counts.py      文書内数値の機械同期のテスト（16件）
   test_evidence_keys.py        observation_key 注釈（overlay）の付与・非上書き・重複検出・gap_scan 連携のテスト（17件）
-                               ── 合計 437件
+  test_cycle_records.py        仮説サイクルの記録（QRY/RUN/PRD）と3つの来歴ゲートのテスト（40件）
+                               ── 合計 477件
 contributions/         研究ノート（統合レポート・調査メモ・全文読解レポート・共通モード測定）
 docs/                  分析レポートと設計記録（並行作業の所有マップは docs/parallel-work-ownership.md。強制力なし）
 .github/workflows/
@@ -180,7 +187,7 @@ docs/                  分析レポートと設計記録（並行作業の所有
 ## 使い方
 
 ```sh
-# 1. テスト（約5秒・437件）
+# 1. テスト（約5秒・477件）
 python3 -m unittest discover -s tests -v
 
 # 2. ベンチマークの再現性確認（fresh実行と成果物の照合）

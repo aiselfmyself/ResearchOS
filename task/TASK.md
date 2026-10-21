@@ -14,6 +14,6 @@
 - 支持する証拠だけでなく、反証・制約条件・未解決事項（Negative findings / Counterclaims）を必ず記録すること。
 
 ## 4. Verification Protocol
-- 機械的検証: `scripts/validate_state.py` による JSON スキーマ検査および参照整合性テスト（研究5台帳のみ。ガバナンス検査は2026-10-20に凍結）。
+- 機械的検証: `scripts/validate_state.py` による JSON スキーマ検査および参照整合性テスト（研究台帳のみ。ガバナンス検査は2026-10-20に凍結）。
 - 意味的検証: Critic / Falsifier による前提の攻撃的レビューおよび反証の記録。
 - 統合: Integrator による統合レポート作成（多数決ではなく証拠の強弱に基づく論証）。

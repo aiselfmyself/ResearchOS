@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "ResearchOS Relation",
-  "description": "Evidence relation E_t(H x O) -> {support, refute, neutral, unresolved} (SHELDON reading contributions/2026-10-21_sheldon_reading.md section 5.1). One record per (hypothesis, observation) pair. Written by an independent adjudication step, never derived mechanically from VER records (section 5.4).",
+  "description": "Evidence relation E_t(H x O) -> {support, refute, neutral, unresolved} (SHELDON reading contributions/2026-10-21_sheldon_reading.md section 5.1). One record per (hypothesis, observation) pair. Written by an independent adjudication step, never derived mechanically from VER records (section 5.4). Since 2026-10-21 a relation in a non-exempt file must also declare derived_from (was this observation used to generate the hypothesis? then it cannot support it) and searched_refutation (did the adjudicator look for a refuting observation, as opposed to finding none?).",
   "type": "object",
   "required": ["relation_id", "hypothesis_id", "observation_id", "verdict"],
   "properties": {
@@ -12,6 +12,14 @@
     "provisional": {"type": "boolean"},
     "source_id": {"type": "string"},
     "rationale": {"type": "string"},
-    "recorded_at": {"type": "string"}
+    "recorded_at": {"type": "string"},
+    "derived_from": {
+      "type": "boolean",
+      "description": "True when this observation was one of the hypothesis's generation inputs. The verdict is still recorded honestly; the flag only keeps the aggregation from counting it as independent support."
+    },
+    "searched_refutation": {
+      "type": "boolean",
+      "description": "True when the adjudicator actively looked for evidence that the hypothesis is false. Distinguishes 'no refutation found' from 'no refutation searched for'."
+    }
   }
 }

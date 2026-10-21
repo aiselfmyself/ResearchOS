@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "ResearchOS Hypothesis",
+  "description": "A hypothesis. Records written before the 2026-10-21 hypothesis-cycle work (state/hypotheses.jsonl and state/hypotheses.d/2026-10-21-3990b64b4fdb.jsonl, listed in state/cycle_exemptions.json) predate the four cycle fields; every record in a newer file must carry them. The fields exist so that a loop can run without controlled experiments: derived_from_evidence_ids records which observations GENERATED the hypothesis (those observations can never also count as its support), refutation_condition states before the fact what observation would kill it, and next_observations says what to look for next. See docs/2026-10-21_hypothesis-cycle-automation.md sections 3 (S4-S7) and 5.",
   "type": "object",
   "required": ["hypothesis_id", "statement", "status"],
   "properties": {
@@ -15,6 +16,31 @@
     "notes": {"type": "string"},
     "hypothesis_region": {"type": "string"},
     "search_status": {"type": "string", "enum": ["retained", "setaside"]},
-    "cooldown_rounds": {"type": "integer"}
+    "cooldown_rounds": {"type": "integer"},
+    "round": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Loop round that produced this record. Required for every hypothesis in a file not listed in state/cycle_exemptions.json."
+    },
+    "derived_from_evidence_ids": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "EVDs used to GENERATE the hypothesis. A relation from one of these observations is marked derived_from=true and is excluded from the support count (docs/2026-10-21_hypothesis-cycle-automation.md section 5)."
+    },
+    "refutation_condition": {
+      "type": "object",
+      "description": "What observation would refute the hypothesis, written before it is looked for. All three strings must be non-empty.",
+      "required": ["observable", "would_refute", "expected_if_true"],
+      "properties": {
+        "observable": {"type": "string"},
+        "would_refute": {"type": "string"},
+        "expected_if_true": {"type": "string"}
+      }
+    },
+    "next_observations": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Concrete observations to collect next. Non-empty for every hypothesis in a non-exempt file; the search planner (S7) turns these into queries."
+    }
   }
 }
