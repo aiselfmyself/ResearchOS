@@ -27,6 +27,8 @@
 > **47 件中 18 件の EVD がどのメモからも参照されていなかった**（`task/TASK.md` §3 は
 > 「主張には必ず証拠と出典を紐付けること」を要求する）。全件を紐付け、**未参照 EVD は 0** になった。
 >
+> **2026-10-21 の追加（SHELDON 読解）**：arXiv:2610.18025「SHELDON: Reasoning through Dual Search over Hypothesis and Observation Spaces」を全文読解し（`contributions/2026-10-21_sheldon_reading.md`）、**仮説空間と観測空間を分離し、その間の証拠関係を 4 値（Support/Refute/Neutral/Unresolved）で型付けする**データモデルを抽出した。**本リポジトリの台帳に欠けていたのはまさにこの関係表**である——実測すると **54 件の EVD のうち 48 件（88.9%）がいずれの HYP とも紐づいていない**。「どの EVD がどの HYP を支持／反駁するか」は VER 経由の間接参照しかなく、台帳上は概念として存在しない。検出手順は決定論的 CI で実装可能だが、**verdict の付与は推論を要し、一度台帳に記録されれば再実行は決定的**になる。backfill 手順（後方互換）と採否はメモ §5・§7 を参照。書誌 1 件・EVD 5 件・VER 1 件・CLM 1 件を追加、**台帳は sources=12 / evidence=54 / claims=9 / verifications=30 / hypotheses=2。**
+>
 > **マージ方針（2026-10-21 以降）**：**CI が緑の PR は、人間の承認を待たずに各セッションが `main` へマージしてよい。** 取り消しが安価なためである。破壊的操作（リモートブランチの削除、`--force` を伴う push、台帳レコードの削除、リポジトリ設定の変更）は**引き続き人間の明示的な承認を要する**。根拠・境界・前提は `docs/autonomous-merge-policy-2026-10-21.md`。
 
 ## 構成
