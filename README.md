@@ -4,7 +4,14 @@
 
 > **状態（2026-10-20）**：2026-10-19 の実装線路はガバナンス機構の自己言及ループに陥り、`main` へのマージが0件のまま停滞した。経緯と分析は `docs/stagnation-analysis-2026-10-20.md`、最小コアへの立て直し方針は `docs/minimal-core-and-ci.md` を参照。本ブランチは「再実行できるものだけを `main` に載せる」ための最小抽出である。
 >
-> **同日の追加**：未完了要素の棚卸し（`docs/incomplete-work-audit-2026-10-20.md`）の指摘に基づき、統合レポート（`contributions/2026-10-20_integrated_survey_report.md`）、共通モード障害の決定論的測定（`gitswarm/readout_sim.py`）、反証の紐付け、既知の誤記2件の訂正、出典7件の台帳登録を行った。台帳は sources=11 / evidence=19 / claims=11 / verifications=32 / hypotheses=3。
+> **同日の追加**：未完了要素の棚卸し（`docs/incomplete-work-audit-2026-10-20.md`）の指摘に基づき、統合レポート（`contributions/2026-10-20_integrated_survey_report.md`）、共通モード障害の決定論的測定（`gitswarm/readout_sim.py`）、反証の紐付け、既知の誤記2件の訂正、出典7件の台帳登録を行った。
+>
+> **2026-10-21 の進展（証拠の充実と誤りの訂正）**：3 セッションの並列照合（S1/S2/S3）が 6 論文 48 claim を原典と突き合わせ、統合役が裁定して **EVD 33 件を追加**した（evidence 14 → **47**）。**11 ソースすべてが 1 件以上の EVD を持つ**状態になった（照合開始前は 4/11）。照合の過程で**文献メモの誤り 2 件**を捕捉し、人間の承認を得て訂正した。
+>
+> - (a) arXiv:2605.23950 を「実験を持たない position paper」としていた誤り。原典 §4.2 は **3 モデル × 3 ハーネスの計画格子実験**を実施しており、**ハーネス分散はモデル分散の 7.80 倍**、**9 組中 6 組で順位逆転**を報告している。本リポジトリの問い（性能差はモデルか harness か）に対する最も直接的な先行測定だった。
+> - (b) context engineering の 3 構成要素（Retrieval and Generation / Processing / Management）を「階層」としていた誤り。原典は**平坦な列挙**である。
+>
+> 統合レポートを**第2版**に改訂した（Agora 本文読解 §4.4・§5.6、自律研究の現在地 §5.7 を新設、[8] の自前実験を §3.3 に反映、各所の計数を更新）。監査 ID 15（SRC-004 への VER が 0 件）を解消し VER 2 件を追加した。**台帳は sources=11 / evidence=47 / claims=8 / verifications=27 / hypotheses=2。**
 
 ## 構成
 
@@ -26,8 +33,13 @@ gitswarm/
   artifacts/           実行で再生成できる成果物（ベンチマーク行列・投票スイープ行列）
 tests/
   fixtures/            arXiv書誌スナップショット（オフライン照合用・2026-10-20取得）
-  test_minimal_core.py    履歴非依存の回帰テスト（34件）
-  test_check_citations.py 書誌照合テスト（17件・ネットワーク非依存）
+  test_minimal_core.py         履歴非依存の回帰テスト（34件）
+  test_check_citations.py      書誌照合テスト（17件・ネットワーク非依存）
+  test_check_memo_citations.py 調査メモ内引用の照合テスト（33件）
+  test_measure_agreement.py    並列セッション間一致度の測定テスト（25件）
+  test_ownership.py            所有マップによるパス分類テスト（16件）
+  test_readout_sim.py          共通モード障害シミュレータの回帰テスト（20件）
+                               ── 合計 145件
   test_check_memo_citations.py メモ引用照合テスト（33件・ネットワーク非依存）
   test_ownership.py       所有マップ分類テスト（16件・ネットワーク非依存）
   test_readout_sim.py     投票スイープの回帰・閾値予測テスト（20件・ネットワーク非依存）
