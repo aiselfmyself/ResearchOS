@@ -1,0 +1,168 @@
+{
+  "schema": "researchos/blind-relation-rejudgment/v1",
+  "base_commit": "33dfffb94baf05bc71ebaa03149a9b75302dd8e1",
+  "seed": "14bf66a13c6f78da2cc1266c924d2277",
+  "sampling_rule": "sorted by relation_id; random.Random(int(seed,16)).sample(support,10) + sample(neutral_or_unresolved_excluding_EVD-d88a,10); shuffle; no old verdict/rationale/interpretation in packet",
+  "items": [
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-932f",
+      "hypothesis_statement": "同質ワーカーによる多数決ノミネーションは、正解判定が困難な主観的・学術的研究では共通モード障害（誤りの再生産）に脆弱である。",
+      "source_title": "GitSwarm: Decentralized Compounding Inference",
+      "excerpt": "worker02 の記述：「GitSwarm は『決定論的多重度推薦（Plurality Readout）』を採用しているが、これは証明問題やベンチマークのように解の正しさが後から確認できる課題で有効。」／ 論文 §3.3：\"We strip GitSwarm of the nomination based decentralized readout for these experiments since all tasks discussed here support a validation performance based candidate selection.\"（H.1 ではnomination アクションと関連文言をプロンプトから除去）。§2.5 は readout を検証スコアが使えない場合の選択規則として定義する。",
+      "section_or_page": "contributions/worker02_gitswarm_and_limits.md l.11 vs arXiv:2610.04862v1 §2.5, §3.3, H.1"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-cd59",
+      "hypothesis_statement": "外部化された構造化メモリ（Git/State Store）を持つエージェントは、単一セッションの巨大プロンプトより累積探索効率と再現性で優れる。",
+      "source_title": "Stellar Colosseum: A Many-Agent Harness for Long-Horizon Research in Mathematics and Theoretical Computer Science",
+      "excerpt": "Let z_i denote a candidate bundled with all of its falsification records, and let C^(0) = {z_1, ..., z_n}. The tree shape is specified by the population width at every level, (m_0, m_1, ..., m_L), m_0 = n, m_L = 1. ... G_j^(l) ~ Unif{ G subset of C^(l) : |G| = k_l }, j = 1, ..., m_{l+1}. Sampling is without replacement within one group, but groups for different aggregation nodes are drawn independently and may overlap. They do not form a partition. ... If R_i^(l) is the number of next-level groups containing a fixed node from level l, then E[R_i^(l)] = m_{l+1} k_l / m_l. ... Intermediate aggregation is constructive rather than a vote or ranking: it may merge compatible components, retain competing branches, repair a localized flaw, or declare an unresolved conflict. Substantive disagreements and falsification evidence are carried forward rather than averaged away.",
+      "section_or_page": "§4.1.3 Tree-Structured Aggregation; §4.4 Table 1 (arXiv HTML v2)"
+    },
+    {
+      "hypothesis_id": "HYP-20261021-fee7",
+      "observation_id": "EVD-004",
+      "hypothesis_statement": "長期自律探索において評価指標ハッキング・過適合・偽の改善を防ぎ実世界／分布外（OOD）汎化利得を得るには、最終スコア単独の選抜ではなく、(1) 探索評価と最終評価の分離・忠実度再検査・フル評価前のdiffリーク／評価改変審査、および (2) 基底評価ノイズ幅δ・複雑度ペナルティ・非生産的要素の構造剪定を組み込んだ段階ゲート付受容規則が必要である。",
+      "source_title": "DuoDiscover: Scaling Autonomous Discovery Beyond the Evaluation Bottleneck",
+      "excerpt": "since search can exploit gaps between a yardstick and the true objective, fidelity tests continually recheck each yardstick's ranking and invalidate any that drift. ... requires a true evaluation to confirm every gain before it is accepted.",
+      "section_or_page": "Abstract; Section 1"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-d515",
+      "hypothesis_statement": "同質ワーカーによる多数決ノミネーションは、正解判定が困難な主観的・学術的研究では共通モード障害（誤りの再生産）に脆弱である。",
+      "source_title": "Agora: Git as Shared Memory for Collective AutoResearch",
+      "excerpt": "We did not rerun the winning method; the primary result is the archived evaluator output, corroborated by the agents' cross-hardware reproductions.",
+      "section_or_page": "Section 4.8 How we verified the record (arXiv HTML v4)"
+    },
+    {
+      "hypothesis_id": "HYP-20261021-a10b",
+      "observation_id": "EVD-20261021-8fa6",
+      "hypothesis_statement": "現行LLMエージェントは複雑な文脈理解に比べて長文出力生成および肥大化した会話履歴の維持に顕著な限界を持つため、全履歴の持ち越しや一括長文生成よりも、役割別の新鮮な文脈再構成・直近ウィンドウ剪定＋自動要約・依存DAGによる局所サブ問題分解を行う方が、低トークンコストで高い完遂率を達成する。",
+      "source_title": "Less Context, Better Agents: Efficient Context Engineering for Long-Horizon Tool-Using LLM Agents",
+      "excerpt": "Second, the context-engineering ordering still holds: adding summarization on top of pruning improves complete itemization from 92.0% to 94.5% at a ∼5.6% wall-clock premium",
+      "section_or_page": "§4.9 (arXiv HTML v1)"
+    },
+    {
+      "hypothesis_id": "HYP-20261021-fee7",
+      "observation_id": "EVD-20261021-12a7",
+      "hypothesis_statement": "長期自律探索において評価指標ハッキング・過適合・偽の改善を防ぎ実世界／分布外（OOD）汎化利得を得るには、最終スコア単独の選抜ではなく、(1) 探索評価と最終評価の分離・忠実度再検査・フル評価前のdiffリーク／評価改変審査、および (2) 基底評価ノイズ幅δ・複雑度ペナルティ・非生産的要素の構造剪定を組み込んだ段階ゲート付受容規則が必要である。",
+      "source_title": "Stellar Colosseum: A Many-Agent Harness for Long-Horizon Research in Mathematics and Theoretical Computer Science",
+      "excerpt": "Classify the strategy as ready for decomposition, eligible for decomposition with explicit obligations, in need of further exploration, or to be rejected. ... A strategy with an unresolved fatal bridge cannot be marked ready. It may still proceed to decomposition, but only if the route and proof architecture are stable and every remaining obligation has a concrete proof or verification path. Treat these as minor obligations and assign each to an explicit proof or certificate section in the proof plan. An obligation is major if resolving it could require changing the route, reduced target, or core mechanism, or if it has no clear repair path. In such cases, return the strategy for further exploration. ... Return the blocking issues, fatal bridge claims, theorem and criterion audits, hidden hard steps, minimal remaining obligations, obligation severity, whether decomposition is allowed, and the recommended next action.",
+      "section_or_page": "Appendix A.1 readiness-gate prompt (arXiv HTML v2, base64 decoded)"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-e9fb",
+      "hypothesis_statement": "同質ワーカーによる多数決ノミネーションは、正解判定が困難な主観的・学術的研究では共通モード障害（誤りの再生産）に脆弱である。",
+      "source_title": "The Horizon Gap: Planning, Memory, Execution, Training, and Evaluation for Long-Horizon LLM Agents",
+      "excerpt": "Long-horizon is a property of the task: how many sequential decisions or actions it requires, independent of whether the resulting interaction trace fits inside one context window. --- Long-context is a property of the model/serving stack: how many tokens a single forward pass can attend to. --- Long-term memory is a property of the system: whether information available at step or session t remains available (in some form — verbatim in context, retrieved from an external store, or baked into weights) at step or session t+k.",
+      "section_or_page": "Section 2.1 Definitions (arXiv HTML v1)"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-4c6f",
+      "hypothesis_statement": "同質ワーカーによる多数決ノミネーションは、正解判定が困難な主観的・学術的研究では共通モード障害（誤りの再生産）に脆弱である。",
+      "source_title": "ResearchOS GitSwarm Harness (this repository)",
+      "excerpt": "n (joint-decided, truth known) = 8 --- p1 = 0.0   p2 = 0.0   e = 0.0 --- P(both wrong) = 0.0 --- expected if independent (p1*p2) = 0.0 --- detection limit of this sample = rho >= None --- n=8: rho is NOT identifiable (at least one worker made no errors on the joint-decided subset, so the independence null p1*p2 is zero and the excess is undefined). Report the required sample size instead. --- required jointly-decided items (error rate e=0.20, alpha=0.05, power=0.80, c=p): rho=0.10: 117,734 items (P(both wrong) 0.0400 -> 0.0416) / rho=0.20: 7,359 items (0.0400 -> 0.0464) / rho=0.30: 1,454 items (0.0400 -> 0.0544) / rho=0.50: 189 items (0.0400 -> 0.0800)",
+      "section_or_page": "scripts/estimate_rho.py; scripts/measure_agreement.py --truth 出力（Agora A/A' 再読解ペア）"
+    },
+    {
+      "hypothesis_id": "HYP-20261021-fee7",
+      "observation_id": "EVD-20261021-de29",
+      "hypothesis_statement": "長期自律探索において評価指標ハッキング・過適合・偽の改善を防ぎ実世界／分布外（OOD）汎化利得を得るには、最終スコア単独の選抜ではなく、(1) 探索評価と最終評価の分離・忠実度再検査・フル評価前のdiffリーク／評価改変審査、および (2) 基底評価ノイズ幅δ・複雑度ペナルティ・非生産的要素の構造剪定を組み込んだ段階ゲート付受容規則が必要である。",
+      "source_title": "RRSI: Regularized Recursive Self-Improvement of Agent Harnesses",
+      "excerpt": "Measured, not chosen. The noise tolerance δ is the spread of repeated evaluations of the unchanged base harness, that is, how far apart two evaluations of the same harness land. This gives 3 passes on Terminal-Bench 2.1, 60 criterion verdicts on Harvey LAB and 5 passes on EngDesign, the last read off the first percentile of a null built by half-splitting the base evaluation’s own trials. This is the one value that must not be tuned, since lowering it buys evolve-set score on noise alone.",
+      "section_or_page": "Appendix E.1 Hyperparameter Setting, Table 5"
+    },
+    {
+      "hypothesis_id": "HYP-20261021-fee7",
+      "observation_id": "EVD-20261021-6094",
+      "hypothesis_statement": "長期自律探索において評価指標ハッキング・過適合・偽の改善を防ぎ実世界／分布外（OOD）汎化利得を得るには、最終スコア単独の選抜ではなく、(1) 探索評価と最終評価の分離・忠実度再検査・フル評価前のdiffリーク／評価改変審査、および (2) 基底評価ノイズ幅δ・複雑度ペナルティ・非生産的要素の構造剪定を組み込んだ段階ゲート付受容規則が必要である。",
+      "source_title": "The Agentic Scientist: Orchestrating Coding Agents for Automated Scientific (Co-)Discovery",
+      "excerpt": "[§3.2] After parallel execution, the aggregator merges worker histories and selects the best correct program found across workers. This selected program becomes the input to the retrospective evidence-generation phase. […] [§3.3] The ideation agent must instead emit a structured idea bundle containing a title, a falsifiable hypothesis, an ordered implementation plan, and the target rubrics. Those records are normalized, and any missing fields or mismatched rubric identifiers are rejected. […] [§3.3] Two distinct gates are then applied: an all-rubric-pass attempt marks the contract complete, whereas updating the worker's best program requires a correct candidate with a strictly higher score; rubric completion and updates to the worker's best program are therefore independent decisions.",
+      "section_or_page": "§3.2 Parallel Investigation（aggregator）; §3.3 Contracted Research Cycles（ideation agent / execution agent）"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-4c61",
+      "hypothesis_statement": "同質ワーカーによる多数決ノミネーションは、正解判定が困難な主観的・学術的研究では共通モード障害（誤りの再生産）に脆弱である。",
+      "source_title": "Transect: Retaining Observability for Long-Horizon LLM Agent Evaluations",
+      "excerpt": "We call the range of attributes an evaluator can reliably see or infer from an evaluation its observability envelope. --- First, within-run opacity: a final score summarises performance on a long-horizon task but obscures discarded strategies, course corrections, recoveries, unexpected behaviors, and attempts to game the evaluation. Second, a human attention bottleneck: reviewing hundreds or thousands of pages of agent activity requires scarce subject-matter expertise and the ability to connect and co-interpret complex events at distant points in a transcript. Third, insufficient statistical power: long agent evaluations are costly in time and resources, so evaluators can afford relatively few repetitions per agent and setup. Fourth, setup attribution uncertainty: observed performance is determined by both the model and the system it is embedded in.",
+      "section_or_page": "Abstract; Section 1 Introduction (arXiv HTML v2)"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261020-932f",
+      "hypothesis_statement": "外部化された構造化メモリ（Git/State Store）を持つエージェントは、単一セッションの巨大プロンプトより累積探索効率と再現性で優れる。",
+      "source_title": "GitSwarm: Decentralized Compounding Inference",
+      "excerpt": "worker02 の記述：「GitSwarm は『決定論的多重度推薦（Plurality Readout）』を採用しているが、これは証明問題やベンチマークのように解の正しさが後から確認できる課題で有効。」／ 論文 §3.3：\"We strip GitSwarm of the nomination based decentralized readout for these experiments since all tasks discussed here support a validation performance based candidate selection.\"（H.1 ではnomination アクションと関連文言をプロンプトから除去）。§2.5 は readout を検証スコアが使えない場合の選択規則として定義する。",
+      "section_or_page": "contributions/worker02_gitswarm_and_limits.md l.11 vs arXiv:2610.04862v1 §2.5, §3.3, H.1"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261020-2336",
+      "hypothesis_statement": "外部化された構造化メモリ（Git/State Store）を持つエージェントは、単一セッションの巨大プロンプトより累積探索効率と再現性で優れる。",
+      "source_title": "Agora: Git as Shared Memory for Collective AutoResearch",
+      "excerpt": "Of 523 pairs of different accounts posting identical scores, 76% are within an hour of each other and 90% within six (Figure 5, left). Removing verifications and pairs in which one contribution builds on the other leaves 499 pairs with the same timing (79% and 90%). Identical scores can still come from re-runs of a shared parent or from different methods, so these pairs show convergence on the same results rather than independent rediscovery.",
+      "section_or_page": "Section 4.6 Coordination dynamics, pattern 3 (arXiv HTML v4)"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261020-d515",
+      "hypothesis_statement": "外部化された構造化メモリ（Git/State Store）を持つエージェントは、単一セッションの巨大プロンプトより累積探索効率と再現性で優れる。",
+      "source_title": "Agora: Git as Shared Memory for Collective AutoResearch",
+      "excerpt": "We did not rerun the winning method; the primary result is the archived evaluator output, corroborated by the agents' cross-hardware reproductions.",
+      "section_or_page": "Section 4.8 How we verified the record (arXiv HTML v4)"
+    },
+    {
+      "hypothesis_id": "HYP-20261021-a10b",
+      "observation_id": "EVD-20261020-e9fb",
+      "hypothesis_statement": "現行LLMエージェントは複雑な文脈理解に比べて長文出力生成および肥大化した会話履歴の維持に顕著な限界を持つため、全履歴の持ち越しや一括長文生成よりも、役割別の新鮮な文脈再構成・直近ウィンドウ剪定＋自動要約・依存DAGによる局所サブ問題分解を行う方が、低トークンコストで高い完遂率を達成する。",
+      "source_title": "The Horizon Gap: Planning, Memory, Execution, Training, and Evaluation for Long-Horizon LLM Agents",
+      "excerpt": "Long-horizon is a property of the task: how many sequential decisions or actions it requires, independent of whether the resulting interaction trace fits inside one context window. --- Long-context is a property of the model/serving stack: how many tokens a single forward pass can attend to. --- Long-term memory is a property of the system: whether information available at step or session t remains available (in some form — verbatim in context, retrieved from an external store, or baked into weights) at step or session t+k.",
+      "section_or_page": "Section 2.1 Definitions (arXiv HTML v1)"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-cd59",
+      "hypothesis_statement": "同質ワーカーによる多数決ノミネーションは、正解判定が困難な主観的・学術的研究では共通モード障害（誤りの再生産）に脆弱である。",
+      "source_title": "Stellar Colosseum: A Many-Agent Harness for Long-Horizon Research in Mathematics and Theoretical Computer Science",
+      "excerpt": "Let z_i denote a candidate bundled with all of its falsification records, and let C^(0) = {z_1, ..., z_n}. The tree shape is specified by the population width at every level, (m_0, m_1, ..., m_L), m_0 = n, m_L = 1. ... G_j^(l) ~ Unif{ G subset of C^(l) : |G| = k_l }, j = 1, ..., m_{l+1}. Sampling is without replacement within one group, but groups for different aggregation nodes are drawn independently and may overlap. They do not form a partition. ... If R_i^(l) is the number of next-level groups containing a fixed node from level l, then E[R_i^(l)] = m_{l+1} k_l / m_l. ... Intermediate aggregation is constructive rather than a vote or ranking: it may merge compatible components, retain competing branches, repair a localized flaw, or declare an unresolved conflict. Substantive disagreements and falsification evidence are carried forward rather than averaged away.",
+      "section_or_page": "§4.1.3 Tree-Structured Aggregation; §4.4 Table 1 (arXiv HTML v2)"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-2aad",
+      "hypothesis_statement": "同質ワーカーによる多数決ノミネーションは、正解判定が困難な主観的・学術的研究では共通モード障害（誤りの再生産）に脆弱である。",
+      "source_title": "DuoDiscover: Scaling Autonomous Discovery Beyond the Evaluation Bottleneck",
+      "excerpt": "On the heavily optimized vLLM and SQLite engines, DuoDiscover achieves 1.92× and 1.38× gains over the base code. --- DuoDiscover surpasses both AlphaEvolve-based ArchAgent v2 and the best human design, with 1.65× ArchAgent v2's gain using about 8,000 candidates over 16.7 days, against over 12,000 candidates and more than 40 days for ArchAgent v2 --- On a CPU microarchitecture optimization task with evaluations of up to 28 hours",
+      "section_or_page": "Abstract; §3.2 Real-world case studies; Table 2 (arXiv HTML v1)"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-9959",
+      "hypothesis_statement": "外部化された構造化メモリ（Git/State Store）を持つエージェントは、単一セッションの巨大プロンプトより累積探索効率と再現性で優れる。",
+      "source_title": "The Agentic Scientist: Orchestrating Coding Agents for Automated Scientific (Co-)Discovery",
+      "excerpt": "At the end of our pipeline, a single repair loop alternates deterministic checks with agent judgment and feeds any failures back to the writer agent for revision. The validation checks cover structural completeness, provenance and claim-to-source links, compilation, and venue and page budget constraints. An independent audit agent runs every round on a read-only copy of the workspace and flags where the paper's numbers, comparisons, or conclusions overclaim or contradict the canonical data and evidence trail. An optional reviewer-style agent assesses framing, caveats, figures, and clarity, and may ask the writer agent to narrow or qualify claims.",
+      "section_or_page": "§3.5 Grounded Paper Writing（Validation and review）"
+    },
+    {
+      "hypothesis_id": "HYP-20261021-4cdb",
+      "observation_id": "EVD-20261021-59ab",
+      "hypothesis_statement": "長期自律研究では運用作業や原稿執筆にトークンが偏り仮説生成・方法論的新規性が枯渇しやすいが、仮説空間（H）と観測空間（O）を明示的に分離し、(1) 負の結果・反証記録を捨てずに候補や履歴と束ねて引き継ぎ、(2) 単発観測をProvisionalとして尚早な仮説棄却を抑止しつつ、(3) 未説明観測と手薄な軸へ探索を誘導することで発見性能が有意に向上する。",
+      "source_title": "SHELDON: Reasoning through Dual Search over Hypothesis and Observation Spaces",
+      "excerpt": "We also introduce the boolean attribute Provisional to each observation because LLMs may occasionally make mistakes in their judgment such as making wrong assumptions, buggy implementation, or being ambiguous. When a new observation is encountered, it is given a Provisional status until it is encountered again. A Provisional observation can be used to guide exploration and follow-up hypothesis testing, but it cannot be used to refute a hypothesis.",
+      "section_or_page": "Section 4.2 (Dual-Space Reasoning Process) — Provisional attribute (boolean, per observation)"
+    },
+    {
+      "hypothesis_id": "HYP-20261021-4cdb",
+      "observation_id": "EVD-008",
+      "hypothesis_statement": "長期自律研究では運用作業や原稿執筆にトークンが偏り仮説生成・方法論的新規性が枯渇しやすいが、仮説空間（H）と観測空間（O）を明示的に分離し、(1) 負の結果・反証記録を捨てずに候補や履歴と束ねて引き継ぎ、(2) 単発観測をProvisionalとして尚早な仮説棄却を抑止しつつ、(3) 未説明観測と手薄な軸へ探索を誘導することで発見性能が有意に向上する。",
+      "source_title": "GitSwarm: Decentralized Compounding Inference",
+      "excerpt": "More broadly, 70.1% of negative-labelled research commits are cited by later accepted contributions. ... 709 (56.4%) are explicitly labelled negative ... and 497 (70.1%) are cited by a later accepted research commit within the same window.",
+      "section_or_page": "Section 3.3 (NanoChat); Appendix E.4"
+    }
+  ]
+}

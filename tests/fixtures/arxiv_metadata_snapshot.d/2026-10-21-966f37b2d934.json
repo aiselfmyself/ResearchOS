@@ -1,0 +1,22 @@
+{
+  "schema": "researchos/arxiv-metadata-snapshot-part/v1",
+  "captured_at": "2026-10-21",
+  "capture_method": "arxiv abs versioned pages read with Arena fetch_page: https://arxiv.org/abs/2608.18091v3 and https://arxiv.org/abs/2608.26159v2",
+  "capture_note": "Round 2; titles, ordered author lists and ORIGINAL submission dates were read on the versioned abs pages. v3/v2 revision dates are not publication years. Base fixture is frozen.",
+  "entries": [
+    {
+      "arxiv_id": "2608.18091",
+      "source_url": "https://arxiv.org/abs/2608.18091v3",
+      "title": "Self- and Other-Labels Induce Bidirectional Bias in LLM Judges",
+      "authors": ["Songeun Chae", "Min Kim", "Donghoon Jung", "Seojin Choi", "Seohyon Jung"],
+      "published": "2026-06-06"
+    },
+    {
+      "arxiv_id": "2608.26159",
+      "source_url": "https://arxiv.org/abs/2608.26159v2",
+      "title": "Self-Generated Text Recognition: Quality Heuristics, Cross-Task Transfer, and Downstream Bias in LLM Evaluation",
+      "authors": ["Jesse St. Amand", "Callum Canavan", "Sohaib Imran", "Joseph Hewson", "Aaron Lutz", "Shi Feng", "Puria Radmard", "Lennie Wells"],
+      "published": "2026-07-07"
+    }
+  ]
+}

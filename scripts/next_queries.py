@@ -48,7 +48,7 @@ QUERY GENERATION RULE (deterministic)
 -------------------------------------
     lower-case the question -> split on anything but letters/digits/hyphen
     -> drop stopwords and duplicates, keep order -> keep the first
-    --max-terms tokens (default 8) -> join with spaces
+    --max-terms tokens (default 10) -> join with spaces
 
 Hyphenated compounds (``self-preference``, ``long-horizon``) stay one token
 because arXiv treats them as meaningful. A question with no surviving token

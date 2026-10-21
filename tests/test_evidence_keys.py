@@ -252,11 +252,12 @@ class RealRepositoryTest(unittest.TestCase):
         report = vs.run_all_checks(ROOT)
         self.assertEqual(report["errors"], [], msg="\n".join(report["errors"]))
 
-    def test_overlay_annotates_only_distinct_source_groups(self) -> None:
+    def test_overlay_never_confuses_search_seeds_with_corroboration(self) -> None:
         mapping, errors = vs.load_evidence_keys(ROOT / vs.EVIDENCE_KEYS_LEDGER)
         self.assertEqual(errors, [])
-        evidences, _ = ledger_store.load_jsonl(ROOT / "state" / "evidence.jsonl")
-        by_id = {e["evidence_id"]: e for e in evidences}
+        evidence = gs.load_ledger("evidence", ROOT / "state")
+        by_id = {e["evidence_id"]: (i, e) for i, e in enumerate(evidence)}
+        flags = gs.derive_provisional(evidence)
         # The Agentic Scientist registers one paper twice (SRC-20261021-7419
         # and SRC-20261021-8452); those EVDs must NOT share a key, or the
         # duplicate would look like independent corroboration.
@@ -266,11 +267,19 @@ class RealRepositoryTest(unittest.TestCase):
             "EVD-20261021-e31f",
         ):
             self.assertNotIn(evidence_id, mapping)
-        # Every key group spans at least two distinct source_id values.
+        # An unexplained EVD may now get a *singleton* key as a search seed.
+        # That must not make it non-provisional: only a second distinct SRC
+        # sharing the key can do that. This invariant also survives future
+        # append-only corroboration without hard-coding today's group sizes.
         groups = {}
+        for row in evidence:
+            key = row.get("observation_key")
+            if key:
+                groups.setdefault(key, set()).add(row["source_id"])
         for evidence_id, key in mapping.items():
-            groups.setdefault(key, set()).add(by_id[evidence_id]["source_id"])
-        self.assertTrue(all(len(sources) >= 2 for sources in groups.values()), groups)
+            i, e = by_id[evidence_id]
+            independently_seen = any(src != e["source_id"] for src in groups[key])
+            self.assertEqual(flags[i], not independently_seen, evidence_id)
 
 
 if __name__ == "__main__":

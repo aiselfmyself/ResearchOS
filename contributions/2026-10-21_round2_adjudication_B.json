@@ -1,0 +1,26 @@
+{
+  "session_id": "round2-current-agent-blind-rerating",
+  "method": "One agent in round 2 read only the frozen blind packet (HYP statement, EVD excerpt, source title); previous REL verdict/rationale and EVD interpretation were hidden until this file was written. Not a second independent model; no ground truth.",
+  "items": [
+    {"hypothesis_id": "HYP-002", "observation_id": "EVD-20261020-932f", "verdict": "neutral", "rationale": "検証可能な課題では nomination を外すという設計上の区別。主観的課題で同質多数決が共通モード誤りを実際に再生産した観測は無い。"},
+    {"hypothesis_id": "HYP-001", "observation_id": "EVD-20261021-cd59", "verdict": "neutral", "rationale": "反証記録を伴う候補を構成的に束ねる機構は示すが、巨大な単一セッションとの累積効率・再現性比較は無い。"},
+    {"hypothesis_id": "HYP-20261021-fee7", "observation_id": "EVD-004", "verdict": "support", "rationale": "proxy yardstick が真の目的からずれる危険を実測の忠実度検査と真の評価で遮断するという識別的な段階ゲートを直接記す。ただし δ や diff 審査と OOD 汎化の必要性までは示さない部分的支持。"},
+    {"hypothesis_id": "HYP-002", "observation_id": "EVD-20261020-d515", "verdict": "neutral", "rationale": "勝者の再実行が無いという再現性の留保であり、同質多数決や主観的判定の誤り相関を測っていない。"},
+    {"hypothesis_id": "HYP-20261021-a10b", "observation_id": "EVD-20261021-8fa6", "verdict": "unresolved", "rationale": "pruning 上の summarization で itemization が改善した一方、5.6% 時間増。全文脈対比・DAG・トークン費用が抜粋に無く『低コストかつ高完遂率』の複合条件は判定不能。"},
+    {"hypothesis_id": "HYP-20261021-fee7", "observation_id": "EVD-20261021-12a7", "verdict": "neutral", "rationale": "数学の証明義務を分類する別領域のゲート設計。評価リークや OOD スコアを抑止した観測ではない。"},
+    {"hypothesis_id": "HYP-002", "observation_id": "EVD-20261020-e9fb", "verdict": "neutral", "rationale": "長期タスク・長文脈・長期記憶の区別であり、多数決の共通モード障害を扱わない。"},
+    {"hypothesis_id": "HYP-002", "observation_id": "EVD-20261021-4c6f", "verdict": "unresolved", "rationale": "n=8 では両者とも誤り0で rho が識別不能と明記する。多数決の共通モード障害の有無を判定できない。"},
+    {"hypothesis_id": "HYP-20261021-fee7", "observation_id": "EVD-20261021-de29", "verdict": "support", "rationale": "δ を基底系の反復ばらつきから固定し、閾値を下げてノイズだけで evolve-set 改善を買うことを禁じるという、仮説のゲート機構を直接示す。全構成要素の必要性・OOD 汎化の実証ではない。"},
+    {"hypothesis_id": "HYP-20261021-fee7", "observation_id": "EVD-20261021-6094", "verdict": "neutral", "rationale": "rubric 完遂と best program 更新の分離は記すが、漏洩監査・δ 基準・凍結 OOD 利得の観測は無い。一般的なゲートの類例に留まる。"},
+    {"hypothesis_id": "HYP-002", "observation_id": "EVD-20261020-4c61", "verdict": "neutral", "rationale": "長期評価の観測可能性・少ない反復・専門家負担に関する留保であり、同質ノミネーションの集団誤りを直接観測していない。"},
+    {"hypothesis_id": "HYP-001", "observation_id": "EVD-20261020-932f", "verdict": "neutral", "rationale": "readout が検証可能課題では外されるという記述で、外部化メモリ対巨大プロンプトの比較ではない。"},
+    {"hypothesis_id": "HYP-001", "observation_id": "EVD-20261020-2336", "verdict": "neutral", "rationale": "同一スコアへの収束は記すが、累積探索効率や記憶の外部化と巨大プロンプトの相対性能は記さない。"},
+    {"hypothesis_id": "HYP-001", "observation_id": "EVD-20261020-d515", "verdict": "neutral", "rationale": "勝者の未再実行は再現性への注意喚起だが、巨大プロンプトと比較した外部化記憶の効果を測っていない。"},
+    {"hypothesis_id": "HYP-20261021-a10b", "observation_id": "EVD-20261020-e9fb", "verdict": "neutral", "rationale": "長期タスク・長文脈・長期記憶という概念定義。剪定／要約／DAG による完遂率・コストの比較結果が無い。"},
+    {"hypothesis_id": "HYP-002", "observation_id": "EVD-20261021-cd59", "verdict": "neutral", "rationale": "集約を多数決ではなく構成的にする規則は記すが、同質多数決との比較や誤り相関の観測は無い。"},
+    {"hypothesis_id": "HYP-002", "observation_id": "EVD-20261021-2aad", "verdict": "neutral", "rationale": "検証可能なソフトウェア性能向上であり、主観的ノミネーションと共通モード誤りの観測が無い。"},
+    {"hypothesis_id": "HYP-001", "observation_id": "EVD-20261021-9959", "verdict": "neutral", "rationale": "修復ループと読取専用監査の仕組みは記すが、単一の巨大な会話と比べた記憶外部化による効率・再現性の測定が無い。"},
+    {"hypothesis_id": "HYP-20261021-4cdb", "observation_id": "EVD-20261021-59ab", "verdict": "support", "rationale": "Provisional は単発観測の誤反駁を避け、探索には使用できるという仮説の識別的規律を直接示す。ただし発見性能の有意改善の実証ではない部分的支持。"},
+    {"hypothesis_id": "HYP-20261021-4cdb", "observation_id": "EVD-008", "verdict": "support", "rationale": "負ラベルの研究コミットの 70.1% が後の採択貢献で引用され、負結果を捨てずに引き継ぐ機構の観測を示す。ただし H×O 方式との対照比較ではない。"}
+  ]
+}
