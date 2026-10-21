@@ -1,0 +1,29 @@
+{
+  "schema": "researchos/arxiv-metadata-snapshot-part/v1",
+  "captured_at": "2026-10-21",
+  "capture_method": "Arena fetch_page of versioned arXiv abs pages: https://arxiv.org/abs/2602.16313v2 ; https://arxiv.org/abs/2606.06090v2 ; https://arxiv.org/abs/2603.04814v1",
+  "capture_note": "Phase 4 round 3. Titles, ordered authors and ORIGINAL submission dates transcribed from versioned abs; journal/conference Comments are not independently verified and revision dates are not treated as publication dates. Frozen base/older parts untouched.",
+  "entries": [
+    {
+      "arxiv_id": "2602.16313",
+      "source_url": "https://arxiv.org/abs/2602.16313v2",
+      "title": "MemoryArena: Benchmarking Agent Memory in Interdependent Multi-Session Agentic Tasks",
+      "authors": ["Zexue He", "Yu Wang", "Churan Zhi", "Yuanzhe Hu", "Tzu-Ping Chen", "Lang Yin", "Ze Chen", "Tong Arthur Wu", "Siru Ouyang", "Zihan Wang", "Jiaxin Pei", "Julian McAuley", "Yejin Choi", "Alex Pentland"],
+      "published": "2026-02-18"
+    },
+    {
+      "arxiv_id": "2606.06090",
+      "source_url": "https://arxiv.org/abs/2606.06090v2",
+      "title": "Beyond Semantic Organization: Memory as Execution State Management for Long-Horizon Agents",
+      "authors": ["Yaoqi Chen", "Haibin Lai", "Yuru Feng", "Chuyu Han", "Qianxi Zhang", "Baotong Lu", "Menghao Li", "Xinjiang Wang", "Zewen Jin", "Hao Wu", "Cheng Li", "Qi Chen"],
+      "published": "2026-06-04"
+    },
+    {
+      "arxiv_id": "2603.04814",
+      "source_url": "https://arxiv.org/abs/2603.04814v1",
+      "title": "Beyond the Context Window: A Cost-Performance Analysis of Fact-Based Memory vs. Long-Context LLMs for Persistent Agents",
+      "authors": ["Natchanon Pollertlam", "Witchayut Kornsuwannawit"],
+      "published": "2026-03-05"
+    }
+  ]
+}

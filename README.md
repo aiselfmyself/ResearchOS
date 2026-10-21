@@ -62,22 +62,22 @@
 以下は**実測値**であり、`scripts/check_doc_numbers.py`（CI の 8 番目のゲート）が本文書の記述と
 リポジトリからの再計算値を突き合わせて検査する。算出コマンドは下記「使い方」節。
 
-- 台帳: sources=27 / evidence=97 / claims=9 / verifications=40 / hypotheses=7 / relations=251
-- 仮説サイクル台帳（2026-10-21 新設）: search_log=7 / runs=2 / predictions=1
+- 台帳: sources=30 / evidence=100 / claims=9 / verifications=40 / hypotheses=7 / relations=254
+- 仮説サイクル台帳（2026-10-21 新設）: search_log=11 / runs=3 / predictions=1
 - 関係台帳の中身（`scripts/gap_scan.py` の実測・ゲート対象外）:
-  unassessed **1 / 97 (1.0%)**、unexplained **27 / 97 (27.8%)**、unresolved のみ 0 件、
-  provisional **67 / 97**（non-provisional 30 件）。
+  unassessed **1 / 100 (1.0%)**、unexplained **29 / 100 (29.0%)**、unresolved のみ 0 件、
+  provisional **70 / 100**（non-provisional 30 件）。
   `support` は**既定で `derived_from: true` を除外した REL 数**を数え、除外件数は
   `support_derived_from` として併記する。生成元からの支持しか無い観測は
   `unexplained` に残る。ただし旧 REL の支持 **85 件**にはフラグが無く、
   `gap_scan` はこれを false と同様に数える。**独立した出典85本を意味しない**。
   `self_support.py` は欠測を unknown とし、旧 `evidence_ids` との重なり 66 件を
-  *生成元の証明ではない推定* として別枠に報告する（ラウンド2の記録は
+  *生成元の証明ではない推定* として別枠に報告する（Phase 3 の詳細は
   `contributions/2026-10-21_phase3_round2.md`）。
-- 観測キーの注釈: `state/evidence_keys.jsonl`（凍結ベース・空）＋`state/evidence_keys.d/*.jsonl` の **32 件**（旧30件＋S3の未説明観測2件）。新 EVD はレコードに直接キー4件を持つ。単一出典のキーは検索の種にはなるが独立再観測ではない
+- 観測キーの注釈: `state/evidence_keys.jsonl`（凍結ベース・空）＋`state/evidence_keys.d/*.jsonl` の **32 件**（旧30件＋S3の未説明観測2件）。新 EVD はレコードに直接キー7件を持つ。単一出典のキーは検索の種にはなるが独立再観測ではない
 - 仮説の問いの注釈: `state/hypothesis_questions.jsonl`（凍結ベース・空）＋`state/hypothesis_questions.d/*.jsonl` の **7 件**（7 仮説・14 問い。分割前のレコード用）
-- ラウンド2（`RUN-20261021-b13d`）：新 SRC 2・EVD 4・REL 4（support 2 は同じ SRC）・HYP 0。旧 REL の盲検再判定は 13/20 一致・旧 support 4/10 残存だが、判定者の独立性と正しさは未確認。新 REL の独立二重裁定は未実施。実質自動化率の分母も未記録
-- テスト: 合計 598件（`tests/` の 23 ファイル。内訳は下記 §構成）
+- ラウンド3（`RUN-20261021-0f00`、Phase 4 の最初の1件）：新 SRC 3・EVD 3・REL 3（限定的support 1、neutral 2）・HYP 0。`unexplained` 27→29、refute 0のままsupport増で `cycle_readout.py` が停止を助言。**Phase 4 の3ラウンドDoDは未達、ラウンド4・5は未実行**（`contributions/2026-10-21_phase4_round3.md`）。独立二重選別・新RELの二重裁定は未実施。判断イベント率18/19は単位依存の参考値で、時間ベースの実質自動化率は未測定
+- テスト: 合計 616件（`tests/` の 24 ファイル。内訳は下記 §構成）
 - CI ゲート: 8ゲート（`.github/workflows/core-check.yml` の `run:` を持つステップ数）
 - 監査 ID 18: **凍結**（2026-10-21、人間の決定）。科学的には未解決のまま、ID 18 の解決を目的とした
   探索・追加抽出・モデル×ハーネス統制比較は割り当てない。正本は `docs/id18-freeze-2026-10-21.md`
@@ -88,10 +88,9 @@
 
 **関係台帳（REL）は 2026-10-21 に投入された。** 初回投入は既存 2 仮説への裁定 172 行と
 新仮説 4 件（`HYP-20261021-*`）への 63 行の計 235 行。その後、ID18 本文確認で追加された
-新規 EVD 2 件へ 6 行を backfill した。2026-10-21 のラウンド1が 5 行、Phase 2 の前提整備が 1 行を追加し、現在は **247 行**である（`HYP-001` 12/0/65/11、
-`HYP-002` 12/0/73/4。順に support/refute/neutral/unresolved）。`refute` は **0 件**だが、
-これは「反駁が無い」ではなく、`observation_key` の無い単独出典の反駁が `provisional` として
-数えられないため（fail-closed）。判断の記録は
+新規 EVD 2 件へ 6 行を backfill した。2026-10-21 のラウンド1が 5 行、Phase 2 の前提整備が 1 行、ラウンド2が4行、ラウンド3が3行を追加し、現在は **254 行**である（`HYP-001` 13/0/67/11、
+`HYP-002` 12/0/73/4。順に support/refute/neutral/unresolved）。記録上の `refute` は **0 件**だが、
+「反駁が存在しない」という意味ではない。単独出典は `provisional` に留まり、対象の違う否定材料を refute に水増ししない（fail-closed）。判断の記録は
 `contributions/2026-10-21_relation_backfill_integration.md` と
 `contributions/2026-10-21_relation_backfill_id18_new_evidence.md` にある。
 
@@ -102,8 +101,8 @@
 検出された。現況監査 ID 21。`docs/minimal-core-and-ci.md` §4 の「書式上の注意」と同じ事由）。
 **したがって現況の数値は必ずこの節に追記する**こと。
 
-参考（ゲートの検査対象外。算出方法は `contributions/2026-10-21_current-status-audit.md` §1.2 と
-`scripts/gap_scan.py`）：出典 25 件のうち EVD を持たないものは 0 件。EVD 93 件のうち独立した support の
+ラウンド1終了時点の参考スナップショット（**現況ではない**。ゲートの検査対象外。算出方法は `contributions/2026-10-21_current-status-audit.md` §1.2 と
+`scripts/gap_scan.py`）：出典 25 件のうち EVD を持たないものは 0 件。EVD 93 件のうち計上可能な support の
 REL を持たないものは **25 件（26.9%）**。この 25 件は「書誌監査など仮説の対象外 6 件」「外部化しても
 再現性が崩れた負の開示 3 件」「統制欠如・検出力不足による保留 12 件」「ラウンド1で予測設計の
 基準線として取得し、意図的に未裁定のまま残した 1 件」「生成元からの支持しか持たない 2 件
@@ -173,6 +172,8 @@ scripts/
                         unknown。旧 evidence_ids との重なりは別の proxy）
   relation_agreement.py S4 の二つの判定ファイルを仮説×観測で突き合わせる計測器
                         （一致率・κ・旧 support 残存率。独立性・正解は保証しない）
+  cycle_readout.py      S8 のRUNスナップショットから停止警告を判定する非ゲート計測器
+                        （欠測を0と推測しない。停止でも終了コード0）
 gitswarm/
   problem.py solvers/  30都市TSPの決定論的ソルバ群（greedy/random/two_opt/SA）
   benchmarks/          複数シード実行＋成果物照合（--write/--check）
@@ -205,7 +206,8 @@ tests/
   test_cycle_records.py        仮説サイクルの記録（QRY/RUN/PRD）と3つの来歴ゲートのテスト（57件）
   test_next_queries.py         S0/S7 のクエリ生成・重み付け・検索ログとの重複判定・質問 overlay のテスト（55件）
   test_phase3_instruments.py  自己支持（欠測区別）・裁定一致率の計測器（39件）
-                               ── 合計 598件
+  test_cycle_readout.py       S8 の停止警告・欠測・イベント率の非ゲートテスト（18件）
+                               ── 合計 616件
 contributions/         研究ノート（統合レポート・調査メモ・全文読解レポート・共通モード測定）
 docs/                  分析レポートと設計記録（並行作業の所有マップは docs/parallel-work-ownership.md。強制力なし）
 .github/workflows/
@@ -216,7 +218,7 @@ docs/                  分析レポートと設計記録（並行作業の所有
 ## 使い方
 
 ```sh
-# 1. テスト（約5秒・598件）
+# 1. テスト（約5秒・616件）
 python3 -m unittest discover -s tests -v
 
 # 2. ベンチマークの再現性確認（fresh実行と成果物の照合）
@@ -244,6 +246,7 @@ python3 scripts/next_queries.py --json     # 機械可読（queries / already_se
 python3 scripts/self_support.py --json     # 明示フラグ内の自己支持率＋欠測・推定を分ける
 python3 scripts/relation_agreement.py --a contributions/2026-10-21_round2_adjudication_A.json \
   --b contributions/2026-10-21_round2_adjudication_B.json --json  # 再裁定の一致（独立性は保証しない）
+python3 scripts/cycle_readout.py --json    # S8 の警告。stopでも終了コード0、CIゲートではない
 
 # 台帳に追記するとき（凍結ベースは書き換えない。docs/record-id-scheme.md §2）
 python3 scripts/new_ledger_shard.py evidence --create   # シャードのパスを作る

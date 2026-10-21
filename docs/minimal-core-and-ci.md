@@ -51,7 +51,7 @@
 
 ゲートするのは決定論的・再実行可能な**8検査**（2026-10-21 時点。初版は4検査で、2026-10-20 に 5・6 を、2026-10-21 に 7 を、同日 8 を追加した）：
 
-1. `python3 -m unittest discover -s tests -v` — **598テスト**（約3〜5秒）
+1. `python3 -m unittest discover -s tests -v` — **616テスト**（約3〜5秒）
 2. `python3 gitswarm/benchmarks/benchmark.py --check` — 成果物と fresh run の照合（許容誤差0.01）
 3. `python3 gitswarm/readout_sim.py --check` — 投票シミュレーション成果物と fresh run の照合
 4. `python3 scripts/validate_state.py` — 研究台帳のスキーマ・ID一意・参照整合性（**台帳内の** ID・パス参照の存在検査を含む）。台帳は**凍結ベース（`state/*.jsonl`）＋セッション別シャード（`state/<台帳名>.d/*.jsonl`）の統合ビュー**として検証される（`scripts/ledger_store.py`）。2026-10-21 から**来歴ゲート**（§2.5）も同じ検査に入った
@@ -327,6 +327,24 @@ coverage 検索を初めて実行した。**キーは索引／検索の種であ
 **いずれも CI には入れない**（§2.6 と同じ計測器の standing）。不一致／欠測／
 自己支持率が高いという正常な研究結果をゲート失敗にしてはいけない。
 入力が読めない／壊れた場合にだけ exit 2、測定が完了したら 0。
+
+---
+
+## 2.8 計測器：Phase 4 の S8 停止警告（CI 非接続）
+
+`scripts/cycle_readout.py` は `RUN.metrics` の**ラウンド前後の記録**だけを読み、
+(1) 未説明数が減らない、(2) refute 0 のまま `derived_from=true` 除外後の support REL が増える、
+(3) 3 ラウンド連続で HYP=0、の各警告を機械判定する。旧 RUN に無い分母・時点値を
+**現在の台帳から過去へ外挿しない**。値がない条件は `unknown_signals` に残し、
+全条件不明でも自動継続を許可しない。予算上限（人手／トークン）はCLI引数で事前指定した
+場合にだけ判定し、未指定・トークン未測定を超過ゼロと偽らない。`stop` は正常な観測なので
+**exit 0**、読込・型エラーのみ exit 2。8ゲートの数も変えない。
+
+ラウンド3は unexplained 27→29 と refute 0 のまま support 88→89 の**二つで停止**。
+`support_non_derived` は独立出典の数ではなく REL 数で、旧85件のフラグは欠測。
+RUNに記録した19判断イベントの人手1回から得る介入回数率18/19は、時間ベースの
+「実質自動化率」ではなく粒度依存の暫定値。ラウンド1・2には同じ分母がなく比較できない。
+経緯と4指標の差分は `contributions/2026-10-21_phase4_round3.md`。
 
 ---
 
