@@ -10,6 +10,9 @@
     "excerpt": {"type": "string"},
     "interpretation": {"type": "string"},
     "data_points": {"type": "object"},
-    "confidence": {"type": "string", "enum": ["high", "medium", "low"]}
+    "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
+    "observation_key": {"type": "string"},
+    "observation_axis": {"type": "string"},
+    "observation_region": {"type": "string"}
   }
 }

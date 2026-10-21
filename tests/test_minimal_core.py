@@ -355,6 +355,12 @@ class RecordIdSchemeTest(unittest.TestCase):
         """
         for name, (ledger, _, id_key) in validate_state.COLLECTIONS.items():
             prefix = validate_state.ID_PREFIXES[name]
+            if prefix not in FROZEN_MAX_EXPECTED:
+                # REL (relation ledger, 2026-10-21) has no sequential range
+                # at all. Its rejection of REL-NNN is tested in
+                # tests/test_relations.py.
+                self.assertNotIn(prefix, validate_state.LEGACY_MAX)
+                continue
             records, _ = validate_state.load_jsonl(ROOT / ledger)
             highest = max(
                 int(record[id_key].split("-")[1])

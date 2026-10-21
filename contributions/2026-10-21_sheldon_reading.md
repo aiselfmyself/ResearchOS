@@ -341,7 +341,7 @@ Appendix C.4 の Select プロンプトが、優先付けの第 2 段を与え�
 
 ```json
 {
-  "relation_id": "REL-20261021-abcd",
+  "relation_id": "REL-YYYYMMDD-xxxx",
   "hypothesis_id": "HYP-001",
   "observation_id": "EVD-20261021-7cdb",
   "verdict": "support",

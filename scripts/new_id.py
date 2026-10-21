@@ -36,6 +36,7 @@ PREFIXES = {
     "CLM": "state/claims.jsonl",
     "VER": "state/verifications.jsonl",
     "HYP": "state/hypotheses.jsonl",
+    "REL": "state/relations.jsonl",
 }
 
 ID_KEYS = {
@@ -44,6 +45,7 @@ ID_KEYS = {
     "CLM": "claim_id",
     "VER": "verification_id",
     "HYP": "hypothesis_id",
+    "REL": "relation_id",
 }
 
 

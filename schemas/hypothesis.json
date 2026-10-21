@@ -12,6 +12,9 @@
       "enum": ["proposed", "testing", "supported", "falsified", "inconclusive"]
     },
     "evidence_ids": {"type": "array", "items": {"type": "string"}},
-    "notes": {"type": "string"}
+    "notes": {"type": "string"},
+    "hypothesis_region": {"type": "string"},
+    "search_status": {"type": "string", "enum": ["retained", "setaside"]},
+    "cooldown_rounds": {"type": "integer"}
   }
 }

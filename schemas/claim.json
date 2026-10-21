@@ -10,6 +10,7 @@
     "counterclaim_ids": {"type": "array", "items": {"type": "string"}},
     "status": {"type": "string", "enum": ["candidate", "supported", "disputed", "rejected"]},
     "scope": {"type": "string"},
-    "limitations": {"type": "string"}
+    "limitations": {"type": "string"},
+    "hypothesis_ids": {"type": "array", "items": {"type": "string"}}
   }
 }

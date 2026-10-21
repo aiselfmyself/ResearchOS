@@ -17,6 +17,15 @@ Scope (deliberately small -- see docs/minimal-core-and-ci.md):
       claim.counterclaim_ids    -> claims
       hypothesis.evidence_ids   -> evidence
       verification.target_id    -> sources | evidence | claims | hypotheses
+      claim.hypothesis_ids      -> hypotheses            (optional field)
+      relation.hypothesis_id    -> hypotheses
+      relation.observation_id   -> evidence
+      relation.source_id        -> sources               (optional field)
+
+  * The relation ledger state/relations.jsonl (E_t: hypothesis x observation
+    -> support/refute/neutral/unresolved; SHELDON reading section 5.1) is
+    schema-checked and reference-checked like the other ledgers. It has no
+    legacy sequential IDs: REL-NNN is never accepted.
 
 Non-goals (frozen by design, not missing by accident):
   * No governance ledgers (sessions / proposals / reviews / approvals /
@@ -60,6 +69,11 @@ COLLECTIONS: Dict[str, Tuple[str, str, str]] = {
         "schemas/hypothesis.json",
         "hypothesis_id",
     ),
+    "relations": (
+        "state/relations.jsonl",
+        "schemas/relation.json",
+        "relation_id",
+    ),
 }
 
 # ---------------------------------------------------------------------------
@@ -74,7 +88,10 @@ COLLECTIONS: Dict[str, Tuple[str, str, str]] = {
 # The 49 records that predate this scheme keep their sequential IDs. They are
 # grandfathered by *number*, not by listing them: a legacy ID is accepted only
 # if it is at or below the frozen maximum below. Anything beyond that range is
-# a new record and must use the new format.
+# a new record and must use the new format. The relation ledger (REL) was
+# created after the scheme, so it has no legacy range at all: LEGACY_MAX has
+# no REL key and REL-NNN is rejected (check_id_format treats a missing key as
+# a maximum of 0).
 # ---------------------------------------------------------------------------
 ID_PREFIXES: Dict[str, str] = {
     "sources": "SRC",
@@ -82,6 +99,7 @@ ID_PREFIXES: Dict[str, str] = {
     "claims": "CLM",
     "verifications": "VER",
     "hypotheses": "HYP",
+    "relations": "REL",
 }
 
 # Frozen at 2026-10-20 when the non-sequential scheme was adopted.
@@ -223,6 +241,12 @@ def check_id_format(
                 errors.append(
                     f"{ledger}:{lineno}: ID {rid!r} must start with {prefix!r}"
                 )
+            elif legacy_max == 0:
+                errors.append(
+                    f"{ledger}:{lineno}: ID {rid!r} is a sequential ID, but "
+                    f"{prefix} has no grandfathered sequential range; mint one "
+                    f"with 'python3 scripts/new_id.py {prefix}' instead"
+                )
             elif int(match.group("num")) > legacy_max:
                 errors.append(
                     f"{ledger}:{lineno}: ID {rid!r} extends the frozen sequential "
@@ -270,6 +294,24 @@ def check_references(data: Dict[str, List[Dict[str, Any]]]) -> List[str]:
         for eid in record.get("evidence_ids", []) or []:
             if eid not in ids["evidence"]:
                 errors.append(f"hypothesis {hid}: unknown evidence_id {eid!r}")
+    for record in data["claims"]:
+        # Optional field (added with the relation ledger): absent is fine,
+        # present must resolve to hypotheses.
+        cid = record.get("claim_id")
+        for hid in record.get("hypothesis_ids", []) or []:
+            if hid not in ids.get("hypotheses", set()):
+                errors.append(f"claim {cid}: unknown hypothesis_id {hid!r}")
+    for record in data.get("relations", []):
+        rid = record.get("relation_id")
+        hid = record.get("hypothesis_id")
+        if isinstance(hid, str) and hid not in ids.get("hypotheses", set()):
+            errors.append(f"relation {rid}: unknown hypothesis_id {hid!r}")
+        oid = record.get("observation_id")
+        if isinstance(oid, str) and oid not in ids.get("evidence", set()):
+            errors.append(f"relation {rid}: unknown observation_id {oid!r}")
+        src = record.get("source_id")
+        if isinstance(src, str) and src not in ids.get("sources", set()):
+            errors.append(f"relation {rid}: unknown source_id {src!r}")
     for record in data["verifications"]:
         vid = record.get("verification_id")
         target = record.get("target_id")
@@ -294,7 +336,7 @@ def check_references(data: Dict[str, List[Dict[str, Any]]]) -> List[str]:
 # filenames ("run_simulation.py") and ordinary prose stay untouched.
 # ---------------------------------------------------------------------------
 ID_TOKEN_RE = re.compile(
-    r"(?<![-\w])(?P<prefix>SRC|EVD|CLM|VER|HYP)"
+    r"(?<![-\w])(?P<prefix>SRC|EVD|CLM|VER|HYP|REL)"
     r"-(?:\d{3}|\d{8}-[0-9a-f]{4})(?![-\w])"
 )
 PATH_TOKEN_RE = re.compile(
