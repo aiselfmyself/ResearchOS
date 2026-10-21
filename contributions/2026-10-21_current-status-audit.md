@@ -527,19 +527,54 @@ summary: 2 stale number(s)   # exit=1
 | 同 §14.11 / §14.12 | 両件の詳細（発覚の経緯・実測・直し方・限界）を追加 |
 | 同「未対応」要約 | ID 16 が **2026-10-21T04:13Z に解消済み**（Issue 4 件すべて CLOSED、OPEN 0 件）であることを追記。**未対応は ID 18 のみ** |
 
-### 7.4 検証（PR #47 の全 8 ゲート）
+### 7.4 検証（PR #47 の全 8 ゲート、`origin/main` 取り込み後）
 
 ```text
 python3 -m unittest discover -s tests            → Ran 242 tests / OK
 python3 gitswarm/benchmarks/benchmark.py --check → PASS
 python3 gitswarm/readout_sim.py --check          → PASS
-python3 scripts/validate_state.py                → PASS (sources=15, evidence=73, claims=9,
+python3 scripts/validate_state.py                → PASS (sources=22, evidence=81, claims=9,
                                                           verifications=32, hypotheses=2)
-python3 scripts/check_citations.py               → 14 checked / 1 skipped / 0 failure
-python3 scripts/check_memo_citations.py          → 22 memos / 52 citations / 4 skipped / 0 failure
+python3 scripts/check_citations.py               → 21 checked / 1 skipped / 0 failure
+python3 scripts/check_memo_citations.py          → 23 memos / 61 citations / 3 skipped / 0 failure
 python3 scripts/check_memo_ledger_refs.py        → 0 dangling / 5 archived
 python3 scripts/check_doc_numbers.py             → 0 stale
 ```
+
+### 7.4.1 並行マージとの衝突（PR #46 / #48）—— ID 21 の是正が実戦で効いた
+
+PR #47 を開いている間に、**別セッションが PR #46 と PR #48 を `main` へマージした**。
+`main` は 7 ソース・EVD 8 件・`contributions/2026-10-21_id18_paper_search.md`・
+`contributions/2026-10-21_agentic_scientist_reading.md`・snapshot 6 件（**RRSI と Agentic Scientist を含む**）を
+獲得していた。**本監査が「未マージ」と報告した RRSI と Agentic Scientist のうち、
+Agentic Scientist は当方と別セッションが独立に読解していた**ことになる。
+
+衝突と解決：
+
+| ファイル | 衝突 | 解決 |
+|---|---|---|
+| `contributions/2026-10-21_agentic_scientist_reading.md` | **add/add**（別セッションの 458 行版 vs `arena/85f0cc80` の 307 行版＝**同一論文の独立した読解が2本**） | **`main` 版を採用**。同一名のファイルは `main` にある方を正本とし、所有マップ §2 の「他のセッションの `contributions/` は書き換えない」に従った。307 行版のブランチは `origin` に残る |
+| `state/sources.jsonl` / `state/evidence.jsonl` | 両側が末尾追記 | **和集合 ＋ ID による重複排除**（前回は単純な和集合で足りたが、今回は両側が同じ arxiv ID を触りうるため） |
+| `tests/fixtures/arxiv_metadata_snapshot.json` | `capture_note` と `entries` の両方 | `capture_note` は情報量の多い `main` 側を採用、`entries` は `arxiv_id` で重複排除（22 件） |
+
+**結果、台帳は sources=22 / evidence=81 になった。**
+
+**そして検査8が即座にこれを検出した**——README の「現在の状態」節は取り込み前の
+`sources=15 / evidence=73` を指していたため、ゲート1（`test_check_doc_numbers.py` の実リポジトリ検査）と
+ゲート8が**同時に赤**になった。
+
+```text
+STALE README.md:64 [ledger:sources]  found 15, expected 22
+STALE README.md:64 [ledger:evidence] found 73, expected 81
+```
+
+**§7.2 の合成テスト（`/tmp` に数値を書き換えたコピー）ではなく、実際の並行マージが
+陳腐化を引き起こし、それを是正後の検査が本物の CI で捕まえた。**
+これが ID 21 の是正が「効いている」ことの、合成ではない証拠である。
+是正前の README なら**この 2 件は検出されず、緑のまま放置されていた。**
+
+数値を「15 → 22」に書き換えるだけでも直るが、**次に別セッションがマージしたらまた同じことが起きる**。
+したがって直し方は同じ——**数値の置き場所を変えたまま、値だけ更新する**。
 
 ### 7.5 残ったこと（本 PR では扱っていない）
 

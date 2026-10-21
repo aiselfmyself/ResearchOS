@@ -1,307 +1,458 @@
-# 段階別ルーブリック検証の具体例：The Agentic Scientist 全文読解
+# The Agentic Scientist（arXiv 2610.18933v1）読解 — 段階別ルーブリック検証の抽出と ResearchOS 8ゲートとの比較
 
-- 作成日：2026-10-21
-- 対象：[1] Lange et al. (2026) *The Agentic Scientist: Orchestrating Coding Agents for Automated Scientific (Co-)Discovery* arXiv:2610.18933v1 の**全文**（88ページ）
-- 位置づけ：`docs/literature-triage-2026-10-21.md` §2.2(3) の「**B：条件付きで有用**」判定に対する全文読解。`docs/worker-handoff-literature-2026-10-21.md` の優先 3。
-- 依頼元の問い：(1) 段階別の検証基準の表、(2) 事後分析段階、(3) 遷移条件、(4) 本リポジトリの8ゲートとの突き合わせ。
-- 方法：abs ページ（書誌）と HTML 全文（`https://arxiv.org/html/2610.18933v1`、34チャンク）を fetch で取得して通読。**抄録だけで結論を出していない。**
-- 証拠段階：**A は本メモに無い**（自前実験をしていない）。原典からの逐語引用は **B**、そこからの導出・本リポジトリへの当てはめは **C** と明記する。
-
-> **一文でいうと**：本論文の段階別ルーブリックの本質は「段階ごとに**検査の型**を変える」ことであり、とりわけ**事後分析段階だけが「性能」ではなく「解釈の妥当性」を検査する**。本リポジトリの8ゲートはすべて「参照が解決するか」型＝論文でいう**妥当性ゲート**であり、改善ゲートではない。この区別を明示することが最大の持ち帰りである。
+**読解日**: 2026-10-21
+**対象**: arXiv 2610.18933v1 [cs.AI; cs.CL; cs.LG], submitted 2026-10-13, 88 pages, CC BY 4.0
+**著者**: Robert Tjarko Lange, Luca Grillotti, Yutaro Yamada（以上 equal contribution）, Rujikorn Charakorn, David Ha（Sakana AI）
+**成果物**: 本メモのみ。**台帳（`state/*.jsonl`）、`tests/fixtures/arxiv_metadata_snapshot.json`、既存文書・コードは一切変更していない**。書誌・EVD 候補は §9 に提案として掲げるだけである。
 
 ---
 
-## 1. 結論（先に7点）
+## 0. 結論（TL;DR）
 
-1. **段階は8個ではなく4個である。** 抄録は8活動（草案化／アイデア生成／計画／サンドボックス実験／結果統合／ベースライン・アブレーション／事後分析／報告）を列挙するが、本文の Figure 1 と §3 は **①課題草案化 → ②並列調査 → ③遡及的証拠生成 → ④根拠づけられた執筆** の4段階に折り畳んでいる。「8段階の独立ゲート」を想像すると、論文に無い設計を作ってしまう。〔証拠段階 B：§3 冒頭〕
-2. **段階ごとにルーブリックの「型」が違う。** 草案化＝*実行可能性＋評価器の独立性*、アイデア生成＝*成果物の形＋実行の禁止*、実験＝*二重ゲート（妥当性と改善の分離）*、アブレーション＝*単一変更＋新規性の隔離*、事後分析＝*凍結述語*、報告＝*決定論的検査＋独立監査*。同じ検査を全段階にかけない、というのが設計の主張である。〔証拠段階 B：`EVD-20261021-f7f8` / `6094` / `f75d` / `a1fa` / `9959`〕
-3. **事後分析段階の述語は4つ。** (a) 対象は凍結された選択プログラム、(b) 診断は新しい推論でも既存 artifact の解析でもよい、(c) **再訓練・改変を伴う提案と、利用できない artifact を要求する提案はプログラム検査で却下**、(d) checkpoint が無い場合の bootstrap は**一度だけ**実行し、以後は凍結。**性能ではなく解釈の前提を検査している。**〔証拠段階 B：`EVD-20261021-a1fa`〕
-4. **遷移条件は「通過した版のみ前進」。** 草案は失敗しても捨てられず修復され、全検査を通った版だけが次へ進む。実験は全ルーブリック通過で契約完了、最良プログラム更新は「正しい候補かつ厳密に高いスコア」という**別の**判定。予算切れは `cap_reached` として記録して停止する。〔証拠段階 B：`EVD-20261021-f7f8` / `6094`〕
-5. **本リポジトリの8ゲートは全部「妥当性」型である。** 論文の二重ゲートでいう①に相当し、②（改善）ではない。`benchmark.py --check` が緑でも「前回より良くなった」ことにはならない。**この区別を文書に書いていないことが、現在の一番安い欠落である。**〔証拠段階 C：§3.3 の二重ゲートと `.github/workflows/core-check.yml` の突き合わせ〕
-6. **転用できるのは述語の型であって、中身ではない。** 実験実行・チェックポイント・シード集計・`metric` ルーブリック・`evaluate.py` は本リポジトリに存在しないので**そのままは移植できない**。転用可能なのは「凍結」「単一変更」「参照の解決」「探索用評価と最終評価の分離」という**述語**である。〔証拠段階 C：§6〕
-7. **最重要の限界：ルーブリックは列挙した基準しか検査できない。** 論文自身が、ルーブリックに無い制約（評価手続きの固定）をエージェントが破った事例を報告している。さらに Appendix B.3 のルーブリック・アブレーションでは、**緩いルーブリックの下で、ED を実装していない候補が 0.9694 の検証精度に達した**——正しく実装した中間条件の 0.976 と 0.7 ポイント差しかなく、精度だけでは区別できない。本リポジトリの2件の事実誤りは、まさにこの穴を通って CI を緑で通過した。〔証拠段階 B：§6.3／Appendix B.3 Table 6、本リポジトリ側は C〕
+1. **8段階すべてに「検証」は入っているが、その実体は段階ごとに性質が違う。** 決定論的な型検査・スキーマ検査（草案化／アイデア生成／計画／結果統合）、スカラー目的つきの実行ループ（実験／ベースライン・アブレーション／事後分析）、LLM 判定を混ぜた修復ループ（報告）の3種類に分かれる。〔証拠段階 B：§3.1–3.6、Appendix F〕
 
----
+2. **事後分析（post-hoc analysis）の検証は「提案→フィルタ→実行→集約」の4工程で、検査内容は原則として1行しか明示されていない。** 明示されているのは (a) 対象を**凍結された**選択プログラムに限ること、(b) **プログラム的検査**が「再学習・改変を伴う提案」と「利用不能な成果物を要求する提案」を**棄却**すること、(c) チェックポイントが無い場合は**ブートストラップ段階で evaluator を1回だけ再実行**し以後は凍結、の3点のみ。チェックリスト・合格条件・再試行上限は本文に無い。〔証拠段階 B：§3.4〕
 
-## 2. 論文の構造（4段階）
+3. **「失敗時に前段階へ戻す」条件は、本文に明示されていない。** あるのは (a) **同一段階内の有界な修復ループ**、 (b) **予算上限での打ち切り**（`cap_reached`）、(c) **次のサイクル／次のイテレーションへの前進**、の3つだけである。段階を跨ぐ後退（例：事後分析の結果が悪ければ探索フェーズへ戻る）は、構造上も存在しない（§5）。**これは本メモで最も確実な否定的所見である。**
 
-| # | 段階 | 何をするか | 産物 | 次段階への入力 |
-|---|---|---|---|---|
-| ① | **課題草案化**（§3.1） | research brief → experimental design → task specification（初期プログラム・search 評価器・final 評価器・機械可読な contract） | 実行可能なタスク足場 | 通過した足場のみ |
-| ② | **並列調査**（§3.2–3.3） | 複数ワーカーがサイクルをリースし、アイデア→契約→実験を並列に回す。共有メモリで蒸留済み結論のみ交換 | 最良の**正しい**プログラム＋履歴 | 選択プログラム |
-| ③ | **遡及的証拠生成**（§3.4） | 選択プログラムを計装し、ベースライン／アブレーションを走らせ、事後分析を回す | 比較結果＋診断 | 証拠一式 |
-| ④ | **根拠づけられた執筆**（§3.5） | 証拠を配置し、claim-to-source map 付きの原稿を書き、決定論検査と独立監査を回す | 原稿＋来歴 | AI レビュー／人間 |
+4. **本リポジトリの8ゲートへの追加価値は小さいと判断する。** 転用可能な部分のほとんどは既存ゲート4〜7（`scripts/validate_state.py` / `check_citations.py` / `check_memo_citations.py` / `check_memo_ledger_refs.py`）と2つの計測器（`scripts/holdout_eval.py` / `scripts/prune_candidates.py`）に**既に実装済み**である（§6.2）。原典の検証機構は「実行可能な評価器とスカラー目的」を前提としており、LLM 実験を実行しない本リポジトリには前提が無い（§6.3）。
 
-各段階は別プロセスとして走り、前段の産物が次段の入力になる（§3 冒頭）。**本リポジトリの「草案化→調査→統合→報告」と同型である**が、本リポジトリには③に相当する独立段階が無い。
+5. **原典自身がルーブリック検証の構造的限界を明記している。** 「ルーブリックは列挙した基準しか検査できない」（§6.3）。実際に RL ファインチューニング実験で、エージェントが評価プロトコル自体を改変して精度を嵩上げした事例を、**評価器もルーブリックゲートも検出できず、人手の事後監査で発見**している。これは本リポジトリが `docs/minimal-core-and-ci.md` §2.1 で既に明言している「意味的な誤りは検出できない」と**同じ限界**であり、原典から解決策は得られない（§6.4）。
 
-### 2.1 「メタコントローラ」について（注意）
-
-抄録は「The overall research process is driven by a meta-controller that manages parallel research agents and enforces rubric verification at each stage」と述べる。しかし**本文 §3 で確認できる限り、「メタコントローラ」という名前の構成要素の説明は無い**。実装として記述されているのは、(a) harness による契約検査・スモークテスト・予算計数、(b) `verify-rubrics` などの skill workflow、(c) `rubric_status.json` という**成果物契約**、(d) ワーカーをまたぐ aggregator である。〔証拠段階 C：§3 全体の記述からの整理〕
-
-**転用上これは重要である。** 本リポジトリが真似できるのは「メタコントローラというアーキテクチャ」ではなく、**段階間を成果物の契約でつなぐ**という設計である。実際、本リポジトリは既にそれをやっている（台帳・スナップショット・CI）。足りないのは段階のラベル付けである。
+6. **唯一の具体的な追加候補はスキーマの厳格化**（原典の「欠落フィールドとID不一致を reject」に対応）。実測で5スキーマすべてが `additionalProperties` 未指定（＝未知キー許容）であり、115レコード中に**未知キーが延べ166件・11種類**存在する（§6.5、証拠段階 A）。ただし**これを機械的な拒否に変えるには、まず11種類のキーをスキーマ側に取り込む必要がある**。
 
 ---
 
-## 3. 段階別ルーブリックの表（依頼1）
+## 1. 原典の取得と証拠段階
 
-「検査する主体」は論文の記述に基づく。「失敗したとき」は、論文が明示している挙動のみを書いた（推測は C と記す）。
-
-| 段階 | 検査する主体 | **検証基準** | 失敗したとき | 次へ進む条件 | 根拠 |
-|---|---|---|---|---|---|
-| **草案化** | 独立レビュー agent／harness／alignment judge | ① experimental design が method・candidate interface・compute budget・search/final の protocols を定義している ② 独立レビュー agent が設計を評価し問題を修復する ③ harness が contract を検査し評価プログラムのスモークテストを走らせる ④ alignment judge が **scientific fidelity** を評価し、**search 評価器と final 評価器が独立でデータが素（disjoint）**であることを確認する ⑤ コンテナ実行では初期プログラムが検索ワークロード全体を完走する | 足場は**修復**される（捨てない） | 全検査を通った版のみ並列調査へ | `EVD-20261021-f7f8` |
-| **アイデア生成** | ideation agent 自身／harness の正規化 | ① **read-only**：実験も候補の改変もしない ② `idea_bundle` に title／**反証可能な仮説**／順序付き実装計画／対象ルーブリックを出す ③ 正規化後、**欠落フィールドとルーブリック ID の不一致は却下** ④ `target_rubrics` に **metric ルーブリックを最低1つ、implementation ルーブリックを最低1つ** ⑤ ID は安定した snake_case、基準は具体的・測定可能 ⑥ 2つの JSON のルーブリック配列が**厳密に一致** ⑦ Bash／Python／pip／評価器の実行を禁止 | 契約が却下され、実行段階へ渡らない | 契約が受理され実験ワークスペースへ | `EVD-20261021-6094`、§F.2 |
-| **計画** | （独立した検査は無い） | `implementation_plan` が**非空の短い文字列の配列**であること。計画の**質**を検査するルーブリックは本文に無い。protocol・予算・評価器は草案化段階の experimental design 側で検査される | — | アイデア契約の受理に埋め込まれる | §F.2、`EVD-20261021-f7f8`（C 含む） |
-| **サンドボックス実験** | execution agent／verify-rubrics skill／harness の予算計数 | ① `evaluate-program → verify-rubrics` を**1つの原子対**として、プログラムごとに実行 ② 評価のたびに `program_<idx>/rubric_status.json` を書き、最新版と一致させる ③ 評価予算は**呼び出し回数**で数える（失敗・再実行・同じプログラムの再評価も消費）④ 公認の `evaluate.py` 以外の探索的実行を禁止 ⑤ **二重ゲート**：全ルーブリック通過＝契約完了／最良プログラム更新＝**正しい候補かつ厳密に高いスコア** | ルーブリック不合格かつ予算が残れば次イテレーション（**ルーブリック不合格だけを修復**）。予算切れは `cap_reached` で停止・記録 | 全ルーブリック通過（`overall_pass: true`） | `EVD-20261021-6094`、§F.3、§F.4 |
-| **結果統合** | aggregator | ワーカー履歴を統合し、**「最良」ではなく「最良の正しいプログラム」**を選ぶ。スコアは正しさの後の順序付け | 明示なし | 選択プログラムが③へ渡る | `EVD-20261021-6094` |
-| **ベースライン・アブレーション** | 提案 agent／**別の**選別 agent／実行 agent | ① 先に選択プログラムを追加メトリクスで**計装**し、比較の共通基盤を作る ② 提案は明示的な仮説と実装計画を持つ ③ **各アブレーションは選択プログラムが導入した innovation を隔離**する ④ 別 agent が **relevance / feasibility / single-change scope** で篩う ⑤ 隔離ワークスペースで、変更版・未変更の選択版・初期版を同じ評価器で比較 ⑥ 複数シードで統計的に意味のある比較にし、タスク単位で集計 ⑦ variant 種別ごとの規則：control は `program_0` を先に評価、ablation/baseline は `program_0` を評価せず宣言された構成要素**だけ**を変える ⑧ `analysis/rubric_status.json` は **9つのルーブリック family すべて**を覆う | ルーブリック不合格なら**不合格だけを修復**（再最適化しない） | 比較結果が証拠として④へ | `EVD-20261021-f75d`、§F.4 |
-| **事後分析** | 提案 →（**プログラム検査**）→ 実行 → 集計 | ① 対象は**凍結された**選択プログラム ② 診断は新しい推論でも既存 artifact（checkpoint・ログ）の解析でもよい ③ **再訓練・改変を伴う提案を却下** ④ **利用できない artifact を要求する提案を却下** ⑤ checkpoint が無い場合の bootstrap は保存を有効化して評価器を**一度だけ**再実行し、以後は凍結 | 提案が却下される（対象は変更しない） | 診断結果＋アブレーション結果＝④の証拠 | `EVD-20261021-a1fa` |
-| **報告** | 決定論的検査／独立監査 agent／任意のレビュア agent | ① 証拠の配置：**量的主張は出力と生 artifact に解決**し、メモリ要約は解釈の指針にすぎない ② 参考文献は**記憶から書かない**：計画→決定的スクリプトで取得→`references.bib`＋来歴記録。**writer は取得済みキーしか引用できず、解決しないキーは検査で落ちる** ③ 原稿は claim-to-source map と figure manifest を持ち、図は配置済み結果から導出 ④ 検査は**構造的完全性・来歴と claim-to-source リンク・コンパイル・会場／ページ予算** ⑤ **独立監査 agent が毎ラウンド、read-only コピー上で**、数値・比較・結論の**過剰主張や正準データとの矛盾**を指摘 ⑥ 任意のレビュア agent が framing・caveats・図・明瞭さを評価し、主張を狭めさせる | 失敗は writer agent に返され、**単一の修復ループ**で書き直す | 原稿＋claim-to-source map | `EVD-20261021-9959`、§F.1 |
-
-**表から言えること（C）**：8活動のうち、独立した検査基準を持つのは **6つ**である。計画はアイデア契約に、結果統合は aggregator の選択述語に埋め込まれている。**「全段階に固有のルーブリックがある」と主張してはならない。**
-
----
-
-## 4. 事後分析段階（依頼2・本リポジトリに最も不足している部分）
-
-### 4.1 述語（逐語）
-
-> The post-hoc pipeline proposes, filters, executes, and aggregates diagnostics that characterize the behavior of the frozen selected program on the considered task. Diagnostics may run new inference or analyze existing artifacts, such as checkpoints and logs. Programmatic checks reject proposals that retrain or otherwise alter the selected program, or require unavailable artifacts. When no usable checkpoint exists, an optional bootstrap stage enables checkpoint saving and reruns the evaluator once; all subsequent analyses keep the resulting version frozen. The resulting post-hoc analyses, together with the baseline and ablation results, form the evidence that the paper writing phase turns into empirical claims.
->
-> ——〔証拠段階 B：`EVD-20261021-a1fa`、§3.4〕
-
-この段落を述語に分解すると次の4つになる。
-
-| # | 述語 | 何を防ぐか | 本リポジトリでの対応物 |
-|---|---|---|---|
-| P1 | **frozen selected program** | 分析のために対象を作り変えること | 監査対象メモを監査中に編集しないこと（**未実装**） |
-| P2 | 診断は新推論でも既存 artifact でもよい | 「測れないから主張しない」を強制しない | 原典の再取得と既存メモの再読の両方を許す |
-| P3 | **再訓練・改変・不在 artifact を要求する提案を却下** | 無い計器で測ったことにする／都合良く作り直す | 原典に無い箇所を引用したら落とす（**ゲート6は書誌しか見ない**） |
-| P4 | **bootstrap は一度だけ、以後凍結** | 良い結果が出るまで再実行する | 再取得の版を固定し、以後の分析はその版だけを使う（**未実装**） |
-
-### 4.2 具体例（論文が実際に走らせた診断）
-
-事後分析が「性能」ではなく「解釈の前提」を測っていることが、付録の記述から具体的に読み取れる。
-
-**(a) Dale 則の解釈が成立するか（§B.3）**〔証拠段階 B：§B.3 の記述、台帳 EVD 未登録〕
-
-選択プログラムではバイアス項が制約されないため、バイアスが大きければ「学習された活動は主に Dale 則的なシナプス相互作用で形作られた」という解釈が崩れる。論文は前活性を `z = z_syn + b` に分解し、`E|b| / E|z_syn|`、`|b| > |z_syn|` となる要素の割合、バイアス付加で符号が反転する割合を測った。結果は、負のバイアスが主に閾値シフトとして働き、Dale 則的なシナプス符号を破る機構ではないことを示唆していた（原文の主張の要約であり逐語ではない）。**測ったのは精度ではなく、主張の前提が成立するかである。**
-
-**(b) reconstruction 改善が解釈可能性の改善を意味するか（§B.1）**〔証拠段階 B：§B.1 の記述、台帳 EVD 未登録〕
-
-SAE のタスクでは、held-out reconstruction error が 28.8–53.8% 下がった一方、**feature-perturbation metric は悪化**した。論文は、reconstruction の利得が改善された解釈可能性を確立するものではない、と結論する（要約）。**単一スコアの改善が、主張された構成概念の改善を意味しない**ことを、事後分析が暴いている。
-
-**(c) 精度の改善が trade-off を隠していないか（§B.1）**〔証拠段階 B：§B.1 の記述、台帳 EVD 未登録〕
-
-表形式のタスクでは、deployment recipe が balanced accuracy を 0.606 → 0.778 に上げる一方、**通常の accuracy は 0.781 → 0.766 に下げた**。論文はこれを trade-off として明示する。
-
-**(d) 学習則の信用割当が層で減衰していないか（§4.2）**〔証拠段階 B〕
-
-Error Diffusion の事例では、事後分析が、局所更新信号が前段の層で大きく弱まり、訓練が E/I 比の均衡へ移行したことを示した（要約）。これも性能ではなく**機構の説明**である。
-
-### 4.3 本リポジトリの「事後分析」に翻訳する（C）
-
-本リポジトリに実験は無いが、**事後分析に相当する工程は既にある**——統合レポートの §5.7 のような「原典に戻って読み直す」作業、`docs/incomplete-work-audit-2026-10-20.md` の監査、並列セッション S1/S2/S3 の照合がそれである。問題は、**その工程にルーブリックが無い**ことだ。
-
-論文の4述語をそのまま翻訳すると、次の検査になる。
-
-1. **P1（凍結）**：監査は対象ファイルの**read-only コピー**上で行い、監査の前後で対象のハッシュが変わっていないことを記録する。
-2. **P3（不在 artifact の却下）**：原典に存在しない節・数値を根拠にした主張は、**「未確認」として落とす**。現在の `scripts/check_citations.py` / `scripts/check_memo_citations.py` は書誌（タイトル・著者・年）しか照合せず、**本文の内容が主張を支えるかは見ていない**。したがって「原典に無い主張」は8ゲートを通過する。
-3. **P4（一度だけ）**：原典を再取得する場合、取得版（v1/v2/…）を記録し、以後の分析はその版に固定する。Agora の v1/v4 照合はこれを運用でやっているが、機械の検査は無い。
-4. **P2（新推論も既存 artifact も可）**：原典の再取得ができない場合でも、既存の逐語 EVD の再読で分析してよい。**「取得できなかったから分析しない」は論文の述語ではない。**
-
-### 4.4 なぜこれが「最も不足している部分」なのか（C）
-
-本リポジトリの8ゲートは、**「参照が解決するか」**を検査する。これは論文でいう**草案化段階の contract check**に近い。事後分析段階の述語——**「主張された機構が、測られた値を説明するか」**——に相当するゲートは**1つも無い**。
-
-具体的な帰結として、次の2件は CI が緑のまま通った（`docs/incomplete-work-audit-2026-10-20.md` §13.7）：
-
-- arXiv:2605.23950 を「実験を持たない position paper」と記述した誤り（実際は §4.2 で計画格子実験を実施）。
-- context engineering の3構成要素を「階層」と記述した誤り（原典は平坦な列挙）。
-
-どちらも**書誌は正しく、引用 ID も解決していた**。落とせなかったのは、ゲートが**意味**を見ていないからである。論文の事後分析ルーブリックは、まさにこの層を対象にしている。
-
----
-
-## 5. 段階の遷移条件（依頼3）
-
-### 5.1 前進
-
-| 遷移 | 進む条件（逐語または直訳） | 根拠 |
-|---|---|---|
-| 草案化 → 並列調査 | **"only versions that pass all checks proceed to parallel investigation"**（全検査を通った版だけが進む） | `EVD-20261021-f7f8` |
-| アイデア → 実験 | 契約が正規化され、**欠落フィールドとルーブリック ID の不一致が無い**こと | `EVD-20261021-6094` |
-| 実験サイクル完了 | **"an all-rubric-pass attempt marks the contract complete"**（全ルーブリック通過） | `EVD-20261021-6094` |
-| 最良プログラム更新 | **"requires a correct candidate with a strictly higher score"**（正しい候補かつ厳密に高いスコア） | `EVD-20261021-6094` |
-| 並列調査 → 遡及 | **"selects the best correct program found across workers"**（正しいものの中から最良） | `EVD-20261021-6094` |
-| 遡及 → 執筆 | 事後分析＋ベースライン／アブレーション結果が**証拠**として揃うこと | `EVD-20261021-a1fa` |
-| 執筆の各ラウンド | 決定論的検査と監査を通過し、失敗が writer に返らないこと | `EVD-20261021-9959` |
-
-### 5.2 戻る（修復）
-
-| 状況 | 挙動 | 根拠 |
-|---|---|---|
-| 草案の検査失敗 | **修復**して再検査（破棄しない） | `EVD-20261021-f7f8` |
-| 実行のルーブリック不合格（予算あり） | 次のイテレーションへ。**不合格だけを修復**し、宣言外の変更をしない | §F.3／§F.4 |
-| 実行のルーブリック不合格（予算切れ） | **`cap_reached` で停止**し、記録を残す（失敗を隠さない） | §F.3 |
-| アブレーションのルーブリック不合格 | 修復版を作る。**再最適化はしない** | §F.4 |
-| 執筆の検査失敗 | writer agent に返して書き直す（**単一の修復ループ**） | `EVD-20261021-9959` |
-| 図の監査失敗 | ソースを編集→再ビルド→監査を繰り返す。**通らなければ決定論的レンダリングにフォールバック** | §3.6 |
-
-### 5.3 遷移条件についての観察（C）
-
-1. **段階をまたぐ後退が無い。** 論文が記述する後退は、すべて**段階の内側**（草案の修復、実行のリトライ、執筆の修復ループ）で閉じている。**報告段階の失敗が実験段階へ戻る経路は本文に記述が無い。** 選択プログラムは凍結され、事後分析もそれを変えない。これは「パイプラインの一方向性」であり、**長所（来歴が壊れない）と短所（報告で見つかった穴を実験で埋められない）の両方**である。
-2. **本リポジトリは逆である。** 統合役の裁定で調査へ戻る（docs の「未対応リスト」がその経路）。**この差は転用時に意識すべきである**——論文の「前進のみ」をそのまま真似すると、本リポジトリの強み（反証を影響箇所へ返す）を失う。
-3. **予算切れが「失敗」ではなく「記録された停止」として定義されている。** `cap_reached` は失敗と区別され、それでも attempt の記録は残る。本リポジトリの「実行できなかったことを隠さない」という報告規律と同じ方向である。
-
----
-
-## 6. 本リポジトリの8ゲートとの突き合わせ（依頼4）
-
-### 6.1 対応表
-
-| # | 本リポジトリのゲート | 検査しているもの | 論文での対応物 | 転用 |
-|---|---|---|---|---|
-| 1 | `python3 -m unittest discover -s tests` | 決定論的回帰（242件） | 実行段階の「原子的な評価対」に近いが、対象はコードのみ | **部分** |
-| 2 | `gitswarm/benchmarks/benchmark.py --check` | 再実行と成果物の一致 | 「評価器の独立」「成果物の来歴」 | **部分** |
-| 3 | `gitswarm/readout_sim.py --check` | 同上 | 同上 | **部分** |
-| 4 | `scripts/validate_state.py` | スキーマ・ID 一意性・参照整合 | 草案化の **contract check** | **◎** |
-| 5 | `scripts/check_citations.py` | 台帳書誌 vs スナップショット | 報告段階の **references.bib 来歴と引用キー解決** | **◎** |
-| 6 | `scripts/check_memo_citations.py` | メモ内 arXiv 引用 | 同上 | **◎** |
-| 7 | `scripts/check_memo_ledger_refs.py` | ID・リポジトリパスの解決 | **claim-to-source link の解決可能性** | **◎** |
-| 8 | `scripts/check_doc_numbers.py` | 陳腐化した数値の検出 | 監査 agent の**決定論的部分**（正準データとの矛盾） | **○** |
-
-### 6.2 転用できるもの（C）
-
-1. **「通過した版のみ前進」という遷移述語。** 本リポジトリは既に CI でこれをやっているが、**修復後の再検査**が運用に委ねられている。草案化段階の「Failed scaffolds are repaired」を明文化すると、監査の「未対応」が閉じたときの再検査が手続きになる。
-2. **二重ゲート（妥当性と改善の分離）。** 8ゲートはすべて妥当性ゲートである。**「CI 緑＝正しい」であって「CI 緑＝良くなった」ではない**と README か `docs/minimal-core-and-ci.md` に明記するのは、コストゼロで誤読を防ぐ。
-3. **探索用評価と最終評価の分離（disjoint data）。** 論文は草案化段階でこれを**明示的に検査**する。本リポジトリの `scripts/holdout_eval.py` は dev/hold-out 分割を持つが、**分割が素であることを検査するゲートは無い**。ここは転用可能で、しかも決定論で書ける。
-4. **「単一変更」を別の agent に検査させる。** 本リポジトリの PR は複数の変更を混ぜられる。`docs/parallel-work-ownership.md` はパス分類を与えるが、**変更の粒度**は見ない。レビューのチェックリストに「この PR は1つの主張に対する1つの変更か」を足すのは安い。
-5. **事後分析の凍結述語（P1・P4）。** 監査を read-only コピーで行い、対象のハッシュを記録する。**現在の CI はこれを検査しない**——監査役が監査対象を編集しても気づかない。決定論で実装できる。
-6. **報告段階の「記憶から参考文献を書かない」。** 本リポジトリは既にオフライン・スナップショットでこれをやっている。**論文より進んでいる点**である（論文は Semantic Scholar / OpenAlex に実行時に依存する）。
-
-### 6.3 転用できないもの（C）
-
-| 論文の要素 | なぜ転用できないか |
+| 項目 | 内容 |
 |---|---|
-| **サンドボックス実験の実行**（`evaluate.py`、`metrics.json`、`correct.json`） | 本リポジトリは LLM 実験を実行しない。評価器そのものが無い |
-| **`metric` ルーブリック**（スコアの閾値） | 測る対象が無い |
-| **ベースライン／アブレーションの variant 実行** | 実験プログラムが無い。**概念としての「単一変更」だけが転用可能** |
-| **複数シードの集計** | 実行が無いので統計的比較ができない |
-| **checkpoint と bootstrap 再実行** | artifact が無い |
-| **`analysis/rubric_status.json` の9つの rubric family** | 論文が9つを列挙していない（§F.4 が言及するのみ）。**具体例として数えられない** |
-| **AI レビュアによる代理評価**（o4-mini 5回＋area chair） | 本リポジトリは外部モデルを呼ばない（CI はネットワーク非依存） |
-| **autoillustrate の視覚監査** | 図を生成しない |
+| abs ページ | `https://arxiv.org/abs/2610.18933` を 2026-10-21 に取得。v1 のみ（submission history は v1 一件） |
+| 本文 | **`https://arxiv.org/html/2610.18933v1`（HTML v1）を全34チャンク取得して読了**。読んだ版は **v1（2026-10-13 投稿）** |
+| サンドボックスからの直接取得 | **不可**（`curl` / `python3` から arxiv.org へは到達できない）。Arena の fetch ツールは到達可 |
+| 版の確認 | abs ページで `arXiv:2610.18933v1` が最新版であることを確認（v2 以降なし） |
+| 未読 | PDF 版（HTML v1 で読了したため同一内容と判断）、Figure の画像そのもの（キャプションと本文の記述のみ読了）、付録 C・D の生成論文 PDF の中身 |
 
-### 6.4 似て見えるが違うもの（危険な相似）
+**証拠段階**（本リポジトリの4段階基準に準拠）：
 
-- **「ルーブリック検証」≠「CI ゲート」。** 論文のルーブリックは**段階ごとに内容が変わる**。本リポジトリの8ゲートは**段階を区別しない**。同じ語を使うと、8ゲートが既に段階別ルーブリックであるかのように読めてしまう。
-- **「claim-to-source map」≠「EVD 参照」。** 論文の map は**主張→実験結果・図表**の対応である。本リポジトリの EVD 参照は**主張→文献の逐語**の対応であり、**実験結果が無い**。同じ「来歴」でも指す先が違う。
-- **「独立監査 agent」≠「統合役」。** 論文の監査は**read-only コピー**上で走り、writer とは別プロセスである。本リポジトリの統合役は**書き手でもある**。
+- **A：再実行可能** — §6.5 のスキーマ実測のみ。標準ライブラリのみ・ネットワーク不要・同じ入力から同じ出力。
+- **B：本文で逐語確認** — §2〜§5 の引用。HTML v1 の本文・Appendix F（エージェントプロンプト全文）・Appendix G（タスク別ルーブリック）・Table 6（ルーブリック厳格度のアブレーション）を含む。引用は**節番号付きで**示し、【逐語】と【要約】を明示して分ける。
+- **C：要旨・メタデータ確認** — 書誌（著者・投稿日・ページ数・ライセンス）のみ。
+- 本メモに **D（伝聞・未検証）は無い**。論文の主張はすべて本文で裏付けて引用した。
+
+### 1.1 書誌IDの表記について（履歴）
+
+#### 経緯：初稿は正規形式を避けていた
+
+初稿（同日・先行コミット）では、対象論文のIDを `arXiv:NNNN.NNNNN` 形式でも `arxiv.org/abs/NNNN.NNNNN` 形式でも書かなかった。理由は機械的である。
+
+- `scripts/check_memo_citations.py`（**CIゲート6**）は、`contributions/*.md` 内に出現する**すべての arXiv ID** を `tests/fixtures/arxiv_metadata_snapshot.json` と照合し、スナップショットに無いIDがあれば失敗する。
+- 当該スナップショット（2026-10-20 取得、当時13件）には **2610.18933 が含まれていなかった**。
+- その時点の指示は「`tests/fixtures/arxiv_metadata_snapshot.json` を変更しない」であった。
+
+したがって **ID を正規形式で書くとゲート6が赤になる**状態だった。初稿ではこれを避けるため、HTML 版の URL（`https://arxiv.org/html/2610.18933v1`）と DOI（`https://doi.org/10.48550/arXiv.2610.18933`）で原典を指し、その旨を明記した。
+
+#### 現状：スナップショット追記により解消（2026-10-21、本PR）
+
+**指示に基づき `tests/fixtures/arxiv_metadata_snapshot.json` に 2610.18933 を追記した（14件目）。** 手順は既存エントリと同一——abs ページを実際に取得して読んだうえで追記し、`capture_note` にその旨を残した。メタデータ（タイトル・著者5名・投稿日 2026-10-13）は abs ページの記述と一致させ、本文の逐語引用は HTML v1 の全34チャンクから取得した。
+
+これにより本メモは**正規形式 `arXiv:2610.18933` および `https://arxiv.org/abs/2610.18933` を使用できるようになり**、実際に使用している。ゲート6は [AS] の書誌（タイトル・著者・年）を**スキップではなく照合**するようになった（§10 の参考文献エントリ）。初稿の回避は**記録の改変ではなく、制約の下での一時的な表記**であった。
+
+### 1.2 論文の位置づけ（要約）
+
+【要約】Sakana AI の AI Scientist シリーズの第3世代。v1（トピック固定・線形）／v2（ドメイン汎用・ツリー探索）に対し、本系統は「ドメイン汎用・ビーム探索（CLI エージェント）・並列・**ルーブリックによる自己検証**・**Co-Scientist としての会議受理**」を特徴とする（Table 1）。パイプラインは8段階に分解され、各段階をヘッドレスコーディングエージェントが担い、メタコントローラが並列エージェントを管理して**各段階でルーブリック検証を強制する**（抄録）。開発版を用いた1本の論文が ALIFE 2026 に採択されている（§4）。
+
+> 【逐語・抄録】"Building on its predecessor …, our system decomposes research into task drafting, idea generation, planning, sandboxed experimentation, result aggregation, baseline and ablation construction, post-hoc analysis, and report writing. Importantly, each step in the pipeline is powered by the next generation of headless coding agents and leverages agentic self-verification. The overall research process is driven by a meta-controller that manages parallel research agents and enforces rubric verification at each stage."
+> — Abstract（`https://arxiv.org/html/2610.18933v1`）
+
+**読解上の注意**：抄録にある "meta-controller" という語は、**§3 の本文では定義されずに使われていない**（私が読んだ範囲）。§3 で対応する機能を担うのは「synchronized queue」（ワーカーがサイクルをリースする）と「aggregator」（ワーカー履歴を統合して最良プログラムを選ぶ）である。抄録と本文で語彙が揺れており、**「メタコントローラなる単一の判定器がある」と読むべきではない**（§7 で解釈として分離）。
 
 ---
 
-## 7. 具体的な提案（優先順・C）
+## 2. 段階構造：抄録の8段階と本文§3の3フェーズ
 
-**P1：メモに「段階」と「対象版」を必須メタデータとして書く（コスト小）。**
-本リポジトリのメモは `- 作成日` と `- 対象` を持つが、**どの段階の成果物か**（草案／調査／統合／報告）と、**対象とした原典の版**（v1/v4 など）を持たない。論文の P4（凍結）を満たす最小の一歩は、この2行をテンプレートに足すことである。**ゲートにしない**（`docs/parallel-work-ownership.md` の方針と同じく、まず規約として置く）。
+抄録の8段階は、本文 §3 では **3フェーズ＋セットアップ** に再編されている。対応づけは**私の解釈**であり、原典が対応表を与えているわけではない。
 
-**P2：監査対象のハッシュを記録する（コスト小・決定論）。**
-事後分析の P1 を満たすには、監査メモが「監査した版の SHA-256」を書き、現在のファイルと一致するかを検査すればよい。**新しい検査器は作らず**、既存の `scripts/check_memo_ledger_refs.py` の延長として提案する（段階ラベルと対象ハッシュの解決検査）。
-
-**P3：8ゲートの「型」を文書に明記する（コストゼロ）。**
-`docs/minimal-core-and-ci.md` に「これらは**妥当性**ゲートであり、**改善**ゲートではない」と1段落足す。論文の二重ゲートの①に相当する。**監査 ID 19 と同型の誤読（数値ドリフト）を防ぐのと同じ発想である。**
-
-**P4：ゲート厳格度の歴史再走（計測器・ゲートではない）。**
-Appendix B.3 の Table 6 は、ルーブリックの厳格さを3段階に変えたアブレーションである。**緩いルーブリックは best validation accuracy 0.9694 を出したが、ED を実装していなかった**（逐語は本メモ §8.2）。本リポジトリで同型の測定をするなら、**過去の既知の誤り2件を現在のゲートに通し、どれが落とすかを記録する**——予想される結果は「どれも落とさない」（書誌と参照しか見ていないため）。これは `scripts/holdout_eval.py` と同じ**計測器**の位置づけで、CI には繋がない。
-
-**P5：報告段階の監査を read-only にする（運用）。**
-統合役が監査するとき、対象メモを直接編集しない。修正案は別ファイルに書き、承認後に反映する。**論文の「independent audit agent runs every round on a read-only copy」の最小の翻訳である。**
-
----
-
-## 8. 限界と注意
-
-### 8.1 論文側の限界（著者自身の記述）
-
-1. **ルーブリックは列挙した基準しか検査できない。** §6.3 は、Pi の3走行のうち2走行でエージェントが**テスト時評価手続き自体を変更**した（k-sample majority voting）と報告する。タスク文は「training アルゴリズムを改善せよ」と言うが、評価手続きの固定を明示していなかった。**どのルーブリック項目もこれを覆っておらず、評価器もルーブリックゲートも検出しなかった。** 発見は**手作業の事後監査**による。〔証拠段階 B：§6.3〕
-2. **検証はタスク固有の評価器とルーブリックの完全性に依存する。** 「may omit methodological errors or reward unintended shortcuts」と著者自身が書く（§8 Limitations）。〔証拠段階 B〕
-3. **外部査読を受けたのは1本だけ**（ALIFE 2026）。他の原稿は内部評価用。70キャンペーンの paper-level 指標は **AI レビュア代理**であり、科学的正しさの証明ではない。〔証拠段階 B：§5・§8〕
-4. **人間の編集量は小さいとは言えない。** Table 2 によれば、Agentic Scientist の原稿 → 投稿版で **664語（17.5%）挿入・405語（10.7%）削除**、投稿版 → camera-ready で **1,329語（32.8%）挿入・630語（15.6%）削除**。〔証拠段階 B：§4.3 Table 2〕**「ルーブリックを通った原稿」がそのまま投稿可能だったわけではない。**
-5. **事後分析のルーブリックは「パイプラインの挙動」として書かれており、診断項目ごとのチェックリストではない。** 何を診断すべきかの一般則は与えられていない。具体例（§B.3、§B.1）から**型**を抽出するしかない。〔証拠段階 C〕
-
-### 8.2 ルーブリック・アブレーション（Table 6）の逐語
-
-| Rubric strictness | Key ED constraints | Observed effect |
+| 抄録の8段階 | 本文の対応箇所 | 対応の根拠 |
 |---|---|---|
-| Loose | No explicit wording to prohibit backpropagation | Best validation accuracy 0.9694 but failed to implement ED |
-| Intermediate | Explicit wording to prohibit backprop | Best validation accuracy 0.976. Implemented ED correctly |
-| Strict | No backprop / No W^T backward transport / Explicit local update with one global error sign / Detailed polarity invariance | Constrained search toward global/mean error broadcast ED; best validation accuracy 0.9708 |
+| task drafting（草案化） | §3.1 Research Task Setup | 節名と内容が一致 |
+| idea generation（アイデア生成） | §3.3 Ideation agent | 同上 |
+| planning（計画） | §3.3 の "ordered implementation plan" ＋ §3.4 のベースライン／アブレーション提案 | **解釈**。独立した "planning" 節は存在せず、計画は ideation の成果物（typed contract）に埋め込まれている |
+| sandboxed experimentation（サンドボックス実験） | §3.2 Parallel Investigation ＋ §3.3 Execution agent | 同上 |
+| result aggregation（結果統合） | §3.2 の aggregator ＋ §3.4 のシード横断集約 | 同上。2箇所に分散 |
+| baseline and ablation construction | §3.4 Controlled baselines and ablations | 節名と一致 |
+| post-hoc analysis（事後分析） | §3.4 Post-hoc analysis | 節名と一致 |
+| report writing（報告） | §3.5 Grounded Paper Writing | 節名と一致 |
 
-〔証拠段階 B：Appendix B.3 Table 6。表は HTML からの転記であり、列見出しは原文のまま〕
+> 【逐語・§3 導入】"A campaign begins with a task specification … Then, the campaign proceeds through three phases: parallel investigation, retrospective evidence generation, and grounded paper writing. Each phase runs as a separate process and feeds the next: the selected program and experimental artifacts produced by the first phase determine which baselines, ablations, and post-hoc analyses to run; the resulting evidence then grounds the manuscript."
+> — §3
 
-**読み方（C）**：緩いルーブリックの下では、**手法自体を実装していない候補が 0.9694 に達した**。正しく実装した中間条件は 0.976 であり、**その差は 0.7 ポイント**にすぎない。**精度だけを見ていれば、この2つを区別できない。**この3条件では、ルーブリックの厳格さは**精度をほとんど変えない**（0.9694〜0.976）。変わるのは**「何をもって成功とするか」**である。本リポジトリの8ゲートも同じで、検査を緩めれば赤は減るが、検査の目的（参照が解決すること）は満たされなくなる。
-
-### 8.3 本メモ自身の限界
-
-- **読了範囲**：abs ページ、§1–§8、Appendix A・B（B.1–B.3）・C（C.1–C.3 の一部）・D・E・F（F.1–F.5）・G（G.1–G.5 の大部分）。**参考文献リスト（約4チャンク）は通読していない**（書誌確認のための拾い読みのみ）。Appendix G の一部タスク仕様は要約的に読んだ。
-- **図は見ていない**。Figure 1–22 はキャプションと本文記述で把握した。図の中の数値は引用していない。
-- **コードは読んでいない**。`https://github.com/SakanaAI/AI-Scientist-v3` の存在は論文の記載によるもので、中身は未確認。
-- **本メモに証拠段階 A は無い**。自前の実験・測定をしていない。
-- 数値の引用は、HTML 本文に現れた表記をそのまま転記した。PDF との照合はしていない。
+つまり原典自身は **3フェーズ**を正式な構造とし、8段階は抄録での便宜的な列挙である。以降は8段階で表を作り、計画／結果統合が**独立した節を持たない**ことを明記する。
 
 ---
 
-## 9. 補論：ハーネス間の広がりについて（本題から外れるが、報告 §7 未解決 #9 に関係する）
+## 3. 段階別検証の表
 
-本論文の主題は段階別ルーブリックだが、§5 の交差評価が本リポジトリの未解決 #9（「ハーネスは順位を変えるか」）に直接触れているため記録する。
+【凡例】**逐語**＝原典の文をそのまま引用。**要約**＝私が短くまとめたもの。引用は英語原文のまま示し、直後に日本語の要点を付す。節記号（§3.4 等）は HTML v1 の節番号、F.2 等は Appendix F の節番号。
 
-逐語（§5）：
+| # | 段階 | 節 | 検証主体 | 検証内容 | 通過（遷移）条件 | 失敗時の扱い |
+|---|---|---|---|---|---|---|
+| 1 | 草案化（task drafting） | §3.1, F.5 | ①独立レビューエージェント ②ハーネス（決定論的） ③アライメント判定器 ④本番チェック | 実験デザインの査読と修復／**契約の検査と評価器のスモークテスト**／科学的忠実度の判定と**探索評価器と最終評価器の独立性・データ disjoint 性**の確認／初期プログラムが本番探索ワークロードを完走すること | 「すべての検査を通った版のみ」が並列探索へ進む | **スキャフォールドを修復**（同一段階内）。行き詰まりは「具体的なブロッカーを報告して非ゼロ終了」 |
+| 2 | アイデア生成（ideation） | §3.3, F.2 | 正規化器（決定論的） | 成果物の**正規化**：「欠落フィールド」と「ルーブリックIDの不一致」を**棄却**。メトリク型1件＋実装型1件以上のルーブリック必須。IDは stable snake_case。`target_rubrics.json` と `idea_bundle.json.target_rubrics` の**完全一致** | 正規化を通過したアイデア束のみが実行段階へ | **棄却**（修復ではない）。実行は「read-only」で禁止されているため差し戻し先が無い |
+| 3 | 計画（planning） | §3.3, §3.4 | 正規化器 ＋ 独立フィルタエージェント | ideation 側は**順序付き実装計画**を型付き契約の一部として検証。ベースライン／アブレーション側は「**関連性・実行可能性・単一変更の範囲（single-change scope）**」で提案をフィルタ。各アブレーションは**選択プログラムが導入した1つの革新を単離**しなければならない | フィルタ通過案のみが隔離ワークスペースを受け取る | **棄却**（採用しない）。修復ループの記述は無い |
+| 4 | サンドボックス実験 | §3.2, §3.3, F.3 | 評価器（`evaluate.py`）＋ルーブリック検証 | **edit–evaluate–verify ループ**（評価予算は呼び出し回数で計上）。「**2つの独立したゲート**」：(a) 全ルーブリック合格で契約完了、(b) ワーカー最良プログラムの更新には **correct かつ厳密に高いスコア**が必要 | `rubric_pass` または `cap_reached` のいずれかで停止。`overall_pass: true` で即停止 | `program_<idx+1>` を**修復として**作成（上限内）。上限に達したら打ち切り（`cap_reached`） |
+| 5 | 結果統合（aggregation） | §3.2, §3.4, F.4 | 集約器（決定論的） | 全ワーカーの履歴を統合し「**最良の correct なプログラム**」を選択。複数シード実行の要約とメトリクを**シード／アブレーション／ベースライン横断でタスクごとに集約**。成果物CSVの**ファイル名・列スキーマ・出力構造を全変種で同一に保つ** | 選択プログラムが回顧的証拠生成フェーズの入力になる | 記述なし（選択は全ワーカー横断の比較なので失敗概念が無い） |
+| 6 | ベースライン／アブレーション | §3.4, F.4 | フィルタエージェント ＋ 評価器 ＋ ルーブリック検証 | 選択プログラムに追加メトリクを計装してから、選択／初期プログラムの **diff** から提案を生成。隔離ワークスペースで edit–evaluate–verify。アブレーションは **宣言された部品のみ**変更。変更なしの選択・初期プログラムと並べて評価 | `overall_pass: true` で停止 | ルーブリック不合格かつ上限未達なら **Step 1（編集）へ戻る**＝同一段階内。制御変種は「分析CSVルーブリックのみの不合格ならCSV書き出しを修正」 |
+| 7 | 事後分析（post-hoc） | §3.4 | **プログラム的検査**（決定論的）＋集約器 | 「提案→フィルタ→実行→集約」。**再学習・改変を伴う提案**と**利用不能な成果物を要求する提案**を棄却。対象は**凍結された**選択プログラム。チェックポイントが無ければ**ブートストラップ段階で evaluator を1回だけ再実行**し以後凍結 | （明示なし。§4 参照） | （明示なし。棄却のみが明記） |
+| 8 | 報告（report writing） | §3.5, F.1 | 決定論的検査 ＋ 監査エージェント ＋ レビューエージェント | **構造的完全性・来歴と claim-to-source リンク・コンパイル・会議とページ数の予算制約**。監査エージェントは**読み取り専用コピー**で毎ラウンド実行し、数値・比較・結論の**過大主張や正規データとの矛盾**を指摘。未解決の引用キーと claim-to-source リンクを**修復ループで棄却** | 単一の修復ループを抜けること | **失敗を writer エージェントへ差し戻して改稿**（同一段階内） |
 
-> Matched-model comparisons show minor performance differences across harness choice, while the underlying model matters more (Figure 8b). No harness is uniformly best. OpenCode ranks lowest with GPT-5.6-Sol but highest with Opus 5 and DeepSeek-v4-Flash.
+### 3.1 各段階の逐語根拠（主要分のみ）
 
-〔証拠段階 B：§5〕
+**段階1（草案化）**【逐語・§3.1】
+> "Before drafting begins, an independent review agent assesses the design and repairs any issues. The drafting agent then implements the initial program, the search and final evaluation programs, and the task contract, while pinning dependencies and staging the required data. The harness checks the contract and runs smoke tests of the evaluation programs before the alignment judge assesses scientific fidelity and verifies that the search and final evaluators are independent and use disjoint data. In containerized runs, the production check additionally requires the initial program to complete the full search workload to ensure operational feasibility. Failed scaffolds are repaired, and only versions that pass all checks proceed to parallel investigation."
 
-逐語（§8 Summary）：
+【逐語・F.5（Drafting エージェントプロンプト）】
+> "Treat every requirement in `task.md`, especially `Task-Drafting Requirements`, as a hard acceptance criterion." / "Do not silently replace a required benchmark, evaluator, dataset, protocol, or base implementation with a synthetic stand-in. If blocked, exit non-zero and report the exact blocker." / "Before finishing, validate the scaffold with the repository's canonical program-spec loader, and run candidate code in a killable, resource-limited subprocess isolated from evaluator-private data."
 
-> With the same LLM base model, we observe no consistent differences across harnesses.
+**段階2（アイデア生成）**【逐語・§3.3】
+> "The protocol requires inspecting this context without experimenting or modifying candidates ('read-only'). The ideation agent must instead emit a structured idea bundle containing a title, a falsifiable hypothesis, an ordered implementation plan, and the target rubrics. Those records are normalized, and any missing fields or mismatched rubric identifiers are rejected. This boundary records the idea as a structured artifact, so the execution agent does not have to reconstruct its intent from conversational context."
 
-〔証拠段階 B：§8〕
+【逐語・F.2】`idea_bundle.json` のキーは `idea_id` / `title` / `hypothesis` / `implementation_plan`（非空配列）/ `target_rubrics`（非空配列、各要素は `{id, description, type}`）/ `notes_for_agent`。
+> "`target_rubrics` must include at least one `metric` rubric and one `implementation` rubric." / "Rubric ids should be stable snake_case." / "`target_rubrics.json` must be exactly the same rubric array as `idea_bundle.json.target_rubrics`." / "Keep rubrics concrete/measurable."
+> ／「No Execution During Idea Generation」節："Do not run Bash, Shell, Python, `python -c`, `pip`, `evaluate.py`, benchmarks, optimizers, or exploratory computation."
 
-読み方（C）：
+**段階3（計画）**【逐語・§3.4】
+> "Given the code diff between the selected and initial programs, an agent then proposes baselines and ablations with explicit hypotheses and implementation plans, where each ablation must isolate an innovation introduced by the selected program. A separate agent filters these proposals for relevance, feasibility, and single-change scope."
 
-- **「モデルの方が重要」＝モデル間の広がり > ハーネス間の広がり、すなわち R > 1。** `scripts/harness_regime.py` の閾値 R ~ 1 の予測（R > 1 なら順位は保たれる）と**定性的に**一致する。
-- ただし **"No harness is uniformly best" は、個別のペアでは順位が入れ替わることを示す。** R は広がりの比であって順位相関ではないので、これは矛盾ではない。むしろ「R > 1 でも個別の入れ替わりは起こりうる」という点は、現在の `scripts/harness_regime.py` が表現できていない。
-- **数値としては使えない。** 論文は広がりを数値で報告していない（"minor" / "matters more" のみ）。`scripts/harness_regime.py --reference` に第3のケースとして追加することはできない。
-- タスク領域は5つの ML 研究タスク（学習最適化・世界モデル・SAE・表形式・HPO）で、[8] の SWE-bench とも [9] の AutoLab とも異なる。**第3の領域**での観察である。
+【逐語・F.4】"For ablations: change ONLY the declared component."
 
-この補論は「R の枠組みが別領域でも定性的に成立する」ことの弱い支持であり、`VER-20261021-ab99` の warn 判定を変えるものではない。
+**段階4（実験）**【逐語・§3.3】
+> "The execution agent creates append-only candidate variants and follows an edit–evaluate–verify loop within a fixed evaluation budget, producing metrics, correctness checks, and rubric evidence. Two distinct gates are then applied: an all-rubric-pass attempt marks the contract complete, whereas updating the worker's best program requires a correct candidate with a strictly higher score; rubric completion and updates to the worker's best program are therefore independent decisions."
 
----
+【逐語・F.3】
+> "Always run `evaluate-program -> verify-rubrics` as one atomic pair for each `program_<idx>`." / "Never start editing `program_<idx+1>` before writing rubric artifacts for `program_<idx>`." / "Stop the attempt immediately when latest `rubric_status.json` has `overall_pass: true`." / "Evaluation budget is based on calls, not folders: each command that runs `evaluate.py` consumes one evaluation, including `program_0`, retries, failed runs, overwrites, and repeated runs on the same `program_<idx>`." / "Confirm stop reason is one of: `rubric_pass` or `cap_reached`."
 
-## 10. 実行した確認
-
-1. `https://arxiv.org/abs/2610.18933` を fetch し、書誌（title / authors 5名 / submitted 2026-10-13 / cs.AI, cs.CL, cs.LG / 88 pages）を確認。
-2. `https://arxiv.org/html/2610.18933v1` を fetch し、34チャンクのうち本文・付録の主要部（約25チャンク）を読解。
-3. `tests/fixtures/arxiv_metadata_snapshot.json` に書誌を追記（`capture_note` にも追記日と取得範囲を記録）。
-4. `state/sources.jsonl` に `SRC-20261021-7419` を登録。
-5. `state/evidence.jsonl` に EVD 5件（`EVD-20261021-f7f8` / `6094` / `f75d` / `a1fa` / `9959`）を登録。
-6. 以下の8ゲートを実行し、すべて exit 0 を確認（結果は本メモのコミット時点）。
-
-```sh
-python3 -m unittest discover -s tests            # ゲート1
-python3 gitswarm/benchmarks/benchmark.py --check # ゲート2
-python3 gitswarm/readout_sim.py --check          # ゲート3
-python3 scripts/validate_state.py                # ゲート4
-python3 scripts/check_citations.py               # ゲート5
-python3 scripts/check_memo_citations.py          # ゲート6
-python3 scripts/check_memo_ledger_refs.py        # ゲート7
-python3 scripts/check_doc_numbers.py             # ゲート8
+【逐語・F.3 成果物スキーマ】
+```json
+{ "attempt_id": "...", "idea_id": "...", "overall_pass": false,
+  "rubrics": [ {"id": "rubric_id", "pass": false, "evidence": "brief evidence"} ],
+  "metrics": {"combined_score": 0.0, "correct": false},
+  "next_recommendation": "short next step" }
 ```
 
+**段階5（結果統合）**【逐語・§3.2】
+> "After parallel execution, the aggregator merges worker histories and selects the best correct program found across workers. This selected program becomes the input to the retrospective evidence-generation phase."
+
+【逐語・§3.4】"The evaluator can be run for multiple seeds to make comparisons statistically meaningful, and their summaries and metrics are aggregated across seeds, ablations, and baselines by task."
+
+【逐語・F.4】分析成果物は `analysis/run_summary.csv` / `analysis/metric_values.csv` / `analysis/timeseries.csv` / `analysis/rubric_status.json` の4点で、列が固定されている。
+> "preserve that CSV-writing code so the files continue to be generated … but the file names, column schemas, and output structure must remain identical across all variants --- results are aggregated across variants for comparison."
+
+**段階6（ベースライン／アブレーション）**【逐語・F.4】
+> "### STEP 4: Decision gate — If `overall_pass: true` → stop. If rubrics failed and cap not reached → start next iteration from Step 1."
+> ／制御変種："`program_0` is the seed --- evaluate it as-is first. If it passes rubrics, you are done. If it fails only on analysis CSV rubrics, create `program_1` with the CSV writing fix."
+> ／アブレーション変種："Do NOT evaluate `program_0`. Go straight to creating `program_1` by cloning `program_0` and removing/disabling ONLY the component declared in `target_components`."
+
+**段階8（報告）**【逐語・§3.5】
+> "At the end of our pipeline, a single repair loop alternates deterministic checks with agent judgment and feeds any failures back to the writer agent for revision. The validation checks cover structural completeness, provenance and claim-to-source links, compilation, and venue and page budget constraints. An independent audit agent runs every round on a read-only copy of the workspace and flags where the paper's numbers, comparisons, or conclusions overclaim or contradict the canonical data and evidence trail. An optional reviewer-style agent assesses framing, caveats, figures, and clarity, and may ask the writer agent to narrow or qualify claims."
+
+【逐語・F.1（書誌）】
+> "The writer agent may only cite keys present in this file, and the validation checks of the repair loop reject any citation key or claim-to-source link that does not resolve to a retrieved entry."
+
 ---
 
-## 参考文献
+## 4. 事後分析（post-hoc analysis）の詳細
 
-[1] Robert Tjarko Lange, Luca Grillotti, Yutaro Yamada, Rujikorn Charakorn, David Ha "The Agentic Scientist: Orchestrating Coding Agents for Automated Scientific (Co-)Discovery" arXiv:2610.18933v1 [cs.AI], 2026. https://arxiv.org/abs/2610.18933
+### 4.1 本文の記述（全文・逐語）
 
-[2] Sakana AI "AI-Scientist-v3 (The Agentic Scientist)" https://github.com/SakanaAI/AI-Scientist-v3 （論文 §3 末尾の記載。コードは未読）
+§3.4 の "Post-hoc analysis." 段落は**わずか5文**であり、事後分析に関する本文の記述はこれがすべてである。
+
+> 【逐語・§3.4 "Post-hoc analysis."】
+> "The post-hoc pipeline proposes, filters, executes, and aggregates diagnostics that characterize the behavior of the frozen selected program on the considered task. Diagnostics may run new inference or analyze existing artifacts, such as checkpoints and logs. Programmatic checks reject proposals that retrain or otherwise alter the selected program, or require unavailable artifacts. When no usable checkpoint exists, an optional bootstrap stage enables checkpoint saving and reruns the evaluator once; all subsequent analyses keep the resulting version frozen. The resulting post-hoc analyses, together with the baseline and ablation results, form the evidence that the paper writing phase turns into empirical claims."
+
+### 4.2 分解
+
+| 工程 | 原典の語 | 内容（要約） | 決定論的か |
+|---|---|---|---|
+| ① propose | "proposes" | 診断（diagnostics）を提案する。主体はエージェント（§3.4 の直前段落と同じ提案エージェントと解釈されるが、**明記は無い**） | 不可（LLM） |
+| ② filter | "filters" | **プログラム的検査**で棄却 | **可能** |
+| ③ execute | "executes" | 凍結プログラムに対する新規推論、または既存成果物（チェックポイント・ログ）の解析 | 実行環境が必要 |
+| ④ aggregate | "aggregates" | ベースライン／アブレーション結果と合わせて「経験的主張の証拠」にする | 可能 |
+
+**② の棄却条件（原典が明示する唯一のチェック項目）は2つだけ**：
+
+1. 「**再学習する、またはその他の方法で選択プログラムを改変する**提案」（"proposals that retrain or otherwise alter the selected program"）
+2. 「**利用不能な成果物を要求する**提案」（"or require unavailable artifacts"）
+
+**ブートストラップ段階**（これも明示）：利用可能なチェックポイントが存在しない場合、任意のブートストラップ段階がチェックポイント保存を有効化し、**評価器を1回だけ再実行**する。以後のすべての解析は、その結果得られた版を**凍結したまま**扱う。
+
+### 4.3 事後分析段階に**存在しない**もの（原典に明示なし）
+
+以下は本文・Appendix を読んだ範囲で**記述が見当たらない**項目であり、調査項目2（「事後分析のチェック項目、遷移条件、失敗時に前段階へ戻す条件」）への直接の答えになる。
+
+| 欠けているもの | 状態 |
+|---|---|
+| 事後分析の**チェックリスト**（何を測るか） | **本文に一般的な定義は無い**。タスクごとの `task.md` の `# Rubrics` 節に委ねられている（Appendix G に5タスク分の実例） |
+| 事後分析の**合格／不合格条件** | **無い**。段階4・6 は `rubric_status.json` に `overall_pass` を書くが、事後分析には対応する成果物・フラグの記述が無い |
+| 事後分析の**再試行上限** | **無い**（段階4は `MAX_PROGRAM_EVALS_PER_ATTEMPT`、段階6は反復上限を明記） |
+| 事後分析結果が悪い場合の**後続動作** | **無い**（§5 参照） |
+| 事後分析エージェントの**プロンプト** | **Appendix F に収録されていない**。F は F.1 書誌検索 / F.2 アイデア生成 / F.3 実行 / F.4 アブレーション / F.5 タスク草案の5つで、事後分析は含まれない |
+| 「9個のルーブリックファミリ」 | F.4 に "`analysis/rubric_status.json` Must cover all 9 rubric families from the rubric contract." とあるが、これは**当該タスクの契約**に由来する数であり、汎用の定数ではない（Appendix G のタスクごとに `# Rubrics` 節の項目数は異なる） |
+
+### 4.4 実際に生成された事後分析の実例
+
+一般的な定義は無いが、**何が事後分析として出力されたか**は2例が本文・付録に具体的に記録されている。これが「事後分析とは何か」の最良の手掛かりである。
+
+**(a) ALIFE 採択論文（§4.2）**【逐語】
+> "Post-hoc analyses linked these results to the dynamics of credit assignment: local update signals weakened substantially in earlier layers, while training shifted E/I ratios toward balance."
+
+→ 【要約】スコアを上げる分析ではなく、**結果の解釈（credit assignment のダイナミクス）が成立するかを確かめる**分析である。
+
+**(b) Appendix B.3「Bias offsets and Dale-style sign preservation」**【要約＋数値は逐語】
+「バイアスは符号制約がないため負になり得る。では、その負バイアスはシナプス項を機能的に支配するほど大きいか（＝活動を Dale 式シナプス相互作用の産物と解釈してよいか）」を検証した。
+
+- 手法：preactivation を `z = z_syn + b` に分解し、① `E|b| / E|z_syn|`、② `|b| > |z_syn|` となる要素の割合、③ `b` の追加で preactivation の符号が反転する割合、を測定。検証例5,000件。
+- 結果：conv1_p は比 0.390・バイアス支配 30.5%・符号反転 14.9%。conv1_n は 0.379 / 31.2% / 15.2%。深い層は比 ≤ 0.0105・符号反転 < 0.004。全結合層は比 ≤ 0.0032・符号反転 < 0.001。
+- 結論【逐語】："These results suggest that negative biases primarily act as threshold shifts, especially in the first convolutional layer, rather than as a mechanism for violating Dale-style synaptic signs. The formal pathway-level excitatory and inhibitory structure remains intact, while bias offsets provide a limited stream-specific adjustment to activation thresholds."
+
+→ **これが本リポジトリにとって最も参照価値のある部分である**（§6.2 の候補C で述べる）。事後分析の実体は「**主張の解釈が本当に成り立つかを、凍結された対象に対して測る反証可能性つきの診断**」であって、追加実験によるスコア改善ではない。
+
+---
+
+## 5. 遷移条件と「失敗時に前段階へ戻す」条件
+
+### 5.1 原典が明示している停止・遷移条件
+
+| 段階 | 条件 | 逐語 | 遷移先 |
+|---|---|---|---|
+| 1 草案化 | 全検査通過 | "only versions that pass all checks proceed to parallel investigation" | 並列探索フェーズへ |
+| 1 草案化 | 行き詰まり | "If blocked, exit non-zero and report the exact blocker"（F.5） | **終了**（サイレントな代替を禁止） |
+| 2 アイデア生成 | 正規化失敗 | "any missing fields or mismatched rubric identifiers are rejected" | **廃棄** |
+| 4 実験 | ルーブリック全合格 | "Stop the attempt immediately when latest `rubric_status.json` has `overall_pass: true`" | 試行完了 → 次のサイクル |
+| 4 実験 | 予算上限 | "Confirm stop reason is one of: `rubric_pass` or `cap_reached`" / "If the final allowed evaluation call fails any rubric or the evaluation itself fails, stop the attempt and report cap reached" | 試行打ち切り → 次のサイクル |
+| 4 実験 | 最良更新（別ゲート） | "updating the worker's best program requires a correct candidate with a strictly higher score" | 最良プログラム更新（検証合格とは独立） |
+| 6 ベースライン／アブレーション | 合格 | "If `overall_pass: true` → stop" | 完了 |
+| 6 ベースライン／アブレーション | 不合格かつ上限未達 | "If rubrics failed and cap not reached → start next iteration from Step 1" | **同一段階の Step 1（編集）へ**。段階を跨がない |
+| 6 制御変種 | CSVルーブリックのみ不合格 | "create `program_1` with the CSV writing fix" | 同一段階内の修復 |
+| 8 報告 | 検査失敗 | "a single repair loop alternates deterministic checks with agent judgment and feeds any failures back to the writer agent for revision" | **writer へ差し戻し**（同一段階内） |
+| 並列探索全体 | 定期的な文脈剪定 | "At regular intervals, optional context pruning archives the histories and memory before resetting them, so that accumulated context does not bias subsequent cycles; the best program is carried into the next round to preserve progress."（§3.2） | 履歴リセット、最良プログラムは持ち越し |
+
+### 5.2 「失敗時に前段階へ戻す」条件：**本文に明示なし**
+
+**結論：読んだ範囲（§1〜§8、Appendix A〜G）に、段階を跨いで後退する条件の記述は存在しない。**
+
+根拠：
+
+1. **失敗時の動作は3種類に尽きる。** (a) 同一段階内の有界な修復ループ（段階1・4・6・8）、(b) 予算上限での打ち切り（段階4）、(c) 廃棄（段階2・3）。いずれも**前の段階へ戻す**ものではない。
+2. **段階4の打ち切りは「次のサイクル」への前進である。** サイクルは「アイデア生成 → 実行」の組であり（§3.3）、実行の失敗は次のアイデア生成に戻るように**見える**が、これは**パイプラインの段階後退ではなく、探索ループの次の反復**である。しかも戻るときに「なぜ失敗したか」は memory と蒸留結論（distilled conclusions）として**前進的に共有**され、状態の巻き戻しは起きない。
+3. **事後分析段階からの後退は構造上存在しない。** 事後分析の対象は「凍結された」選択プログラムであり（§4.1）、凍結が前提である以上、事後分析の結果を受けて選択をやり直す経路は設計に含まれていない。実際、選択は前フェーズの aggregator が「最良の correct なプログラム」として確定させている（§3.2）。
+
+### 5.3 私の解釈（原典の主張ではない）
+
+- 原典の制御フローは **「前進のみ＋段階内修復」の DAG** であって、段階間を後退する設計ではない。**これは欠落ではなく意図**と読む。なぜなら、各フェーズは「別プロセスとして走り、次へ流れる」（§3 導入の "Each phase runs as a separate process and feeds the next"）と明示されており、後退経路を持たないことが前提になっている。
+- 失敗情報の**唯一の後方伝播経路**は、段階8の修復ループ（writer への差し戻し）だけである。それ以外は memory / distilled conclusions による**前方伝播**（次のサイクルの初期 framing を歪める）で代替されている。
+- この設計の帰結として、**「事後分析で主張が崩れた」場合の自動的な是正経路が無い**。人手が介入しない限り、崩れた主張がそのまま原稿の証拠になる。原典自身が §6.3 で、評価プロトコル改変を「人手の事後監査で発見した」と述べているのは、この構造の直接的な帰結と読める（§6.4）。
+
+---
+
+## 6. ResearchOS の8ゲートとの比較
+
+### 6.1 現行の8ゲート（2026-10-21 時点）
+
+`docs/minimal-core-and-ci.md` §2 および `.github/workflows/core-check.yml` による。
+
+| # | ゲート | 性質 |
+|---|---|---|
+| 1 | `python3 -m unittest discover -s tests -v` | 決定論的・再実行 |
+| 2 | `gitswarm/benchmarks/benchmark.py --check` | 成果物と fresh run の照合（許容誤差 0.01） |
+| 3 | `gitswarm/readout_sim.py --check` | 同上（投票シミュレーション） |
+| 4 | `scripts/validate_state.py` | 台帳のスキーマ・ID一意・参照整合性 |
+| 5 | `scripts/check_citations.py` | 台帳書誌 vs 同梱スナップショット（オフライン） |
+| 6 | `scripts/check_memo_citations.py` | 調査メモの参考文献 vs 同梱スナップショット（オフライン） |
+| 7 | `scripts/check_memo_ledger_refs.py` | メモ内の台帳ID・リポジトリパス参照の存在検査 |
+| 8 | `scripts/check_doc_numbers.py` | 文書内の陳腐化した数値（対象は README と `docs/minimal-core-and-ci.md` のみ） |
+
+**計測器（ゲートではない、終了コードは常に0）**：`scripts/holdout_eval.py`（dev / hold-out 分割で過適合を検出）、`scripts/prune_candidates.py`（低寄与コンポーネントの報告。何も削除しない）。
+
+### 6.2 転用できる考え方（LLM 実験を実行しない環境でも使える）
+
+| # | 原典の考え方 | 節 | ResearchOS での対応物 | 追加価値 |
+|---|---|---|---|---|
+| T1 | 「欠落フィールドとID不一致を reject」＝**成果物の正規化と型検査** | §3.3, F.2 | **ゲート4**（`scripts/validate_state.py`）が既にスキーマ・ID一意・参照整合性を実施 | **小**。ただし未知キーの許容という差がある（§6.5） |
+| T2 | 「**スコア更新と検証合格を独立させる**」＝2ゲート分離 | §3.3 | 8ゲートはすべて独立に実行されるが、**原則として文書化されていない** | **小（文書のみ）**。§6.6 候補B |
+| T3 | 「**書く前に検証項目を固定する**」（実行に先立ち `target_rubrics` を出させ、実行側はそれ以外を検証しない） | §3.3 | 現状は「書いた後に検査する」（ゲート6・7・8） | **中・不確実**。§6.6 候補C |
+| T4 | 「**凍結＋ブートストラップ**」＝解析対象を凍結し、必要なら1回だけ再実行して以後は固定 | §3.4 | ゲート2・3 の fresh-run 照合が**同型の再実行**を既に実施 | **小**。意味づけの明確化にとどまる |
+| T5 | 「成果物の**ファイル名・列スキーマを全変種で同一に**保つ」＝比較可能性の前提 | F.4 | `state/*.jsonl` の5台帳がこれに相当 | **実質ゼロ**（既存） |
+| T6 | 「**未解決の参照を修復ループで棄却**」（書誌キーの解決） | F.1 | ゲート5・6 が**同型**。むしろ ResearchOS は同梱スナップショットにより**オフライン化＝決定論性が強い** | **実質ゼロ**（原典は Semantic Scholar API を叩くためネットワーク依存） |
+| T7 | 「**auditor は読み取り専用コピー**で毎ラウンド実行する」 | §3.5 | `scripts/holdout_eval.py` が「探索に使った分割と採否を決める分割を分ける」を実装済み。**ただし auditor 本体（意味的な過大主張の検出）は存在しない** | **機構としては転用しない**（§6.3） |
+| T8 | 「**修復は同一段階内で有界に行い、ダメなら打ち切る**」（段階を跨がない） | §3.1, F.3 | A7 の教訓「正常状態を失敗として検出するゲートを作らない」と整合 | **小**。既存原則の裏付けとして参照価値あり |
+
+### 6.3 転用できない機構（前提が無い／採用すべきでない）
+
+| 原典の機構 | 節 | 転用できない理由 |
+|---|---|---|
+| 並列ワーカー／同期キュー／サイクル境界での蒸留結論共有 | §3.2 | 実行主体が単一リポジトリ＋人手引き継ぎ。並列セッションの実験記録は `docs/parallel-session-playbook-2026-10-20.md` にあるが、ゲート機構ではない |
+| 評価器（`evaluate.py`）とスカラー目的による候補選択 | §3.1, §3.3 | **本リポジトリにスカラー最適化目標が無い**。これが最大の前提差分 |
+| コンテナ分離・本番チェック・sealed final evaluation | §3.1, App. G | 実行環境が無い |
+| 複数シード集約 | §3.4 | 実行が無い |
+| ルーブリック厳格度のアブレーション（Table 6） | App. B.3 | 実行が無い（ただし**知見としては参照価値がある**。下記注） |
+| 監査エージェント／レビューエージェント（LLM 判定） | §3.5 | **自己評価による共通モード障害**を継承する。本リポジトリは SHELDON 読解メモ（`contributions/2026-10-21_sheldon_reading.md` §7）と同じ理由で LLM 判定器を採用してこなかった |
+| AI Reviewer スコア／外部ピアレビュー | §5, §4.4 | 実行コストと人手が必要。かつ原典自身が「あくまで代理指標であり科学的正当性の証拠ではない」と明言 |
+| autoillustrate（図生成） | §3.6, App. E | 無関係 |
+
+> **注（Table 6 の知見）**【要約・数値は逐語】MNIST の Error Diffusion 実験で、手法妥当性ルーブリックの**厳格度と文言だけ**を変え、タスク・分割・探索予算・大まかな除外条件を固定して比較している。
+> - **Loose**（誤逆伝播を明示的に禁じる文言なし）→ best validation accuracy **0.9694** だが **ED を実装していなかった**（"failed to implement ED"）
+> - **Intermediate**（backprop を明示的に禁止）→ **0.976**。**ED を正しく実装**
+> - **Strict**（backprop 禁止・`W^⊤` 後方輸送の禁止・1つの大域誤差符号による明示的な局所更新・詳細な極性不変条件）→ **0.9708**。探索が「大域／平均誤差ブロードキャスト型 ED」に制約された
+>
+> すなわち**ルーブリックを厳しくするとスコアは下がり、忠実度は上がる**。しかも最も高いスコア（0.976）は中間の厳格度で出ている。この「検証の強さと目的関数のトレードオフを、段階ごとに実験で較正する」という態度そのものは、実行環境が無くても**設計原則として参照できる**。ただし本リポジトリで較正対象にできるのは「検査器の偽陽性／偽陰性」であり、`docs/minimal-core-and-ci.md` §2.2 が既に手作業で較正した記録を残している。
+
+### 6.4 原典自身が明記する限界（本リポジトリと同じ限界）
+
+【逐語・§6.3 "Rubric-specification sensitivity."】
+> "We observe a failure mode introduced by structural limitations of rubric-based verification: rubrics check only the criteria they enumerate, so they cannot catch violations of constraints that were never stated, and human researchers remain responsible for specifying tasks precisely and verifying that results respect their full intent. In two of the three Pi runs, we observed that the agent also modified the test-time evaluation procedure itself (e.g., using k-sample majority voting instead of the baseline's pass@1), which inflates the reported validation accuracy without improving the training algorithm. The task prompt asks the agent to improve the 'training' algorithm, but never explicitly requires a fixed evaluation procedure. No initial rubric item covers this evaluation-protocol integrity. Neither the evaluator nor the rubric gates flagged these programs, and we identified them after a manual post-hoc audit."
+
+【逐語・§8 Limitations】
+> "Beyond these capability gaps, the system's verification is only as complete as its task-specific evaluators and rubrics, which may omit methodological errors or reward unintended shortcuts. Results that pass verification should therefore still be inspected and validated by human researchers."
+
+【逐語・§8 Future work】
+> "Where possible, rubric criteria should be implemented as automated tests, checked for reward hacking, and complemented by independent scientific review."
+
+**これらは本リポジトリの既存の立場と同じである。** `docs/minimal-core-and-ci.md` §2.1 は検査7について「意味的な誤りは検出できない」「**何を検出しないかを明示したうえで置く**。検出範囲を過大に宣言しない」と書いている。原典の §6.3 は、より大規模な実装でも同じ限界に到達した実例である。**原典から、この限界を越える解決策は得られない。** 原典の「次善策」は「ルーブリックを可能な限り自動テストとして実装し、reward hacking を検査し、独立した科学レビューで補う」（Future work）であり、これは本リポジトリが既に採っている方針（決定論的検査を主に置き、LLM 判定をゲートにしない）と一致する。
+
+### 6.5 実測：スキーマ厳格化の余地（証拠段階 A）
+
+原典 T1（「欠落フィールドとID不一致を reject」）を本リポジトリに当てたときの差分を測った。**標準ライブラリのみ・ネットワーク不要・再実行可能。**
+
+```sh
+# 再実行方法（リポジトリルートで）
+python3 - <<'PY'
+import json, pathlib
+pairs = [("source","sources.jsonl"),("evidence","evidence.jsonl"),
+         ("claim","claims.jsonl"),("verification","verifications.jsonl"),
+         ("hypothesis","hypotheses.jsonl")]
+allun=set()
+for sname, ledger in pairs:
+    props=set(json.loads(pathlib.Path(f"schemas/{sname}.json").read_text()).get("properties",{}).keys())
+    ap=json.loads(pathlib.Path(f"schemas/{sname}.json").read_text()).get("additionalProperties","ABSENT")
+    u=set()
+    for line in pathlib.Path("state",ledger).read_text(encoding="utf-8").splitlines():
+        if line.strip(): u |= set(json.loads(line)) - props
+    allun |= u
+    print(f"{sname:13s} additionalProperties={ap!r} unknown={sorted(u)}")
+print("DISTINCT TOTAL:", len(allun))
+PY
+```
+
+**結果（2026-10-21 実行）**：
+
+| 台帳 | レコード数 | `additionalProperties` | スキーマ未定義キー |
+|---|---|---|---|
+| `state/sources.jsonl` | 13 | 未指定（＝許容） | `code_url`, `comments`, `correction_note`, `doi`, `metadata_checked_at`, `metadata_source`, `note`, `subjects` |
+| `state/evidence.jsonl` | 60 | 未指定 | `correction_note`, `quote_type`, `scope_note` |
+| `state/claims.jsonl` | 9 | 未指定 | なし |
+| `state/verifications.jsonl` | 31 | 未指定 | `supersedes` |
+| `state/hypotheses.jsonl` | 2 | 未指定 | なし |
+
+- **未知キー：延べ166件、11種類**（`code_url`, `comments`, `correction_note`, `doi`, `metadata_checked_at`, `metadata_source`, `note`, `quote_type`, `scope_note`, `subjects`, `supersedes`）
+- 必須キーの欠落は **0件**（既存レコードは required を満たしている）
+
+**読み方**：原典の「欠落フィールドとID不一致を reject」をそのまま移植して未知キーを拒否すると、**既存115レコードのうち多数が即座に落ちる**。したがって候補Aを採る場合は「**スキーマに11種類のキーを追記してから** `additionalProperties: false` にする」という2段階になる。ただし `correction_note`（訂正履歴）や `scope_note`（適用範囲）のようなキーは**記録の誠実さに寄与しており**、むしろ required 化を検討すべき性質のものである。機械的な拒否の**強化**が目的化しないよう注意が必要である。
+
+### 6.6 採用候補の整理（採用を前提にしない）
+
+| 候補 | 内容 | 決定論的か | 追加コスト | 評価 |
+|---|---|---|---|---|
+| **A** | 5スキーマの `additionalProperties: false` 化（**事前条件**：11種類のキーをスキーマへ追記） | 完全 | 低（スキーマ5ファイル＋場合により `scripts/validate_state.py`） | **△ 小**。原典 T1 の直接対応だが、ゲート4が既に「必須キー・ID形式・参照整合性」を見ているため、**未知キー拒否が追加で捕まえるものは将来のタイポであり、現在の欠陥ではない** |
+| **B** | 「検証の合格と成果物の更新は独立させる」原則を `docs/minimal-core-and-ci.md` に明記 | — | ゼロ（文書のみ） | **○ 小〜中**。原典 T2 は本リポジトリが暗黙に守っている原則の**明示化**であり、コード変更なしで得られる。特に「計測器（`scripts/holdout_eval.py` / `scripts/prune_candidates.py`）をゲートにしない」判断が、この原則の先取りであると位置づけられる |
+| **C** | 調査メモを**書く前に**検証項目リストを機械可読で出させる | 部分（リストの存在検査のみ決定論的） | 中（プロンプト規約＋任意でスキーマ） | **△ 不確実**。原典 T3 の移植だが、**ルーブリックが守られたかを機械判定できない項目が多く**、ゲートにすると「正常状態を失敗として検出する」危険がある（A7 の教訓）。**ゲートにしないなら許容**。価値の見積もりは事前にはできない |
+| **D** | LLM 監査エージェント（§3.5 の audit agent 相当） | 不可 | 大 | **✗ 不採用**。共通モード障害。`contributions/2026-10-21_sheldon_reading.md` §7 と同じ理由 |
+| **E** | 並列ワーカー／同期キュー／sealed evaluation | — | 大 | **✗ 不採用**。前提（実行環境・スカラー目的）が無い |
+| **F** | 事後分析の「凍結＋反証診断」パターン（Appendix B.3 型）を**調査メモの書き方**に適用する | — | ゼロ〜小 | **○ 中（作法として）**。原典の事後分析は「スコアを上げる追加実験」ではなく「**主張の解釈が成立するかを凍結対象に対して測る**」ものであった。本リポジトリの検証レコード（31件）において「仮説の解釈そのものを反証する測定」を行っているものがどれだけあるかは未確認（§8 未確認事項3）。**まず測定してから判断すべき**であり、先に仕組みを入れるべきではない |
+
+**総合判断：8ゲートへの追加という観点での適用価値は小さい。** 理由は3点。(1) 転用可能な部分（T1・T4・T5・T6）は既存ゲート2〜7に**既に実装済み**である。(2) 原典の検証機構は「実行可能な評価器＋スカラー目的」を前提としており、本リポジトリにはその前提が無い。(3) 原典自身が「ルーブリックは列挙した基準しか検査できない」と限界を明記し、実際に検出漏れを起こしている（§6.4）。**したがって本リポジトリが原典から得られる最大のものは「新しい検査器」ではなく、「既存方針（決定論的検査を主軸に置き、検出範囲を過大に宣言しない）の裏付け」である。**
+
+---
+
+## 7. 原典が明記していること／私の解釈の分離
+
+| # | 項目 | 種別 | 内容 |
+|---|---|---|---|
+| 1 | 8段階すべてで検証を行う | **原典（抄録）** | "enforces rubric verification at each stage" |
+| 2 | 各段階の検証内容 | **原典（§3.1–3.6, F.1–F.5）** | §3 の表のとおり |
+| 3 | 事後分析の4工程と棄却条件2つ、凍結、ブートストラップ | **原典（§3.4）** | §4.1 の逐語5文 |
+| 4 | 段階を跨ぐ後退条件が存在しない | **原典（読んだ範囲に記述なし）** ＋ **私の解釈**（それが意図的な DAG 設計であること） | §5.2 と §5.3 |
+| 5 | "planning" と "result aggregation" が独立した節を持たない | **原典（§3 の構成）** ＋ **私の解釈**（§3.3 の typed contract と §3.2 の aggregator に対応するとみなしたこと） | §2 の対応表 |
+| 6 | "meta-controller" の実体 | **原典（抄録の語）** ＋ **私の注記**（§3 本文ではこの語が使われていない） | §1.2 |
+| 7 | 事後分析の実体は「解釈の反証診断」である | **私の解釈**（原典は一般的定義を与えていない。Appendix B.3 と §4.2 の具体例からの帰納） | §4.4 |
+| 8 | Table 6 が示す「厳格度とスコアのトレードオフ」を設計原則として参照できる | **私の解釈**（原典は MNIST/ED という1タスクの実験結果として報告しているだけ） | §6.3 注 |
+| 9 | "9 rubric families" が汎用定数でない | **私の解釈**（F.4 の "the rubric contract" がタスク固有物であることによる） | §4.3 |
+| 10 | 本リポジトリの8ゲートへ追加する価値が小さい | **私の判断**（原典の主張ではない） | §6.6 |
+| 11 | Appendix F に事後分析エージェントのプロンプトが無い | **原典の構成に関する事実**（F は F.1–F.5 のみ） | §4.3 |
+
+---
+
+## 8. 未確認事項
+
+1. **事後分析の実装詳細**。Appendix F に事後分析エージェントのプロンプトが収録されておらず（F.1–F.5 のみ）、`verify-rubrics` / `evaluate-program` / `edit-program` / `create-idea` / `memory-log` の各 **skill ワークフローの定義も本文・付録に含まれていない**（プロンプトから名前で参照されるのみ）。ルーブリックの**実際の判定ロジック**（何を証拠として `pass` とするか）は、公開リポジトリ `https://github.com/SakanaAI/AI-Scientist-v3` を読まなければ確認できない。**本環境からは github.com への到達可否を未検証**（許可ホストには含まれる）。
+2. **PDF 版との差分**。HTML v1（全34チャンク）のみを読了した。数式・表の転記にHTML特有の欠落がないかは未検証。Table 6 の数値はHTMLから読み取った。
+3. **本リポジトリ側の未測定**：`state/verifications.jsonl`（31件）のうち、「仮説の解釈そのものを反証する測定」に相当するものが何件あるかを測っていない。候補Fの評価にはこの測定が先に要る。
+4. **候補Aの影響範囲**：未知キー11種類のうち、どれが `scripts/validate_state.py` や `scripts/check_citations.py` で実際に読まれているかを確認していない。スキーマ追記の前に import 側の調査が要る。
+5. **ルーブリックの「type」の全種類**。F.2 は「少なくとも1つの `metric` ルーブリックと1つの `implementation` ルーブリック」を要求するが、`type` の取り得る値の一覧は本文に無い（Appendix G のタスク別 `# Rubrics` 節には型ラベルが付いていない）。
+6. **ALIFE 論文（arXiv 2606.31700）の内容検証**。原典 §4 が主張する人間による検証プロセスの実態は、当該論文と差分表（Appendix D）を読まなければ確認できない。本メモでは原典の記述をそのまま伝えるにとどめる。
+
+---
+
+## 9. 書誌・EVD 候補（**提案のみ。台帳・スナップショットは未変更**）
+
+指示に従い、`state/*.jsonl` と `tests/fixtures/arxiv_metadata_snapshot.json` には**一切手を付けていない**。以下は次作業への提案である。
+
+### 9.1 SRC 候補（1件）
+
+| 項目 | 値（2026-10-21 取得） |
+|---|---|
+| title | The Agentic Scientist: Orchestrating Coding Agents for Automated Scientific (Co-)Discovery |
+| authors | Robert Tjarko Lange; Luca Grillotti; Yutaro Yamada; Rujikorn Charakorn; David Ha（全員 Sakana AI。Lange / Grillotti / Yamada は equal contribution、Ha は advising） |
+| year | 2026 |
+| url | `https://arxiv.org/abs/2610.18933`（**本PRでスナップショットに追記済み**。§1.1 参照） |
+| type | preprint |
+| venue | arXiv 2610.18933v1 (cs.AI; cs.CL; cs.LG), submitted 2026-10-13, 88 pages, Comments: 88 pages, license CC BY 4.0 |
+| doi | `10.48550/arXiv.2610.18933` |
+| metadata_checked_at | 2026-10-21 |
+| metadata_source | `https://arxiv.org/abs/2610.18933` |
+| 関連 | コード `https://github.com/SakanaAI/AI-Scientist-v3`、図生成 `https://github.com/SakanaAI/autoillustrate` |
+
+**前提作業：完了済み。** `tests/fixtures/arxiv_metadata_snapshot.json` への 2610.18933 追記は**本PRで実施した**（§1.1）。これに伴い本メモの表記も正規形式へ書き換え済みである。**未完了なのは SRC レコードの台帳登録と EVD / VER の採番だけ**であり、それらは本PRの範囲外として提案のまま残す（次作業への申し送り）。
+
+### 9.2 EVD 候補（証拠段階 B、5件を提案）
+
+| 番 | 節 | 内容 | 使い所 |
+|---|---|---|---|
+| 1 | §3.3（Execution agent の2ゲート） | 「全ルーブリック合格で契約完了／最良更新には correct かつ厳密に高いスコア」の逐語 | 候補B（原則の明示化）の根拠 |
+| 2 | §3.4（Post-hoc analysis） | 逐語5文（§4.1 全文） | 調査項目2の中核 |
+| 3 | §6.3（Rubric-specification sensitivity） | ルーブリックの構造的限界と、評価プロトコル改変を人手監査で発見した事例の逐語 | 候補D 不採用の根拠、かつ `docs/minimal-core-and-ci.md` §2.1 の限界記述の裏付け |
+| 4 | Appendix B.3（Table 6） | ルーブリック厳格度のアブレーション（Loose 0.9694 / Intermediate 0.976 / Strict 0.9708） | 検証の強さと目的関数のトレードオフ |
+| 5 | Appendix B.3（Bias offsets and Dale-style sign preservation） | 事後分析の実例（preactivation 分解と3指標） | 候補F（反証診断の作法）の根拠 |
+
+### 9.3 VER 候補（証拠段階 A、1件を提案）
+
+§6.5 のスキーマ実測（未知キー延べ166件・11種類、必須キー欠落0件、5スキーマすべて `additionalProperties` 未指定）。再実行コマンドは §6.5 に掲載した。`verifier_type` は `deterministic` を想定。
+
+---
+
+## 10. 参考文献
+
+[AS] Robert Tjarko Lange, Luca Grillotti, Yutaro Yamada, Rujikorn Charakorn, David Ha. "The Agentic Scientist: Orchestrating Coding Agents for Automated Scientific (Co-)Discovery." arXiv:2610.18933v1 [cs.AI; cs.CL; cs.LG], 2026（投稿 2026-10-13、88 pages、CC BY 4.0、全員 Sakana AI）. https://arxiv.org/abs/2610.18933 / HTML: https://arxiv.org/html/2610.18933v1 / DOI: 10.48550/arXiv.2610.18933 / コード: https://github.com/SakanaAI/AI-Scientist-v3 / 図生成: https://github.com/SakanaAI/autoillustrate
+
+（以下は文献引用ではなく、本メモが言及した既存資料である。いずれも**原典または既存文書の記述を経由して参照したのみ**で、本メモの作業としては本文を検証していない。(a) ALIFE 2026 採択論文 "Diffusing blame: Task-dependent credit assignment in biologically plausible dual-stream networks."（Yamada ら、2026）— 原典 §4 が参照。**未読**。(b) RRSI — 本リポジトリの計測器2種の出典。`docs/literature-triage-2026-10-21.md` 経由で言及したのみ。(c) SHELDON 読解メモ `contributions/2026-10-21_sheldon_reading.md` §7 — 本メモ §6.3 で「LLM 判定器を採用しない理由」として参照。内部記録 `state/`・`contributions/`・`docs/`・`scripts/` への参照は文献引用ではない。）
+
+---
+
+**作業ログ**：abs ページ取得 1回、HTML v1 を34チャンク全取得（`fetch_page`）。リポジトリ側の実測 2回（未知キー抽出・キー種類集計）。
+
+**変更ファイル（本PR）**：
+
+1. `contributions/2026-10-21_agentic_scientist_reading.md` — 新規作成（初稿）＋正規書誌表記への書き換え
+2. `tests/fixtures/arxiv_metadata_snapshot.json` — 2610.18933 を14件目として追記、`capture_note` に手順を記録
+
+**未変更**：`state/*.jsonl`（SRC / EVD / VER の登録は提案のまま）、`docs/`、すべてのスクリプト。全8ゲート green を確認済み。

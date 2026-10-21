@@ -2,7 +2,7 @@
   "schema": "researchos/arxiv-metadata-snapshot/v1",
   "captured_at": "2026-10-20",
   "capture_method": "arxiv abs pages (https://arxiv.org/abs/<id>) read via web fetch tool",
-"capture_note": "Bundled so CI needs no network. Entries are added only after the abs page has actually been read. 2609.24972 and 2609.15983 were added 2026-10-21 after verification that Arena's web-fetch tool can read arxiv.org even though the sandbox's own curl cannot. 2610.18025 (SHELDON) was added 2026-10-21 by the same procedure: the abs page was fetched and read, and the full HTML v1 was read for the body quotes. 2610.18933 was added 2026-10-21 after the abs page AND the HTML full text (https://arxiv.org/html/2610.18933v1) were read.",
+  "capture_note": "Bundled so CI needs no network. Entries are added only after the abs page has actually been read. 2609.24972 and 2609.15983 were added 2026-10-21 after verification that Arena's web-fetch tool can read arxiv.org even though the sandbox's own curl cannot. 2610.18025 (SHELDON) was added 2026-10-21 by the same procedure: the abs page was fetched and read, and the full HTML v1 was read for the body quotes. 2610.18933 (The Agentic Scientist) was added 2026-10-21 by the same procedure: the abs page was fetched and read (submitted 13 Oct 2026, v1 only, 88 pages, CC BY 4.0), and the full HTML v1 was read across all 34 chunks for the body quotes.",
   "entries": [
     {
       "arxiv_id": "2610.18933",
@@ -252,6 +252,114 @@
         "Monica S. Lam"
       ],
       "published": "2026-10-13"
+    },
+    {
+      "arxiv_id": "2606.08529",
+      "source_url": "https://arxiv.org/abs/2606.08529",
+      "title": "Scaffold Effects on GAIA: A Controlled Comparison",
+      "authors": [
+        "Jason Starace"
+      ],
+      "published": "2026-06-07"
+    },
+    {
+      "arxiv_id": "2609.17394",
+      "source_url": "https://arxiv.org/abs/2609.17394",
+      "title": "Coding Agents Have Converged: Why the SWE-bench Leaderboard Can No Longer Order Its Top Entries, and What to Measure Instead",
+      "authors": [
+        "Fengshuo Liu",
+        "Ying Liu",
+        "Ruize Sun",
+        "Lie Luo",
+        "Siyuan Guo"
+      ],
+      "published": "2026-09-15"
+    },
+    {
+      "arxiv_id": "2610.00651",
+      "source_url": "https://arxiv.org/abs/2610.00651",
+      "title": "Agent Evaluation Reliability: More Tasks Won't (Always) Fix An Agent Leaderboard",
+      "authors": [
+        "Michael Hardy",
+        "Ruhana Azam",
+        "Anka Reuel",
+        "Mykel Kochenderfer",
+        "Sanmi Koyejo"
+      ],
+      "published": "2026-09-30"
+    },
+    {
+      "arxiv_id": "2607.22585",
+      "source_url": "https://arxiv.org/abs/2607.22585",
+      "title": "The Scaffold Effect in Coding Agents: Harness Choice as a Hidden Variable in Coding-Agent Evaluation",
+      "authors": [
+        "Naman Vats",
+        "Oleg Golev"
+      ],
+      "published": "2026-06-08"
+    },
+    {
+      "arxiv_id": "2607.13085",
+      "source_url": "https://arxiv.org/abs/2607.13085",
+      "title": "Baselines Before Architecture: Evaluating Coding Agents for Autonomous Penetration Testing",
+      "authors": [
+        "Ananda Dhakal",
+        "Krish Neupane",
+        "Aarjan Chaudhary"
+      ],
+      "published": "2026-07-13"
+    },
+    {
+      "arxiv_id": "2609.09218",
+      "source_url": "https://arxiv.org/abs/2609.09218",
+      "title": "The Double Measurement Confound in Agent Benchmarks: De-Scaffolding, Ground-Truth Scoring, and Reliability Beyond the Mean",
+      "authors": [
+        "Yonghong Zhang",
+        "Shadi Motaali",
+        "Vu Phong Dinh",
+        "Avin Piroutiniya",
+        "Jorge E. López de Vergara",
+        "Luis de Pedro",
+        "Ricardo Correia",
+        "Isabel M. Parra",
+        "Yong Xie"
+      ],
+      "published": "2026-09-06"
+    },
+    {
+      "arxiv_id": "2605.27898",
+      "source_url": "https://arxiv.org/abs/2605.27898",
+      "title": "UniACE: A Unified Framework for Evaluating LLM Agentic Capabilities",
+      "authors": [
+        "Pengyu Zhu",
+        "Lijun Li",
+        "Yaxing Lyu",
+        "Qianxin Luo",
+        "Jingyi Yang",
+        "Yi Liu",
+        "Tingfeng Hui",
+        "Xinyu Yuan",
+        "Li Sun",
+        "Sen Su",
+        "Jing Shao"
+      ],
+      "published": "2026-05-27"
+    },
+    {
+      "arxiv_id": "2609.32459",
+      "source_url": "https://arxiv.org/abs/2609.32459",
+      "title": "Beyond the Model: Demystifying Harness Effects in Software Engineering Agents",
+      "authors": [
+        "Haichuan Hu",
+        "Quanjun Zhang",
+        "Shengcheng Yu",
+        "Zhifei Chen",
+        "Tianyu Luo",
+        "Chunrong Fang",
+        "Zhenyu Chen",
+        "Liang Xiao"
+      ],
+      "published": "2026-09-26"
     }
   ]
 }
