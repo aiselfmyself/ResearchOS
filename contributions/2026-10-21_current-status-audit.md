@@ -3,7 +3,11 @@
 - 作成日：2026-10-21
 - 対象：`main` HEAD = `6ea24b3`（マージコミット "Merge pull request #45"）。作業ブランチ `arena/cd154ec2-researchos`
 - 目的：前回監査（`docs/incomplete-work-audit-2026-10-20.md`）および周辺文書の**状態記述が現在と食い違っていないか**を、リポジトリの実測と**読み取り専用の GitHub 確認**で洗い出し、統合役が安全に適用できる訂正案を出す
-- **本稿は報告のみ。コード・台帳（`state/`）・既存文書・CI 定義・GitHub の Issue/PR/ブランチは一切変更していない。**
+- **本稿は報告のみ。
+> **〔2026-10-21 追記・PR #47〕** 本稿の**副次的な発見 2 件（§3.8 の ID 21・ID 22）は同日に是正され、
+> PR #47 として `main` へ取り込まれた。** 詳細は **§7** を参照。
+> 本稿 §1〜§6 は**監査時点（PR #47 の直前、HEAD `6ea24b3`）の記録**としてそのまま残す。
+コード・台帳（`state/`）・既存文書・CI 定義・GitHub の Issue/PR/ブランチは一切変更していない。**
 - 所有者：`docs/parallel-work-ownership.md` §2 に従い `README.md` / `state/` / `docs/minimal-core-and-ci.md` は**統合役のみ**が編集する。本稿は §3 の**文案**を提供するにとどめる
 
 ---
@@ -63,16 +67,17 @@
 
 | ブランチ | HEAD 日時 | 変更内容 |
 |---|---|---|
-| `arena/1e74f6a0-researchos` | 06:36Z | `docs/` の `worker-assignment-prompts-2026-10-21.md` 新規（+209） |
-| `arena/85f0cc80-researchos` | 05:35Z | **The Agentic Scientist 読解**（`contributions/` の `2026-10-21_agentic_scientist_reading.md` +307、SRC +1（末尾 4 桁 `7419`）、EVD +5、fixture に `2610.18933` 追記） |
-| `arena/2411d5fb-researchos` | 05:43Z | **RRSI v3 読解**（`contributions/` の `2026-10-21_rrsi_reading.md` +224、SRC +1（末尾 4 桁 `a3a2`）、EVD +8、VER +1（末尾 4 桁 `508e`）、`docs/literature-triage-2026-10-21.md` §7 追加、`scripts/holdout_eval.py` / `prune_candidates.py` / 両テスト修正） |
+| `arena/1e74f6a0-researchos` | 06:36Z | `docs/worker-assignment-prompts-2026-10-21.md` 新規（+209） |
+| `arena/85f0cc80-researchos` | 05:35Z | **The Agentic Scientist 読解**（`contributions/2026-10-21_agentic_scientist_reading.md` +307、SRC +1（`SRC-20261021-7419`）、EVD +5、fixture に `2610.18933` 追記） |
+| `arena/2411d5fb-researchos` | 05:43Z | **RRSI v3 読解**（`contributions/2026-10-21_rrsi_reading.md` +224、SRC +1（`SRC-20261021-a3a2`）、EVD +8、VER +1（`VER-20261021-508e`）、`docs/literature-triage-2026-10-21.md` §7 追加、`scripts/holdout_eval.py` / `prune_candidates.py` / 両テスト修正） |
 
 残る 6 本（`ac3628ba` / `b7545cd1` / `bbc9c7b9` / `be8b5d01` / `7605f122` / `23370dd5`）は**いずれも `ahead=0`**＝マージ済み PR（#42/#39/#44/#45/#40・#41/#43）の作業ブランチが残置されたもので、内容は `main` に包含されている。
 
-> **〔表記上の注意〕** 未マージブランチ上のレコード ID とファイルパスは、本稿では**末尾 4 桁のみ／ディレクトリ接頭辞なし**で記す。
+> **〔表記について・PR #47 で解消済み〕** 初稿では、未マージブランチ上のレコード ID とファイルパスを**末尾 4 桁のみ／ディレクトリ接頭辞なし**で記していた。
 > そのまま書くと**検査7（`scripts/check_memo_ledger_refs.py`）が `main` に存在しない参照として dangling を出し、CI を赤にするため**である（実際に初稿で 7 件検出された）。
 > これは検査7の欠陥ではなく**設計どおりの挙動**だが、**「未マージの作業を `main` の文書から参照する」こと自体に機械的な抵抗がある**ことを意味する。
-> 統合役がこれらのブランチをマージした後は、本稿の表記を実 ID に戻してよい（その時点で参照は解決する）。
+> **これら 3 ブランチは本稿と同日の PR #47 で `main` へ取り込まれた**（§7）。
+> 取り込みに伴い本稿の表記は実 ID・実パスへ戻してある。
 
 ### 1.4 検査8 の除外規則が README に効いていないことの実証
 
@@ -121,11 +126,11 @@ summary: 1 doc(s) scanned, 7 stale number(s)   # exit=1
 | **D-04** | `README.md:16` | 「これで `docs/incomplete-work-audit-2026-10-20.md` の**未対応項目はゼロ**になった」 | **ID 18 は未解決のまま**（監査 §14.9 L1157 / §14.4 / L1393 が明記）。**記述時点でも ID 16 が未対応だったため、書かれた時点ですでに不正確** | **高** |
 | **D-05** | `docs/literature-triage-2026-10-21.md:104–105` | 「固定タスクへの過適合を避ける | **未実装**」「低寄与コンポーネントの剪定 | **未実装**」 | **両方実装済**（`scripts/holdout_eval.py` / `scripts/prune_candidates.py`、PR #42）。※ **未マージの `arena/2411d5fb-researchos` がこの 2 行の書き換えを既に含む**（§3.5 参照） | **中**（重複編集リスクあり） |
 | **D-06** | `docs/literature-triage-2026-10-21.md:102, 143` | 「`state/verifications.jsonl`（**29件**）」「メモ17件・**EVD 49件**」 | verifications **31** / evidence **60**。メモは **19 件** | 中 |
-| **D-07** | `docs/literature-triage-2026-10-21.md:28, 257` | 「**本文は未読**」/「優先 1・2 は abs ページで書誌・抄録を確認済み（**本文は未読**）」 | **RRSI 本文（HTML v3 全15チャンク）は読了済**（`arena/2411d5fb-researchos` の `contributions/` の `2026-10-21_rrsi_reading.md`）。`main` には**未マージ** | 中 |
+| **D-07** | `docs/literature-triage-2026-10-21.md:28, 257` | 「**本文は未読**」/「優先 1・2 は abs ページで書誌・抄録を確認済み（**本文は未読**）」 | **RRSI 本文（HTML v3 全15チャンク）は読了済**（`arena/2411d5fb-researchos` の `contributions/2026-10-21_rrsi_reading.md`）。`main` には**未マージ** | 中 |
 | **D-08** | `docs/worker-handoff-literature-2026-10-21.md:299–301, 323, 338, 343` | 優先4 SHELDON：「**スナップショット未追記**」「`state/evidence.jsonl` は **49 件**」「台帳（EVD 49 / CLM 8 / VER 29 / HYP 2）」「fixture に**未登録**」 | **完了・登録済**（PR #44 / `SRC-20261021-2384` / `contributions/2026-10-21_sheldon_reading.md` / fixture に `2610.18025` 追記済＝snapshot 13 件）。実測は **EVD 60 / CLM 9 / VER 31 / HYP 2** | **中** |
 | **D-09** | `docs/worker-handoff-literature-2026-10-21.md:165`（優先2 Stellar Colosseum） | 未了として扱われている | **完了・登録済**（PR #45 / `SRC-20261021-2b88` / `contributions/2026-10-21_stellar_colosseum_reading.md`）。引継ぎ資料のカテゴリ誤記（cs.CL→cs.LG）も同 PR で訂正済 | 中 |
 | **D-10** | `README.md:119` / `docs/minimal-core-and-ci.md:44` | 「凍結中である（**記録は `arena/*` ブランチに残る**）」「凍結（`arena/*` ブランチに記録として残る）」 | **凍結記録を含む旧 `arena/*` は ID 11 で全削除済**（監査 §13.8(1)）。現存する 9 本の `arena/*` は**別目的の作業ブランチで、凍結記録ではない**。参照先が死んでいる | **中** |
-| **D-11** | `README.md:21–22` / `docs/minimal-core-and-ci.md:66` | 「RRSI の 2 項目を**実装**」/「いずれも **RRSI の設計要素の実装である**」 | RRSI v3 本文照合の結果、両者は RRSI の **critic / selector / pruner とは別物**と判定されている（未マージ `contributions/` の `2026-10-21_rrsi_reading.md` §1-6「いずれも**要修正**（撤回・削除ではない）」）。マージ後は過大表明になる | **中** |
+| **D-11** | `README.md:21–22` / `docs/minimal-core-and-ci.md:66` | 「RRSI の 2 項目を**実装**」/「いずれも **RRSI の設計要素の実装である**」 | RRSI v3 本文照合の結果、両者は RRSI の **critic / selector / pruner とは別物**と判定されている（未マージ `contributions/2026-10-21_rrsi_reading.md` §1-6「いずれも**要修正**（撤回・削除ではない）」）。マージ後は過大表明になる | **中** |
 | **D-12** | `docs/incomplete-work-audit-2026-10-20.md:1010, 1088–1101` | 「対応済み 14件 / 撤回 1件 / **未対応 1件**（ID 16）」「残る論点は新 ID 17〜20 の 4 件」 | **対応済み 15 / 撤回 1 / 未対応 1（ID 18）**。ID 16・19・20 は完了、ID 17 は凍結 | 中 |
 | **D-13** | `README.md:30` | 「**54 件の EVD のうち 48 件（88.9%）**がいずれの HYP とも紐づいていない」 | **54 / 60 ＝ 90.0%**（HYP 未紐付けは 6 件のまま、EVD だけ増えた） | 低 |
 | **D-14** | `README.md:9` | 「**11 ソースすべて**が 1 件以上の EVD を持つ」 | **13 ソースすべて**が ≥1 件（SRC-20261021-2384 / -2b88 が追加） | 低 |
@@ -241,7 +246,7 @@ ID 17 は**凍結**、ID 19・ID 20 は**完了**。
 ```markdown
 **〔2026-10-21 追記〕** 優先 1（RRSI）の**本文は読了済**（HTML v3 全15チャンク、Appendix A–F、
 表1–9）。ただし本稿執筆時点では `main` に**未マージ**（`arena/2411d5fb-researchos`）。
-マージ後は本稿 §7 および `contributions/` の `2026-10-21_rrsi_reading.md` が現在の読解状態の正本となる。
+マージ後は本稿 §7 および `contributions/2026-10-21_rrsi_reading.md` が現在の読解状態の正本となる。
 ```
 
 ### 3.5 `docs/worker-handoff-literature-2026-10-21.md`——冒頭に進捗バナーを追記（**各プロンプト本文は変更しない**）〔D-08 / D-09 / D-17〕
@@ -255,9 +260,9 @@ ID 17 は**凍結**、ID 19・ID 20 は**完了**。
 >
 > | 優先 | 論文 | 現在の状態（2026-10-21） |
 > |---|---|---|
-> | 1 | RRSI `2609.24972` | **本文読了済・未マージ**（`arena/2411d5fb-researchos`。新規 SRC 1 件（末尾 4 桁 `a3a2`）、EVD 8、VER 1。暫定実装 2 本は「要修正」と判定） |
+> | 1 | RRSI `2609.24972` | **本文読了済・未マージ**（`arena/2411d5fb-researchos`。`SRC-20261021-a3a2`、EVD 8 件、VER 1 件。暫定実装 2 本は「要修正」と判定） |
 > | 2 | Stellar Colosseum `2609.15983` | **✅ 完了・登録済**（PR #45 / `SRC-20261021-2b88` / `contributions/2026-10-21_stellar_colosseum_reading.md`。本稿 L174 のカテゴリ誤記 cs.CL→cs.LG も訂正済） |
-> | 3 | The Agentic Scientist `2610.18933` | **成果物あり・未マージ**（`arena/85f0cc80-researchos`。新規 SRC 1 件（末尾 4 桁 `7419`）、EVD 5、fixture に `2610.18933` 追記） |
+> | 3 | The Agentic Scientist `2610.18933` | **成果物あり・未マージ**（`arena/85f0cc80-researchos`。`SRC-20261021-7419`、EVD 5 件、fixture に `2610.18933` 追記） |
 > | 4 | SHELDON `2610.18025` | **✅ 完了・登録済**（PR #44 / `SRC-20261021-2384` / `contributions/2026-10-21_sheldon_reading.md` / fixture 追記済） |
 > | 5 | RLTL;DR `2609.37633` | **未着手** |
 >
@@ -289,7 +294,7 @@ ID 17 は**凍結**、ID 19・ID 20 は**完了**。
 **〔2026-10-21 追記〕** 上記は**抄録要約に基づく暫定実装**である。RRSI v3 本文の照合の結果、
 `holdout_eval.py` は RRSI の**critic／selector ではなく**ローカル検出器の分割診断、
 `prune_candidates.py` は**実測寄与に基づく pruner ではなく**非破壊の構造インベントリと判定された
-（`contributions/` の `2026-10-21_rrsi_reading.md` §1-6、§5。**未マージ** `arena/2411d5fb-researchos`）。
+（`contributions/2026-10-21_rrsi_reading.md` §1-6、§5。**未マージ** `arena/2411d5fb-researchos`）。
 いずれも**撤回・削除ではなく「要修正」**であり、本リポジトリの診断道具としての価値は維持される。
 ```
 
@@ -320,7 +325,7 @@ ID 17 は**凍結**、ID 19・ID 20 は**完了**。
 
 | # | 項目 | 状態 | 根拠 |
 |---|---|---|---|
-| A-1 | **監査 ID 18**：閾値 R ~ 1 の検証に必要な「**同一タスク領域内でモデルの広がりを変えた第3の論文**」の収集 | **未解決**。既存インベントリ（54件）からは解決しないことが確定済み（§14.9）。別探索が進行中（`docs/` の `worker-assignment-prompts-2026-10-21.md` ワーカーB） | 監査 §13.11 / §14.9 / §14.4 |
+| A-1 | **監査 ID 18**：閾値 R ~ 1 の検証に必要な「**同一タスク領域内でモデルの広がりを変えた第3の論文**」の収集 | **未解決**。既存インベントリ（54件）からは解決しないことが確定済み（§14.9）。別探索が進行中（`docs/worker-assignment-prompts-2026-10-21.md` ワーカーB） | 監査 §13.11 / §14.9 / §14.4 |
 | A-2 | **SHELDON 型の HYP–EVD 関係表の採否と backfill** | **未決着**。README L30 が「採否はメモ §5・§7 を参照」と保留したまま。実測 **54/60（90.0%）が未紐付け**で、**台帳スキーマは未変更**（`evidence.jsonl` / `hypotheses.jsonl` に verdict フィールドなし） | `state/` 全件走査、README L30 |
 | A-3 | **`counterclaim_ids` の未設定が再発**（D-16） | **`CLM-006` が空、`CLM-20261021-7b3e` はフィールド欠落**。監査 ID 5 は「完了」と記録されているが、新規 CLM には適用されていない。`schemas/claim.json` が required にしないため CI は緑 | `state/claims.jsonl` 全件 |
 | A-4 | **リモート `arena/*` 9 本の扱い**（D-02） | **人間の承認待ち**。うち 6 本は `ahead=0` の残置で冗長。**ID 11 を完了した直後に同型の問題が再生産されている** | `gh api .../branches` / `compare` |
@@ -346,8 +351,8 @@ ID 17 は**凍結**、ID 19・ID 20 は**完了**。
 | C-2 | RRSI 未実装 2 項目の**実装**（`holdout_eval.py` / `prune_candidates.py`） | PR #42、両ファイル実在、テスト 18＋19 件、8 ゲート緑 | `docs/literature-triage-2026-10-21.md` L104–107 → **§3.4（マージで解消。重複編集禁止）** |
 | C-3 | **SHELDON** の読解・SRC 登録・fixture 追記 | PR #44 / `SRC-20261021-2384` / `contributions/2026-10-21_sheldon_reading.md` / snapshot に `2610.18025` あり | handoff 優先4（L299–301, 323, 338, 343）→ §3.5 |
 | C-4 | **Stellar Colosseum** の読解・SRC 登録・カテゴリ誤記訂正 | PR #45 / `SRC-20261021-2b88` / `contributions/2026-10-21_stellar_colosseum_reading.md` / handoff L174 訂正済 | handoff 優先2（L165）→ §3.5 |
-| C-5 | **RRSI v3 本文の読解** | `arena/2411d5fb-researchos` に `contributions/` の `2026-10-21_rrsi_reading.md`（224行）＋ EVD 8・SRC 1・VER 1 | triage L28 / L257「本文は未読」→ §3.4 |
-| C-6 | **The Agentic Scientist** の読解 | `arena/85f0cc80-researchos` に `contributions/` の `2026-10-21_agentic_scientist_reading.md`（307行）＋ SRC 1・EVD 5・fixture 追記 | handoff 優先3（L240, 281）→ §3.5 |
+| C-5 | **RRSI v3 本文の読解** | `arena/2411d5fb-researchos` に `contributions/2026-10-21_rrsi_reading.md`（224行）＋ EVD 8・SRC 1・VER 1 | triage L28 / L257「本文は未読」→ §3.4 |
+| C-6 | **The Agentic Scientist** の読解 | `arena/85f0cc80-researchos` に `contributions/2026-10-21_agentic_scientist_reading.md`（307行）＋ SRC 1・EVD 5・fixture 追記 | handoff 優先3（L240, 281）→ §3.5 |
 | C-7 | README の**台帳件数 3 か所**（sources / evidence / verifications） | 実測 13 / 60 / 31 | README L30 → §3.1（追記） |
 | C-8 | README の「**リモートのブランチは `main` のみ**」 | 実測 10 本 | README L16 → §3.2（追記） |
 | C-9 | 凍結記録の参照先（`arena/*` ブランチ）の消失 | ID 11 で全削除済 | README L119 / minimal-core-and-ci.md L44 → §3.6 |
@@ -467,4 +472,96 @@ gh api repos/aiselfmyself/ResearchOS -i | grep -i x-oauth-scopes
 
 ---
 
-*2026-10-21、現況監査ワーカー（A）。台帳・コード・既存文書・GitHub の状態は変更していない。*
+---
+
+## 7. その後の是正（2026-10-21、PR #47）
+
+本稿の提出後、人間の指示により**副次的な発見 2 件（§3.8 の ID 21・ID 22）を自ら是正し、
+PR #47 として `main` へ取り込んだ**。本章のみが PR #47 以降の記録であり、§1〜§6 は
+**監査時点（HEAD `6ea24b3`）のスナップショット**として残す。
+
+### 7.1 ID 22：未マージ 3 ブランチを取り込んだ
+
+§1.3 に挙げた 3 ブランチをすべて `main` へ統合した。
+
+| ブランチ | 取り込み | 内容 |
+|---|---|---|
+| `arena/1e74f6a0-researchos` | ✅ | `docs/worker-assignment-prompts-2026-10-21.md` |
+| `arena/85f0cc80-researchos` | ✅ | The Agentic Scientist 読解 ＋ `SRC-20261021-7419` ＋ EVD 5 件 ＋ snapshot へ `2610.18933` 追記 |
+| `arena/2411d5fb-researchos` | ✅ | RRSI v3 読解 ＋ `SRC-20261021-a3a2` ＋ EVD 8 件 ＋ `VER-20261021-508e` ＋ triage §7 ＋ 暫定実装 2 本の位置づけ訂正 |
+
+**衝突の解決**：`state/` の 3 台帳（sources / evidence / verifications）と
+`tests/fixtures/arxiv_metadata_snapshot.json` が衝突した。**いずれも両側が末尾への追記**であり、
+行の和集合（HEAD 側 → ブランチ側）で解決した。ID は非連番方式のため **ID 自体は衝突しなかった**
+（§3.8 の予測どおり）。`snapshot` の `capture_note` のみ両側が別の追記文を持っていたため、
+**両方を保持する形で結合**した。
+
+**取り込み後の台帳**：sources=15 / evidence=73 / claims=9 / verifications=32 / hypotheses=2（重複 0 件）。
+
+### 7.2 ID 21：検査8が README の現況を検査できるようにした
+
+`README.md` に **「## 現在の状態（実測値・機械検査対象）」節を新設**し、現在値を
+**箇条書き（`>` ではない）**で書いた。あわせて歴史的な件数が並ぶ引用ブロック内の 2 行に
+`drift-ok` を付与し、現況節に**「なぜ `>` で書かないか」**を明記した。
+
+**是正が効いていることを実測で確認した**——是正後の README を `/tmp` にコピーし、
+現況節の数値のみを書き換えて走査した：
+
+```text
+python3 scripts/check_doc_numbers.py --file /tmp/driftcheck/README_drifted.md
+  STALE L64 [ledger:sources] found 12, expected 15
+  STALE L66 [gates]          found  7, expected 8
+summary: 2 stale number(s)   # exit=1
+```
+
+**是正前は同じ数値が検出されず、是正後は検出される。** 数値を書き換えるのではなく
+**置き場所を分けた**ので、次に台帳が増えても陳腐化は検出される（ID 14 と同じ方針）。
+
+### 7.3 併せて訂正した記述
+
+| 対象 | 訂正内容 |
+|---|---|
+| `README.md` L16 相当 | 「リモートは `main` のみ」「未対応ゼロ」に**日付付きの追記**を付し、現況（10 本／ID 18 未解決）を明示。履歴の本文は変更していない |
+| `README.md` L21–22 相当 | 「RRSI の 2 項目を実装」に**訂正注**を追加——両者は RRSI の critic / pruner ではなく「一般化の懸念だけを借りたローカル診断」であることを明記（RRSI 読解 §5 の判定「要修正」に追随） |
+| `docs/incomplete-work-audit-2026-10-20.md` §14.4 | 新 ID **21 / 22** を登録 |
+| 同 §14.11 / §14.12 | 両件の詳細（発覚の経緯・実測・直し方・限界）を追加 |
+| 同「未対応」要約 | ID 16 が **2026-10-21T04:13Z に解消済み**（Issue 4 件すべて CLOSED、OPEN 0 件）であることを追記。**未対応は ID 18 のみ** |
+
+### 7.4 検証（PR #47 の全 8 ゲート）
+
+```text
+python3 -m unittest discover -s tests            → Ran 242 tests / OK
+python3 gitswarm/benchmarks/benchmark.py --check → PASS
+python3 gitswarm/readout_sim.py --check          → PASS
+python3 scripts/validate_state.py                → PASS (sources=15, evidence=73, claims=9,
+                                                          verifications=32, hypotheses=2)
+python3 scripts/check_citations.py               → 14 checked / 1 skipped / 0 failure
+python3 scripts/check_memo_citations.py          → 22 memos / 52 citations / 4 skipped / 0 failure
+python3 scripts/check_memo_ledger_refs.py        → 0 dangling / 5 archived
+python3 scripts/check_doc_numbers.py             → 0 stale
+```
+
+### 7.5 残ったこと（本 PR では扱っていない）
+
+- **監査 ID 18**（第3の論文の収集）—— 未解決。別ワーカーが探索中。
+- **SHELDON 型 HYP–EVD 関係表の採否**（A-2）—— 未決着。台帳スキーマは未変更。
+- **`counterclaim_ids` の未設定**（D-16）—— `CLM-006` / `CLM-20261021-7b3e` が空のまま。
+- **`docs/worker-handoff-literature-2026-10-21.md` の進捗バナー**（§3.5 の提案）—— 未適用。
+  優先 2・4 が完了済、優先 1・3 が取り込み済であることが同文書に反映されていない。
+- **`README.md` L119 / `docs/minimal-core-and-ci.md:44` の凍結記録の参照先**（D-10）—— 未訂正。
+- **リモート `arena/*` 6 本（`ahead=0`）の扱い**（A-4）—— 削除は人間の承認を要するため未決着。
+- **読解メモの逐語引用の検証** —— 本 PR は「未マージを解消した」のであって「内容を検証した」のではない（§7.6）。
+
+### 7.6 限界の明示
+
+取り込んだ 2 本の読解メモ（`RRSI` / `Agentic Scientist`）について、
+**逐語引用が原典と一致するかは確認していない。** 確認したのは
+スキーマ適合・ID 一意性・参照解決・書誌照合・メモ引用照合・全文テスト・数値の陳腐化なし、である。
+原典との突き合わせは機械検査では原理的に捕れず
+（`docs/minimal-core-and-ci.md` §2.1）、次セッションの照合に委ねる。
+自律マージ方針 §5 が**意図的に未解決**とする「誤りが混入すること自体の防止」に当たる。
+
+---
+
+*2026-10-21、現況監査ワーカー（A）→ 同日 PR #47 で統合役を兼務。*
+*§1〜§6 は監査時点（HEAD `6ea24b3`）の記録。§7 が PR #47 による是正の記録である。*
