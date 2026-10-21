@@ -85,7 +85,7 @@ def canonical_json(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
 
 
-def build_outputs(source_root: Path) -> dict[Path, str]:
+def build_outputs(source_root: Path, *, reuse_pinned_commit: bool = False) -> dict[Path, str]:
     source_root = source_root.resolve()
     if not source_root.is_dir():
         raise ImportErrorDetail(f"source root is not a directory: {source_root}")
@@ -93,6 +93,19 @@ def build_outputs(source_root: Path) -> dict[Path, str]:
     selection = read_json(SELECTION_PATH)
     if not isinstance(selection, dict):
         raise ImportErrorDetail("selection file must contain a JSON object")
+
+    # A check should remain reproducible after this seed kit is committed into
+    # ResearchOS: the current HEAD then changes, even though the selected
+    # upstream records have not. --write intentionally refreshes to HEAD.
+    commit = ""
+    if reuse_pinned_commit and MANIFEST_PATH.is_file():
+        old_manifest = read_json(MANIFEST_PATH)
+        if isinstance(old_manifest, dict):
+            pinned = old_manifest.get("upstream_commit")
+            if isinstance(pinned, str) and len(pinned) >= 7:
+                commit = pinned
+    if not commit:
+        commit = git_commit(source_root)
 
     selected_source_ids = selection.get("selected_sources")
     selected_evidence = selection.get("selected_evidence")
@@ -119,7 +132,6 @@ def build_outputs(source_root: Path) -> dict[Path, str]:
     if len(evidence_ids) != len(set(evidence_ids)):
         raise ImportErrorDetail("selected_evidence contains duplicate IDs")
 
-    commit = git_commit(source_root)
     materials: list[dict[str, Any]] = []
     evidence_origins: dict[str, str] = {}
     used_sources: set[str] = set()
@@ -236,7 +248,7 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
-        outputs = build_outputs(args.source_root)
+        outputs = build_outputs(args.source_root, reuse_pinned_commit=not args.write)
     except (ImportErrorDetail, OSError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
