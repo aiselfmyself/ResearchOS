@@ -1,0 +1,150 @@
+{
+  "arm": "parallel",
+  "worker": "P1",
+  "base_commit": "ccf76aa654c1344e7bc7862bc835cf1420c98ff8",
+  "items": [
+    {
+      "id": "Q01",
+      "value": 9,
+      "location": "abs: Authors（カンマ区切り氏名を9名計数）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q04",
+      "value": "Apple",
+      "location": "HTML 冒頭著者ブロック: Affiliation",
+      "confidence": "high"
+    },
+    {
+      "id": "Q07",
+      "value": 8,
+      "location": "HTML 第一レベル見出し: 1 Introduction〜8 Conclusion and outlook。References・Appendix・小節を除外",
+      "confidence": "high"
+    },
+    {
+      "id": "Q11",
+      "value": [
+        6,
+        8
+      ],
+      "location": "§1 Figure 1 キャプション: 6th and 8th rollout",
+      "confidence": "high"
+    },
+    {
+      "id": "Q13",
+      "value": "Remember to paginate search results.",
+      "location": "§1 sequential rolloutsを導入する段落の引用例",
+      "confidence": "high"
+    },
+    {
+      "id": "Q17",
+      "value": 50,
+      "location": "§3.1 maximum episode horizon",
+      "confidence": "high"
+    },
+    {
+      "id": "Q20",
+      "value": 4.5,
+      "location": "§3.2 asynchronous rollout collection、K=8のsampling phase",
+      "confidence": "high"
+    },
+    {
+      "id": "Q25",
+      "value": 123,
+      "location": "§4.1 Datasets: Leetcode remaining tasks after Pass@128=0 filtering",
+      "confidence": "high"
+    },
+    {
+      "id": "Q27",
+      "value": [
+        "RLTF-SD",
+        "Strategy-guided Exploration (SGE)",
+        "GRPO"
+      ],
+      "location": "§4.1 Baselines: three baselines",
+      "confidence": "high"
+    },
+    {
+      "id": "Q28",
+      "value": 91.1,
+      "location": "§4.2 Table 1: RLTL;DR行 × SAPI列",
+      "confidence": "high"
+    },
+    {
+      "id": "Q31",
+      "value": 256,
+      "location": "§5.1 Dataset: 642 tasks split into eval and train",
+      "confidence": "high"
+    },
+    {
+      "id": "Q36",
+      "value": 3.4,
+      "location": "§6 Table 3: Student, no information about failed unit tests (only success)行 × Train Pass@1列（表示03.4%）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q38",
+      "value": [
+        "summary",
+        "feedback",
+        "wrong_step_id",
+        "corrected_step",
+        "hint"
+      ],
+      "location": "Appendix A.1 Prompt 1末尾 JSON形式指定",
+      "confidence": "high"
+    },
+    {
+      "id": "Q41",
+      "value": 21,
+      "location": "Appendix A.4 Table 4: Avg attempts per task (due to async collection)行 × Appworld/SAPI列",
+      "confidence": "high"
+    },
+    {
+      "id": "Q44",
+      "value": 15.3,
+      "location": "Appendix C.1 Table 5: Wrong capitalization行 × Share列",
+      "confidence": "high"
+    },
+    {
+      "id": "Q47",
+      "value": 20,
+      "location": "Appendix D.2 Insight too-easy ratio: below 20%",
+      "confidence": "high"
+    },
+    {
+      "id": "Q50",
+      "value": 57,
+      "location": "Appendix E.8 Figure 11キャプション: sequential insight条件で解が見つかる割合",
+      "confidence": "high"
+    }
+  ],
+  "session_log": {
+    "arm": "parallel",
+    "worker": "P1",
+    "branch": "arena/40bd7a47-researchos",
+    "base_commit": "ccf76aa654c1344e7bc7862bc835cf1420c98ff8",
+    "started_at_utc": "2026-10-21T08:38:12Z",
+    "finished_at_utc": "2026-10-21T08:45:05Z",
+    "tool_calls": {
+      "total": 22,
+      "by_kind": {
+        "bash": 7,
+        "page_fetch": 13,
+        "file_read": 2
+      }
+    },
+    "files_read": [
+      "docs/single-vs-multi-experiment-2026-10-21.md",
+      "docs/worker-prompts-next-stage-2026-10-21.md",
+      ".github/workflows/core-check.yml",
+      "https://arxiv.org/html/2609.37633v2",
+      "https://arxiv.org/abs/2609.37633v2"
+    ],
+    "output_files": [
+      "contributions/2026-10-21_svm_parallel_p1.json",
+      "contributions/2026-10-21_svm_parallel_p1.md"
+    ],
+    "notes": "開始後、担当未指定の確認とユーザー回答待ちを含む（待機時間未分離、開始時計はリセットしない）。ユーザーが本会話をP1として進める方針を承認。別途D2記録の確認は未実施。採点道具は開始HEADに存在。固定版冒頭転記: arXiv:2609.37633v2 [cs.LG] 19 Oct 2026。HTML取得12チャンク（0,2,1,3,4,5,6,9,8,10,11,14）、abs取得1回。PDF未使用。UIモデル名unknown。ゲートの事前実行を内容確定前に実施したためその時間も含む。全体ゲートが他メモを自動走査し、他アームのファイル名と引用検査結果が出力されたが、その成果物自体や回答値は開いていない。files_readは直接読んだ入力のみであり、自動走査の全ファイルは列挙しない。ツール数は本JSON書込呼出まで、確定後のゲート・git/PR操作は対象外。自己申告値。"
+  }
+}
