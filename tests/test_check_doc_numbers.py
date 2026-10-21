@@ -38,6 +38,7 @@ if str(ROOT / "scripts") not in sys.path:
     sys.path.insert(0, str(ROOT / "scripts"))
 
 import check_doc_numbers as cdn  # noqa: E402
+import ledger_store  # noqa: E402
 
 
 class RealRepoTest(unittest.TestCase):
@@ -73,13 +74,20 @@ class ActualValueTest(unittest.TestCase):
         self.assertGreaterEqual(cdn.actual_gate_count(), 3)
         self.assertIn("steps:", text)
 
-    def test_ledger_counts_match_line_counts(self):
+    def test_ledger_counts_match_union_view(self):
+        """Counts are records in the union view, not lines of the base file.
+
+        Before the 2026-10-21 sharding migration these were the same number.
+        They diverge as soon as one session shard exists, so this test uses
+        the same reader as the checker (scripts/ledger_store.py) instead of
+        counting `state/<name>.jsonl` lines.
+        """
         ledgers = cdn.actual_ledger_counts()
         self.assertEqual(set(ledgers), set(cdn.LEDGERS))
         for name, fname in cdn.LEDGERS.items():
-            path = cdn.STATE_DIR / fname
-            expected = sum(1 for l in path.read_text(encoding="utf-8").splitlines() if l.strip())
-            self.assertEqual(ledgers[name], expected, fname)
+            records, errors = ledger_store.load_jsonl(cdn.STATE_DIR / fname)
+            self.assertEqual(errors, [], fname)
+            self.assertEqual(ledgers[name], len(records), fname)
 
 
 class ScanFileTest(unittest.TestCase):

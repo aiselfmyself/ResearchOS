@@ -51,10 +51,10 @@
 
 ゲートするのは決定論的・再実行可能な**8検査**（2026-10-21 時点。初版は4検査で、2026-10-20 に 5・6 を、2026-10-21 に 7 を、同日 8 を追加した）：
 
-1. `python3 -m unittest discover -s tests -v` — **388テスト**（約3〜5秒）
+1. `python3 -m unittest discover -s tests -v` — **420テスト**（約3〜5秒）
 2. `python3 gitswarm/benchmarks/benchmark.py --check` — 成果物と fresh run の照合（許容誤差0.01）
 3. `python3 gitswarm/readout_sim.py --check` — 投票シミュレーション成果物と fresh run の照合
-4. `python3 scripts/validate_state.py` — 研究台帳のスキーマ・ID一意・参照整合性（**台帳内の** ID・パス参照の存在検査を含む）
+4. `python3 scripts/validate_state.py` — 研究台帳のスキーマ・ID一意・参照整合性（**台帳内の** ID・パス参照の存在検査を含む）。台帳は**凍結ベース（`state/*.jsonl`）＋セッション別シャード（`state/<台帳名>.d/*.jsonl`）の統合ビュー**として検証される（`scripts/ledger_store.py`）
 5. `python3 scripts/check_citations.py` — 台帳書誌と同梱arXivスナップショットの照合（**オフライン・ネットワーク不要**。実API照合の `--live` は手動専用でゲートしない）
 6. `python3 scripts/check_memo_citations.py` — 調査メモ（`contributions/*.md`）の参考文献・本文中arXiv引用と同梱スナップショットの照合（オフライン）
 7. `python3 scripts/check_memo_ledger_refs.py` — 調査メモ内の**台帳ID参照とリポジトリパス参照の存在検査**（オフライン。2026-10-21 追加。後述 §2.1）
@@ -122,7 +122,7 @@
 | `合計 N件` / `Nテスト` / `N tests` | `tests/*.py` の `def test_` の静的計数（`unittest` の収集数と一致を確認済み） |
 | `test_NAME.py …（N件）` | 当該ファイルの `def test_` 数 |
 | `Nゲート` / `N つ）` | `core-check.yml` のステップのうち **`run:` を持つもの**（setup は `uses:` なので除外リストが要らない） |
-| `evidence=N` 他 | `state/*.jsonl` の非空行数 |
+| `evidence=N` 他（6台帳。`relations` を含む） | 統合ビューのレコード数（凍結ベース `state/<台帳名>.jsonl` ＋ `state/<台帳名>.d/*.jsonl`）。件数の同期は `scripts/sync_doc_counts.py` |
 
 **対象は `README.md` と本ファイルのみ**——監査や統合レポートは過去の記述（「evidence 47 → 48」）に
 満ちており、そこを検査すると**正常な状態を失敗として検出してしまう**。

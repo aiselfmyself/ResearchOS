@@ -93,6 +93,10 @@ LEDGERS = {
     "claims": "claims.jsonl",
     "verifications": "verifications.jsonl",
     "hypotheses": "hypotheses.jsonl",
+    # Added 2026-10-21: the relation ledger is part of the validator's
+    # COLLECTIONS and R3/R4 are about to write to it, so a documented
+    # `relations=N` must be checked like the other five (not silently ignored).
+    "relations": "relations.jsonl",
 }
 
 SKIP_MARKER = "drift-ok"

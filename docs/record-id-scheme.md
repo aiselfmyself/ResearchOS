@@ -31,6 +31,22 @@ python3 scripts/new_id.py EVD --count 3  # 3件
 
 出力されたIDをそのままレコードに書く。既存の台帳を読んで重複を避けるので、通常は衝突しない。
 
+**書き込み先は `state/<台帳名>.d/` の新しいシャードファイルである（2026-10-21 以降）。**
+
+```sh
+python3 scripts/new_ledger_shard.py evidence --create
+# -> state/evidence.d/2026-10-21-3f9ac21b7d40.jsonl（空ファイルが作られる）
+```
+
+- `state/<台帳名>.jsonl` は**凍結ベース**であり、追記も編集もしない。既存レコードはそこに留まる。
+- 1セッション／1作業バッチにつき1ファイル。書いたシャードは後から編集しない（訂正は新しいシャード＋記録）。
+- ファイル名は `YYYY-MM-DD-<12桁hex>`。**日付だけでなく12桁のランダム要素が必須**（同日に並行するセッションが同名を作らないため）。
+- 規則に合わない名前のファイルは読み手が拒否して報告する（黙って無視しない）。名前は `new_ledger_shard.py` に作らせるのが確実。
+- 書誌スナップショットも同じ規則（`tests/fixtures/arxiv_metadata_snapshot.json` が凍結ベース、追加は `.../<YYYY-MM-DD>-<12桁hex>.json`）。`python3 scripts/new_ledger_shard.py arxiv_snapshot --create` で作る。
+- 統合ビューの読み取りは `scripts/ledger_store.py` が一元化する。追記後に `python3 scripts/validate_state.py` を走らせ、緑を確認してから PR に出す。
+
+背景と移行記録：`contributions/2026-10-21_ledger_sharding_migration.md`。
+
 **採番は人間の承認なしに実行してよい。** 2026-10-21 に `docs/parallel-work-ownership.md` §2.1 で
 `state/` を「統合役のみ」から「全セッション（追記のみ）」に変更したことに伴う。
 
@@ -69,8 +85,8 @@ state/evidence.jsonl:15: ID 'EVD-015' extends the frozen sequential range
 | 問題 | この方式 |
 |---|---|
 | 同一台帳への追記による **ID衝突**（add/add、union後の重複） | **解決**（接尾辞が独立） |
-| 同一台帳への追記による **テキスト衝突** | **未解決**（同じ行範囲を触るため。1レコード1ファイル分割は未実施） |
-| 共有ファイル（`README.md`、`docs/`、`gitswarm/artifacts/`）の同時編集 | **未解決**（`docs/parallel-work-ownership.md` の所有マップで運用回避を試みるが、強制力はなく、規約を知らないセッションの編集は防げない） |
+| 同一台帳への追記による **テキスト衝突** | **解決**（2026-10-21、方式B: 追記先を台帳ごとのシャードファイルに分けた。3ブランチ同時追記→順次マージで衝突0を実測。`contributions/2026-10-21_ledger_sharding_migration.md` §4） |
+| 共有ファイル（`README.md`、`docs/`、`gitswarm/artifacts/`）の同時編集 | **未解決**（`docs/parallel-work-ownership.md` の所有マップで運用回避を試みるが、強制力はなく、規約を知らないセッションの編集は防げない）。唯一の例外は README／`docs/minimal-core-and-ci.md` の**現在値の数値行**で、`scripts/sync_doc_counts.py` により機械的に同期できる（衝突しても1行） |
 | 誰が変更したかの識別 | **未解決**（全セッションが同一 git author のため原理的に不可） |
 
 ## 5. やらないこと
@@ -87,3 +103,4 @@ state/evidence.jsonl:15: ID 'EVD-015' extends the frozen sequential range
 |---|---|
 | 2026-10-20 | 初版。連番IDの衝突問題に対して非連番ID方式を導入 |
 | 2026-10-21 | §2に「採番は人間の承認なしに実行してよい」旨を追記。`docs/parallel-work-ownership.md` §2.1 で `state/` が全セッションに開放されたことに伴う |
+| 2026-10-21 | §2に**追記先**（`state/<台帳名>.d/` のシャード、`new_ledger_shard.py`）を明記。§4の「テキスト衝突」を**解決**に更新（方式Bのシャーディング移行）。根拠は `contributions/2026-10-21_ledger_sharding_migration.md` |
