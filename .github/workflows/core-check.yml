@@ -66,3 +66,6 @@ jobs:
 
       - name: Check ledger IDs and repo paths referenced in memos
         run: python3 scripts/check_memo_ledger_refs.py
+
+      - name: Check docs for stale numbers
+        run: python3 scripts/check_doc_numbers.py
