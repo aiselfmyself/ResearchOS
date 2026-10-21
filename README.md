@@ -62,10 +62,10 @@
 以下は**実測値**であり、`scripts/check_doc_numbers.py`（CI の 8 番目のゲート）が本文書の記述と
 リポジトリからの再計算値を突き合わせて検査する。算出コマンドは下記「使い方」節。
 
-- 台帳: sources=23 / evidence=86 / claims=9 / verifications=34 / hypotheses=6 / relations=235
+- 台帳: sources=23 / evidence=88 / claims=9 / verifications=40 / hypotheses=6 / relations=235
 - 関係台帳の中身（`scripts/gap_scan.py` の実測・ゲート対象外）:
-  unassessed **0 / 86 (0.0%)**、unexplained **20 / 86 (23.3%)**、unresolved のみ 0 件、
-  provisional **56 / 86**（`observation_key` の注釈 30 件により non-provisional 30 件）
+  unassessed **2 / 88 (2.3%)**、unexplained **22 / 88 (25.0%)**、unresolved のみ 0 件、
+  provisional **58 / 88**（`observation_key` の注釈 30 件により non-provisional 30 件）
 - 観測キーの注釈: `state/evidence_keys.jsonl`（凍結ベース・空）＋`state/evidence_keys.d/*.jsonl` の **30 件**（30 EVD）
 - テスト: 合計 437件（`tests/` の 20 ファイル。内訳は下記 §構成）
 - CI ゲート: 8ゲート（`.github/workflows/core-check.yml` の `run:` を持つステップ数）
@@ -88,9 +88,11 @@
 **したがって現況の数値は必ずこの節に追記する**こと。
 
 参考（ゲートの検査対象外。算出方法は `contributions/2026-10-21_current-status-audit.md` §1.2 と
-`scripts/gap_scan.py`）：出典 23 件のうち EVD を持たないものは 0 件。EVD 86 件のうち support の REL を
-持たないものは **20 件（23.3%）**。この 20 件は「書誌監査など仮説の対象外 6 件」「外部化しても
+`scripts/gap_scan.py`）：出典 23 件のうち EVD を持たないものは 0 件。EVD 88 件のうち support の REL を
+持たないものは **22 件（25.0%）**。うち 20 件は「書誌監査など仮説の対象外 6 件」「外部化しても
 再現性が崩れた負の開示 3 件」「統制欠如による保留 11 件」に分かれ、support を付けるべき観測ではない。
+残りの 2 件は ID18 本文確認のシャード変換で追加された新規 EVD で、関係 backfill は未実施である
+（変換記録は `contributions/2026-10-21_id18_shard_conversion.md` §5）。
 
 ## 構成
 
