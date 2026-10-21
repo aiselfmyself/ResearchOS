@@ -51,7 +51,7 @@
 
 ゲートするのは決定論的・再実行可能な**8検査**（2026-10-21 時点。初版は4検査で、2026-10-20 に 5・6 を、2026-10-21 に 7 を、同日 8 を追加した）：
 
-1. `python3 -m unittest discover -s tests -v` — **480テスト**（約3〜5秒）
+1. `python3 -m unittest discover -s tests -v` — **504テスト**（約3〜5秒）
 2. `python3 gitswarm/benchmarks/benchmark.py --check` — 成果物と fresh run の照合（許容誤差0.01）
 3. `python3 gitswarm/readout_sim.py --check` — 投票シミュレーション成果物と fresh run の照合
 4. `python3 scripts/validate_state.py` — 研究台帳のスキーマ・ID一意・参照整合性（**台帳内の** ID・パス参照の存在検査を含む）。台帳は**凍結ベース（`state/*.jsonl`）＋セッション別シャード（`state/<台帳名>.d/*.jsonl`）の統合ビュー**として検証される（`scripts/ledger_store.py`）。2026-10-21 から**来歴ゲート**（§2.5）も同じ検査に入った
@@ -236,13 +236,29 @@ hold-out / OOD 評価を**分ける**ことである。
 
 1. 新規 SRC は `query_id` を持ち、その QRY が `included_source_ids` で逆向きに参照する
 2. 新規 HYP は `round` / `derived_from_evidence_ids` / `refutation_condition`（3項目すべて非空）
-   / `next_observations`（非空）を持つ
+   / `next_literature_questions`（非空）/ `next_internal_measurements`（存在。空リスト可）を持つ
 3. 新規 REL は `derived_from` / `searched_refutation` の真偽値を持ち、`derived_from=true` は
    仮説側の `derived_from_evidence_ids` と一致する
 
 **免除はファイル単位**（`state/cycle_exemptions.json`）。シャードは 1 セッションが 1 回だけ書き、
 以後編集しないため、「既知のファイルに無い」＝「新しいレコード」が厳密に成り立つ。
-250 件の ID を列挙して保守する必要がない。
+250 件の ID を列挙して保守する必要がない。免除は 2 段ある——`legacy_files`（サイクル機構以前。
+全検査を免除）と `pre_split_files`（`next_*` の分割以前。**分割の検査だけ**を免除し、
+`round` / `derived_from_evidence_ids` / `refutation_condition` は検査し続ける）。両方に
+同じファイルを書くとエラーになる。
+
+**反証可能性の扱い（2026-10-21 追加）**：`refutation_condition.threshold`（`metric` /
+`operator` / `value`）は**任意**であり、書けなくても仮説は有効である。これは Phase 1 の
+「記録の存在だけをゲートする」方針の延長で、**反証可能性の水準が仮説ごとに違うことを
+ゲートで均さず計測値として残す**。ただし書いた場合は型を厳格に検査する（未知の operator・
+非数値・bool は失敗）。閾値を持つ `PRD` だけが機械採点の対象になる。
+
+**計測器の出力も台帳に入れる（同日追加）**：`gap_scan` / `holdout_eval` / `prune_candidates`
+などの測定を根拠に検索や仮説生成を行う場合、その測定を `SRC-004`（本リポジトリ）起点の
+`EVD` として起票する（`quote_type: "measurement"`）。`measurement` 型の EVD 自体は
+前例がある（`EVD-20261020-ffec`）が、「測定を検索計画の根拠にするなら EVD にする」と
+いう規約の適用第 1 号が `EVD-20261021-d88a`（ラウンド0の自己支持率）である。台帳外の数値を根拠にすると `QRY.derived_from` が空になり、
+S0 の「穴に紐づかないクエリは採らない」が空文化するためである。
 
 **何を検出しないか**：支持が汚染されているか（自己支持率）、仮説が良いか、refute が十分か。
 いずれも計測器（Phase 3 の `scripts/self_support.py`）が報告し、人間が判断する。

@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "ResearchOS Hypothesis",
-  "description": "A hypothesis. Records written before the 2026-10-21 hypothesis-cycle work (state/hypotheses.jsonl and state/hypotheses.d/2026-10-21-3990b64b4fdb.jsonl, listed in state/cycle_exemptions.json) predate the four cycle fields; every record in a newer file must carry them. The fields exist so that a loop can run without controlled experiments: derived_from_evidence_ids records which observations GENERATED the hypothesis (those observations can never also count as its support), refutation_condition states before the fact what observation would kill it, and next_observations says what to look for next. See docs/2026-10-21_hypothesis-cycle-automation.md sections 3 (S4-S7) and 5.",
+  "description": "A hypothesis. Records written before the 2026-10-21 hypothesis-cycle work (state/hypotheses.jsonl, state/hypotheses.d/2026-10-21-3990b64b4fdb.jsonl and the round-1 shard, listed in state/cycle_exemptions.json) predate the cycle fields; every record in a newer file must carry them. The fields exist so that a loop can run without controlled experiments: derived_from_evidence_ids records which observations GENERATED the hypothesis (those observations can never also count as its support), refutation_condition states before the fact what observation would kill it, and the next_* lists say what to look for next. The next_* list was SPLIT on 2026-10-21: round 1 found that every existing list held self-experiments or internal measurements and no literature question, so the search planner had nothing it could search for. See docs/2026-10-21_hypothesis-cycle-automation.md sections 3 (S4-S7), 5 and 13.",
   "type": "object",
   "required": ["hypothesis_id", "statement", "status"],
   "properties": {
@@ -34,13 +34,33 @@
       "properties": {
         "observable": {"type": "string"},
         "would_refute": {"type": "string"},
-        "expected_if_true": {"type": "string"}
+        "expected_if_true": {"type": "string"},
+        "threshold": {
+          "type": "object",
+          "description": "OPTIONAL machine-readable half of the refutation condition: the observation counts as a refutation when metric operator value holds. A condition that cannot be written in this form is still valid (the gate does not require it) but is reported as 'not machine-checkable' by the instruments. When present, all three fields are checked strictly -- a broken threshold looks checkable and is not, which is worse than no threshold.",
+          "required": ["metric", "operator", "value"],
+          "properties": {
+            "metric": {"type": "string", "description": "What is measured, e.g. 'residual_support_rate'"},
+            "operator": {"type": "string", "enum": ["<", "<=", ">", ">=", "==", "!="]},
+            "value": {"type": "number"}
+          }
+        }
       }
     },
     "next_observations": {
       "type": "array",
       "items": {"type": "string"},
-      "description": "Concrete observations to collect next. Non-empty for every hypothesis in a non-exempt file; the search planner (S7) turns these into queries."
+      "description": "LEGACY (pre-round-1). A single undifferentiated list that mixed literature questions with self-experiments. Kept only so that records in a pre_split_files entry stay valid; records in a newer file must use next_literature_questions + next_internal_measurements instead."
+    },
+    "next_literature_questions": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Questions a literature search could answer, phrased so the search planner (S7) can turn each into a query. Required (non-empty) for every hypothesis in a file not listed in state/cycle_exemptions.json."
+    },
+    "next_internal_measurements": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Measurements to run against this repository's own ledgers or artifacts. Required (a list, possibly empty) for every hypothesis in a file not listed in state/cycle_exemptions.json: 'nothing to measure internally' is a decision that must be stated, not a field left out."
     }
   }
 }

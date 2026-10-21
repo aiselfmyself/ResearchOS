@@ -58,8 +58,17 @@ Scope (deliberately small -- see docs/minimal-core-and-ci.md):
                                             the hypothesis (they can never also
                                             be counted as its support)
         hypothesis.refutation_condition  -> observable / would_refute /
-                                            expected_if_true, all non-empty
-        hypothesis.next_observations     -> non-empty list of strings
+                                            expected_if_true, all non-empty;
+                                            optional threshold is checked when
+                                            present (metric / operator / value)
+        hypothesis.next_literature_questions
+                                         -> non-empty list of strings; the
+                                            questions the search planner turns
+                                            into queries (2026-10-21 round 1:
+                                            the old single next_observations
+                                            list held no searchable question)
+        hypothesis.next_internal_measurements
+                                         -> a list of strings (may be empty)
         relation.derived_from            -> boolean
         relation.searched_refutation     -> boolean
 
@@ -68,6 +77,19 @@ Scope (deliberately small -- see docs/minimal-core-and-ci.md):
     that sets derived_from=true must name an observation listed in its
     hypothesis's derived_from_evidence_ids (only checked when the hypothesis
     itself carries the field, since legacy hypotheses never recorded theirs).
+
+    Two exemption lists exist in state/cycle_exemptions.json:
+
+        legacy_files     -- everything predating the cycle system
+        pre_split_files  -- predating the 2026-10-21 round-1 lesson that a
+                            single next_observations list is not searchable.
+                            These keep every other cycle check; only the
+                            next_* split is waived.
+
+    The split was first enforced after round 1, whose own hypothesis shard
+    therefore still carries the old single list. Exempting that file from all
+    checks would have removed the round / derived_from / refutation gates from
+    the one record that demonstrates them, so the narrower list is used.
 
 Non-goals (frozen by design, not missing by accident):
   * No governance ledgers (sessions / proposals / reviews / approvals /
@@ -476,10 +498,12 @@ def check_id_format(
 # shard is immutable, so a new file is exactly the set of new records.
 # ---------------------------------------------------------------------------
 REFUTATION_FIELDS = ("observable", "would_refute", "expected_if_true")
+THRESHOLD_FIELDS = ("metric", "operator", "value")
+THRESHOLD_OPERATORS = ("<", "<=", ">", ">=", "==", "!=")
 
 
-def load_cycle_exemptions(path: Path) -> Tuple[set, List[str]]:
-    """Return (exempt relative paths, errors) from state/cycle_exemptions.json.
+def load_cycle_exemptions(path: Path) -> Tuple[set, set, List[str]]:
+    """Return (legacy files, pre-split files, errors) from the exemptions file.
 
     A missing file is an error rather than "nothing is exempt": without it the
     validator cannot tell a grandfathered record from a new one, and silently
@@ -490,16 +514,35 @@ def load_cycle_exemptions(path: Path) -> Tuple[set, List[str]]:
     try:
         document = json.loads(Path(path).read_text(encoding="utf-8"))
     except FileNotFoundError:
-        return set(), [
+        return set(), set(), [
             f"{path}: file not found; the cycle gates cannot distinguish "
             f"legacy records from new ones without it"
         ]
     except (OSError, json.JSONDecodeError) as exc:
-        return set(), [f"{path}: {exc}"]
-    files = document.get("legacy_files")
-    if not isinstance(files, list) or not all(isinstance(f, str) for f in files):
-        return set(), [f"{path}: 'legacy_files' must be a list of strings"]
-    return {f.replace("\\", "/") for f in files}, errors
+        return set(), set(), [f"{path}: {exc}"]
+
+    def files(key: str) -> Optional[set]:
+        value = document.get(key)
+        if value is None:
+            return set()
+        if not isinstance(value, list) or not all(isinstance(f, str) for f in value):
+            errors.append(f"{path}: '{key}' must be a list of strings")
+            return None
+        return {f.replace("\\", "/") for f in value}
+
+    legacy = files("legacy_files")
+    if legacy is None:
+        return set(), set(), errors
+    pre_split = files("pre_split_files")
+    if pre_split is None:
+        return set(), set(), errors
+    overlap = legacy & pre_split
+    if overlap:
+        errors.append(
+            f"{path}: {sorted(overlap)} appear in both legacy_files and "
+            f"pre_split_files; legacy_files already waives every check"
+        )
+    return legacy, pre_split, errors
 
 
 def relative_origin(origin: str, root: Path) -> str:
@@ -526,6 +569,40 @@ def _is_exempt(rel_origin: str, exempt_files: set) -> bool:
     return rel_origin in exempt_files
 
 
+def check_threshold(condition: Any, label: str) -> List[str]:
+    """Validate the optional machine-readable half of a refutation condition.
+
+    Absent is fine: a condition that cannot be written with a numeric
+    threshold is still a valid refutation condition, just not one a script can
+    score. Present-but-malformed is an error, because a threshold that does not
+    parse is worse than no threshold -- it looks checkable and is not.
+    """
+    errors: List[str] = []
+    if not isinstance(condition, dict) or "threshold" not in condition:
+        return errors
+    threshold = condition.get("threshold")
+    if not isinstance(threshold, dict):
+        return [f"{label}: refutation_condition.threshold must be an object"]
+    for field in THRESHOLD_FIELDS:
+        if field not in threshold:
+            errors.append(f"{label}: refutation_condition.threshold.{field} is missing")
+    metric = threshold.get("metric")
+    if "metric" in threshold and not _nonempty_string(metric):
+        errors.append(f"{label}: refutation_condition.threshold.metric must be a non-empty string")
+    operator = threshold.get("operator")
+    if "operator" in threshold and operator not in THRESHOLD_OPERATORS:
+        errors.append(
+            f"{label}: refutation_condition.threshold.operator {operator!r} is not one of "
+            f"{list(THRESHOLD_OPERATORS)}"
+        )
+    value = threshold.get("value")
+    if "value" in threshold and (
+        not isinstance(value, (int, float)) or isinstance(value, bool)
+    ):
+        errors.append(f"{label}: refutation_condition.threshold.value must be a number")
+    return errors
+
+
 def _nonempty_string(value: Any) -> bool:
     return isinstance(value, str) and bool(value.strip())
 
@@ -535,9 +612,15 @@ def check_cycle_fields(
     origins: Dict[str, List[str]],
     exempt_files: set,
     root: Path,
+    pre_split_files: Optional[set] = None,
 ) -> List[str]:
-    """Enforce the 2026-10-21 provenance fields on non-exempt records."""
+    """Enforce the 2026-10-21 provenance fields on non-exempt records.
+
+    ``pre_split_files`` waives only the next_literature_questions /
+    next_internal_measurements split (see the module docstring).
+    """
     errors: List[str] = []
+    pre_split_files = pre_split_files or set()
 
     def rel(name: str, index: int) -> str:
         found = origins.get(name, [])
@@ -640,17 +723,50 @@ def check_cycle_fields(
                         f"hypothesis {hid}: refutation_condition.{field} must "
                         f"be a non-empty string"
                     )
-        next_observations = record.get("next_observations")
-        if not isinstance(next_observations, list) or not next_observations:
-            errors.append(
-                f"hypothesis {hid}: 'next_observations' must be a non-empty "
-                f"list; the search planner turns these into queries"
-            )
-        elif not all(_nonempty_string(item) for item in next_observations):
-            errors.append(
-                f"hypothesis {hid}: every next_observations item must be a "
-                f"non-empty string"
-            )
+        errors.extend(check_threshold(condition, f"hypothesis {hid}"))
+        # Split on 2026-10-21 (round 1): the single next_observations list held
+        # only self-experiments and internal measurements, so the search
+        # planner had nothing to search. A literature question and an internal
+        # measurement are different jobs and are now recorded separately.
+        if _is_exempt(rel("hypotheses", index), pre_split_files):
+            # Still check the legacy field it does have: a record that predates
+            # the split must not lose its shape either.
+            legacy = record.get("next_observations")
+            if not isinstance(legacy, list) or not legacy:
+                errors.append(
+                    f"hypothesis {hid}: pre-split record must keep a non-empty "
+                    f"'next_observations' list"
+                )
+            elif not all(_nonempty_string(item) for item in legacy):
+                errors.append(
+                    f"hypothesis {hid}: every next_observations item must be a "
+                    f"non-empty string"
+                )
+        else:
+            questions = record.get("next_literature_questions")
+            if not isinstance(questions, list) or not questions:
+                errors.append(
+                    f"hypothesis {hid}: 'next_literature_questions' must be a "
+                    f"non-empty list of questions a literature search could "
+                    f"answer; the search planner turns them into queries"
+                )
+            elif not all(_nonempty_string(item) for item in questions):
+                errors.append(
+                    f"hypothesis {hid}: every next_literature_questions item "
+                    f"must be a non-empty string"
+                )
+            measurements = record.get("next_internal_measurements")
+            if not isinstance(measurements, list):
+                errors.append(
+                    f"hypothesis {hid}: 'next_internal_measurements' must be a "
+                    f"list (use an empty list when there is nothing to measure "
+                    f"internally -- state the decision, do not omit the field)"
+                )
+            elif not all(_nonempty_string(item) for item in measurements):
+                errors.append(
+                    f"hypothesis {hid}: every next_internal_measurements item "
+                    f"must be a non-empty string"
+                )
 
     # --- relations: derived flag, and the refutation actually searched ----
     for index, record in enumerate(data.get("relations", [])):
@@ -721,6 +837,9 @@ def check_cycle_fields(
     # --- predictions: a probability in [0, 1] -----------------------------
     for record in data.get("predictions", []):
         pid = record.get("prediction_id")
+        errors.extend(
+            check_threshold(record.get("refutation_condition"), f"prediction {pid}")
+        )
         probability = record.get("probability")
         if not isinstance(probability, (int, float)) \
                 or isinstance(probability, bool) or not 0.0 <= probability <= 1.0:
@@ -909,9 +1028,13 @@ def run_all_checks(root: Path = ROOT) -> Dict[str, List[str]]:
         data[name] = records
     errors.extend(check_evidence_keys(data.get("evidence", []), key_mapping))
     errors.extend(check_references(data))
-    exempt_files, exempt_errors = load_cycle_exemptions(root / CYCLE_EXEMPTIONS)
+    exempt_files, pre_split, exempt_errors = load_cycle_exemptions(
+        root / CYCLE_EXEMPTIONS
+    )
     errors.extend(exempt_errors)
-    errors.extend(check_cycle_fields(data, origins_by_name, exempt_files, root))
+    errors.extend(
+        check_cycle_fields(data, origins_by_name, exempt_files, root, pre_split)
+    )
     errors.extend(check_cross_references(data, root))
     return {"errors": errors}
 

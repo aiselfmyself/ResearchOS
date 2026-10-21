@@ -1,6 +1,6 @@
 {
   "schema": "researchos/cycle-exemptions/v1",
-  "note": "Ledger files that predate the 2026-10-21 hypothesis-cycle gates. A record whose origin file is listed here is validated against its own schema but is NOT required to carry the cycle fields (query_id on sources; round / derived_from_evidence_ids / refutation_condition / next_observations on hypotheses; derived_from / searched_refutation on relations). Everything in a file not listed here must carry them. This is a file list rather than an ID list on purpose: shard files are immutable and written by one session, so a new file is exactly the set of new records, and no one has to maintain 250 IDs. Do not add a file here to silence a gate on new work -- add the missing field instead (docs/2026-10-21_hypothesis-cycle-automation.md section 5).",
+  "note": "Ledger files that predate the 2026-10-21 hypothesis-cycle gates. A record whose origin file is listed in legacy_files is validated against its own schema but is NOT required to carry the cycle fields (query_id on sources; round / derived_from_evidence_ids / refutation_condition / next_* on hypotheses; derived_from / searched_refutation on relations). Files in pre_split_files predate only the 2026-10-21 round-1 split of next_observations into next_literature_questions + next_internal_measurements; they keep every other check (round, derived_from, refutation). This is a file list rather than an ID list on purpose: shard files are immutable and written by one session, so a new file is exactly the set of new records, and no one has to maintain 250 IDs. Do not add a file here to silence a gate on new work -- add the missing field instead (docs/2026-10-21_hypothesis-cycle-automation.md section 5).",
   "legacy_files": [
     "state/sources.jsonl",
     "state/evidence.jsonl",
@@ -15,5 +15,8 @@
     "state/relations.d/2026-10-21-a194d1a9b885.jsonl",
     "state/evidence_keys.jsonl",
     "state/evidence_keys.d/2026-10-21-3ead52ec8d51.jsonl"
+  ],
+  "pre_split_files": [
+    "state/hypotheses.d/2026-10-21-00a42038e2b6.jsonl"
   ]
 }

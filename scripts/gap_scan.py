@@ -57,6 +57,25 @@ observation is provisional and no refutation can be counted. That is the
 intended conservative default, not a bug: the baseline memo under
 ``contributions/`` records the measured result.
 
+DERIVED-FROM SUPPORT IS NOT INDEPENDENT SUPPORT (2026-10-21 round 1)
+--------------------------------------------------------------------
+Since the cycle gates landed, a relation may carry ``derived_from: true``: the
+observation was one of the hypothesis's own generation inputs. Such a relation
+is a real verdict, but it cannot be evidence *for* the hypothesis -- counting
+it reproduces exactly the circularity the gates exist to expose (before the
+flag existed, 94-100% of the support of the four new hypotheses came from
+their own generation inputs).
+
+By default ``support`` therefore counts only relations with
+``derived_from`` absent or false, and ``support_derived_from`` reports the
+excluded ones next to it, so nothing is hidden. ``unexplained`` follows the
+same rule: an observation whose only support is from its own generation input
+does not explain anything independently. ``--include-derived-from`` restores
+the old counting for comparison; the two numbers together always reproduce it.
+
+An absent flag counts as false, which is what keeps the 241 pre-round-1
+relations unchanged.
+
 Two readings of "unassessed" are reported
 -----------------------------------------
 The prompt-level definition above (no REL record at all) is *not* the only
@@ -216,15 +235,34 @@ def _bucket() -> Dict[str, int]:
     counts = {verdict: 0 for verdict in VERDICTS}
     counts["other"] = 0
     counts["refute_suppressed_provisional"] = 0
+    #: support relations whose observation is one of the hypothesis's own
+    #: generation inputs. Never added to "support" unless the caller asks.
+    counts["support_derived_from"] = 0
     return counts
+
+
+def is_derived_from(relation: Dict[str, Any]) -> bool:
+    """True when the REL declares its observation as a generation input.
+
+    Fail-open towards counting: only an explicit boolean ``true`` marks a
+    relation as derived. Anything else (absent, null, a stray string) is read
+    as false, so the 241 relations written before the flag existed keep their
+    old meaning.
+    """
+    return relation.get("derived_from") is True
 
 
 def analyse(
     evidences: List[Dict[str, Any]],
     relations: List[Dict[str, Any]],
     hypotheses: List[Dict[str, Any]],
+    exclude_derived_from: bool = True,
 ) -> Dict[str, Any]:
-    """Compute the report for already-parsed ledgers (pure, no I/O)."""
+    """Compute the report for already-parsed ledgers (pure, no I/O).
+
+    ``exclude_derived_from`` defaults to True: see "DERIVED-FROM SUPPORT IS NOT
+    INDEPENDENT SUPPORT" in the module docstring.
+    """
     ids = [observation_id(record, i) for i, record in enumerate(evidences)]
     provisional_flags = derive_provisional(evidences)
     provisional_by_id = dict(zip(ids, provisional_flags))
@@ -245,6 +283,9 @@ def analyse(
     seen_pairs: Dict[tuple, int] = {}
     relations_by_observation: Dict[str, List[Dict[str, Any]]] = {}
     support_by_observation: set = set()
+    independent_support_by_observation: set = set()
+    derived_support_total = 0
+    independent_support_total = 0
     unresolved_only_candidates: set = set(ids)
 
     for relation in relations:
@@ -260,6 +301,11 @@ def analyse(
                 unresolved_only_candidates.discard(oid)
             if verdict == SUPPORT:
                 support_by_observation.add(oid)
+                if is_derived_from(relation):
+                    derived_support_total += 1
+                else:
+                    independent_support_total += 1
+                    independent_support_by_observation.add(oid)
         else:
             anomalies["dangling_observation"].append(
                 f"{rid}: observation_id={oid or '<missing>'}"
@@ -278,7 +324,12 @@ def analyse(
             else:
                 counts["refute"] += 1
         elif verdict in VERDICTS:
-            counts[verdict] += 1
+            if verdict == SUPPORT and is_derived_from(relation):
+                counts["support_derived_from"] += 1
+                if not exclude_derived_from:
+                    counts["support"] += 1
+            else:
+                counts[verdict] += 1
         else:
             # Includes an empty verdict and any out-of-enum string, even one
             # that happens to name an internal counter ("other").
@@ -297,7 +348,11 @@ def analyse(
     ]
 
     unassessed = [oid for oid in ids if oid not in relations_by_observation]
-    unexplained = [oid for oid in ids if oid not in support_by_observation]
+    supported = (
+        independent_support_by_observation if exclude_derived_from
+        else support_by_observation
+    )
+    unexplained = [oid for oid in ids if oid not in supported]
     # Narrow reading of "unassessed": a REL exists but every verdict for the
     # observation is "unresolved". Requires at least one REL by construction.
     unresolved_only = sorted(
@@ -318,7 +373,7 @@ def analyse(
         row["evidence"] += 1
         if oid not in relations_by_observation:
             row["unassessed"] += 1
-        if oid not in support_by_observation:
+        if oid not in supported:
             row["unexplained"] += 1
 
     per_source = [
@@ -352,6 +407,11 @@ def analyse(
             "hypotheses": len(per_hypothesis),
             "provisional": provisional_count,
             "non_provisional": total - provisional_count,
+            # Both are RELATION counts (not observation counts), so they add up
+            # to the old unconditional support count.
+            "support_derived_from": derived_support_total,
+            "support_independent": independent_support_total,
+            "excludes_derived_from": exclude_derived_from,
         },
         "unassessed": {
             "count": len(unassessed),
@@ -378,7 +438,9 @@ def analyse(
     }
 
 
-def measure(state_dir: Optional[Path] = None) -> Dict[str, Any]:
+def measure(
+    state_dir: Optional[Path] = None, exclude_derived_from: bool = True
+) -> Dict[str, Any]:
     """Read the ledgers under ``state_dir`` and return the report."""
     state_dir = Path(state_dir) if state_dir is not None else ROOT / "state"
     if not state_dir.is_dir():
@@ -386,7 +448,10 @@ def measure(state_dir: Optional[Path] = None) -> Dict[str, Any]:
     evidences = load_ledger("evidence", state_dir)
     relations = load_ledger("relations", state_dir)
     hypotheses = load_ledger("hypotheses", state_dir)
-    return analyse(evidences, relations, hypotheses)
+    return analyse(
+        evidences, relations, hypotheses,
+        exclude_derived_from=exclude_derived_from,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -428,7 +493,7 @@ def format_human(report: Dict[str, Any]) -> str:
         _listing(
             "unexplained",
             report["unexplained"],
-            "support の REL が無い観測",
+            "独立した support の REL が無い観測（derived_from を除く）",
         )
     )
     lines.append("")
@@ -440,16 +505,23 @@ def format_human(report: Dict[str, Any]) -> str:
     if unresolved_only["evidence_ids"]:
         lines.append("  " + ", ".join(unresolved_only["evidence_ids"]))
     lines.append("")
-    lines.append("仮説ごとの verdict（refute は非 provisional のみを数える）")
+    lines.append(
+        "仮説ごとの verdict（refute は非 provisional のみ。support は "
+        "derived_from を除いた独立支持）"
+    )
     if report["per_hypothesis"]:
         for row in report["per_hypothesis"]:
             suppressed = row["refute_suppressed_provisional"]
             extra = f" / provisional により抑止={suppressed}" if suppressed else ""
             other = f" / other={row['other']}" if row["other"] else ""
+            derived = (
+                f" / うち生成元={row['support_derived_from']}"
+                if row["support_derived_from"] else ""
+            )
             lines.append(
                 f"  {row['hypothesis_id']}  support={row['support']} "
                 f"refute={row['refute']} neutral={row['neutral']} "
-                f"unresolved={row['unresolved']}{extra}{other}"
+                f"unresolved={row['unresolved']}{derived}{extra}{other}"
             )
     else:
         lines.append("  (仮説が 0 件)")
@@ -468,6 +540,11 @@ def format_human(report: Dict[str, Any]) -> str:
             for item in anomalies[kind]:
                 lines.append(f"  [{kind}] {item}")
         lines.append("")
+    if not totals.get("excludes_derived_from", True):
+        lines.append(
+            "注記: --include-derived-from により、生成元からの支持も support に"
+            "数えている（旧来の数え方）。"
+        )
     lines.append(
         "注記: これは計測器でありゲートではない。穴があっても終了コードは 0。"
         "台帳は読み取りのみで、変更していない。"
@@ -491,10 +568,18 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         "hypotheses.jsonl (default: <repo>/state)",
     )
     parser.add_argument("--json", action="store_true", help="machine-readable output")
+    parser.add_argument(
+        "--include-derived-from",
+        action="store_true",
+        help="count support relations whose observation is a generation input "
+        "(the pre-2026-10-21 counting; default is to exclude them)",
+    )
     args = parser.parse_args(list(argv) if argv is not None else None)
 
     try:
-        report = measure(args.state_dir)
+        report = measure(
+            args.state_dir, exclude_derived_from=not args.include_derived_from
+        )
     except LedgerError as exc:
         print(f"error: {exc}", file=sys.stderr)
         print(
