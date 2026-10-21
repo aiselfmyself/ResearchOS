@@ -1,0 +1,32 @@
+{
+  "schema": "researchos/arxiv-metadata-snapshot-part/v1",
+  "captured_at": "2026-10-21",
+  "capture_method": "arxiv abs pages (https://arxiv.org/abs/2404.13076, https://arxiv.org/abs/2610.22599) read via the web fetch tool",
+  "capture_note": "2026-10-21 round 1 of the hypothesis cycle. 2404.13076 was looked up by identifier (known item) and 2610.22599 was found by the arXiv search 'self-preference LLM evaluator' (274 hits). Title, author list and submission date were read from each abs page; the base snapshot stays frozen and these are appended as a part (method B).",
+  "entries": [
+    {
+      "arxiv_id": "2404.13076",
+      "source_url": "https://arxiv.org/abs/2404.13076",
+      "title": "LLM Evaluators Recognize and Favor Their Own Generations",
+      "authors": [
+        "Arjun Panickssery",
+        "Samuel R. Bowman",
+        "Shi Feng"
+      ],
+      "published": "2024-04-15"
+    },
+    {
+      "arxiv_id": "2610.22599",
+      "source_url": "https://arxiv.org/abs/2610.22599",
+      "title": "Can LLMs predict the outcomes of machine learning experiments?",
+      "authors": [
+        "Ayush Bansal",
+        "Aldo Pareja",
+        "Sean Klein",
+        "Serge Didenko",
+        "Artem Lukoianov"
+      ],
+      "published": "2026-10-15"
+    }
+  ]
+}
