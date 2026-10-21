@@ -15,6 +15,8 @@
 >
 > **同日の整理**：監査 ID 11（旧ブランチのアーカイブ）を完了した。人間の承認を得て `arena/*` のリモートブランチ **36 本すべてを削除**し、**リモートのブランチは `main` のみ**になった。あわせて ID 12（記録数値のドリフト是正）を人間の判断で撤回した。これで `docs/incomplete-work-audit-2026-10-20.md` の**未対応項目はゼロ**になった。
 >
+> **`rho` の実測（報告 §7 未解決 #1）**：`scripts/estimate_rho.py` を新設し、`gitswarm/readout_sim.py` の自由パラメータだった共通モード項 `rho` を実データから推定する経路を与えた。**結論は「既存データでは測れない」**——本リポジトリ唯一の反復ペア（Agora A/A'）は正解既知の共同判定項目が 8 件・誤り 0 件で識別不能。検出力解析では `rho=0.30` の検出に約 1,454 件を要し、**8 件は 2〜3 桁不足**する。測定法を「対誤り相関の計数」から「過程の直接計装」へ切り替える必要がある（`EVD-20261021-4c6f`）。
+>
 > **証拠の紐付け完了**：`scripts/check_memo_ledger_refs.py` の新設に伴い調べたところ、
 > **47 件中 18 件の EVD がどのメモからも参照されていなかった**（`task/TASK.md` §3 は
 > 「主張には必ず証拠と出典を紐付けること」を要求する）。全件を紐付け、**未参照 EVD は 0** になった。
@@ -34,6 +36,8 @@ scripts/
   check_memo_citations.py 調査メモ内引用のarXiv照合（オフラインfixture、--liveは手動専用）
   check_ownership.py   並行作業の所有マップによるパス分類（助言専用・CI非接続）
   check_memo_ledger_refs.py メモ内の台帳ID・パス参照の存在検査（CI7番目のゲート）
+  measure_agreement.py  2セッションの抽出結果の一致率と相関誤り（計測器・CI非接続）
+  estimate_rho.py       相関誤りから共通モード項 rho を推定＋検出力解析（計測器）
 gitswarm/
   problem.py solvers/  30都市TSPの決定論的ソルバ群（greedy/random/two_opt/SA）
   benchmarks/          複数シード実行＋成果物照合（--write/--check）
@@ -49,7 +53,8 @@ tests/
   test_ownership.py            所有マップによるパス分類テスト（16件）
   test_readout_sim.py          共通モード障害シミュレータの回帰テスト（20件）
   test_check_memo_ledger_refs.py メモ内ID・パス参照の検査テスト（12件）
-                               ── 合計 157件
+  test_estimate_rho.py         rho 推定器の回帰テスト（13件）
+                               ── 合計 170件
   test_check_memo_citations.py メモ引用照合テスト（33件・ネットワーク非依存）
   test_ownership.py       所有マップ分類テスト（16件・ネットワーク非依存）
   test_readout_sim.py     投票スイープの回帰・閾値予測テスト（20件・ネットワーク非依存）
