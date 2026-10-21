@@ -62,10 +62,10 @@
 以下は**実測値**であり、`scripts/check_doc_numbers.py`（CI の 8 番目のゲート）が本文書の記述と
 リポジトリからの再計算値を突き合わせて検査する。算出コマンドは下記「使い方」節。
 
-- 台帳: sources=30 / evidence=100 / claims=9 / verifications=40 / hypotheses=7 / relations=254
+- 台帳: sources=30 / evidence=100 / claims=9 / verifications=40 / hypotheses=7 / relations=255
 - 仮説サイクル台帳（2026-10-21 新設）: search_log=11 / runs=3 / predictions=1
 - 関係台帳の中身（`scripts/gap_scan.py` の実測・ゲート対象外）:
-  unassessed **1 / 100 (1.0%)**、unexplained **29 / 100 (29.0%)**、unresolved のみ 0 件、
+  unassessed **0 / 100 (0.0%)**、unexplained **29 / 100 (29.0%)**、unresolved のみ 0 件、
   provisional **70 / 100**（non-provisional 30 件）。
   `support` は**既定で `derived_from: true` を除外した REL 数**を数え、除外件数は
   `support_derived_from` として併記する。生成元からの支持しか無い観測は
@@ -89,7 +89,7 @@
 
 **関係台帳（REL）は 2026-10-21 に投入された。** 初回投入は既存 2 仮説への裁定 172 行と
 新仮説 4 件（`HYP-20261021-*`）への 63 行の計 235 行。その後、ID18 本文確認で追加された
-新規 EVD 2 件へ 6 行を backfill した。2026-10-21 のラウンド1が 5 行、Phase 2 の前提整備が 1 行、ラウンド2が4行、ラウンド3が3行を追加し、現在は **254 行**である（`HYP-001` 13/0/67/11、
+新規 EVD 2 件へ 6 行を backfill した。2026-10-21 のラウンド1が 5 行、Phase 2 の前提整備が 1 行、ラウンド2が4行、ラウンド3が3行を追加し、現在は **255 行**である（`HYP-001` 13/0/67/11、
 `HYP-002` 12/0/73/4。順に support/refute/neutral/unresolved）。記録上の `refute` は **0 件**だが、
 「反駁が存在しない」という意味ではない。単独出典は `provisional` に留まり、対象の違う否定材料を refute に水増ししない（fail-closed）。判断の記録は
 `contributions/2026-10-21_relation_backfill_integration.md` と
