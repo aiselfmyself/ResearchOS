@@ -2,8 +2,52 @@
   "schema": "researchos/arxiv-metadata-snapshot/v1",
   "captured_at": "2026-10-20",
   "capture_method": "arxiv abs pages (https://arxiv.org/abs/<id>) read via web fetch tool",
-  "capture_note": "The export.arxiv.org Atom API returned 'Rate exceeded' from this sandbox at capture time, so the snapshot was taken from the abs pages instead. Abs pages and the Atom API report the same authoritative metadata fields (title, ordered authors, submission date) used by this fixture. Entries 2507.13334, 2605.23950, 2606.10209, 2608.06663, 2608.13417, 2609.18094 and 2610.08364 were appended the same day (2026-10-20), also read from their abs pages, for the second survey memo and the Agora reference of the GitSwarm fulltext reading.",
+  "capture_note": "Bundled so CI needs no network. Entries are added only after the abs page has actually been read. 2609.24972 and 2609.15983 were added 2026-10-21 after verification that Arena's web-fetch tool can read arxiv.org even though the sandbox's own curl cannot.",
   "entries": [
+    {
+      "arxiv_id": "2610.17184",
+      "source_url": "https://arxiv.org/abs/2610.17184",
+      "title": "DuoDiscover: Scaling Autonomous Discovery Beyond the Evaluation Bottleneck",
+      "authors": [
+        "Shubham Agarwal",
+        "Akshat Gupta",
+        "Mike Heddes",
+        "Dilara Soylu",
+        "Rui Meng",
+        "Patrick Tser Jern Kon",
+        "Jiefeng Chen",
+        "Mert Cemri",
+        "Shu Liu",
+        "Abe Gonzalez",
+        "Akanksha Jain",
+        "Bhavana Dalvi Mishra",
+        "Linfeng Song",
+        "Vilobh Meshram",
+        "Xiangru Tang",
+        "Jinsung Yoon",
+        "Aditya Parameswaran",
+        "Ion Stoica",
+        "Vahab Mirrokni",
+        "Burak Gokturk",
+        "Parthasarathy Ranganathan",
+        "Tomas Pfister",
+        "Nanyun Peng",
+        "Chun-Liang Li"
+      ],
+      "published": "2026-10-12"
+    },
+    {
+      "arxiv_id": "2610.08364",
+      "source_url": "https://arxiv.org/abs/2610.08364",
+      "title": "Transect: Retaining Observability for Long-Horizon LLM Agent Evaluations",
+      "authors": [
+        "Toby D. Pilditch",
+        "Konstantinos Voudouris",
+        "Alexandra Abbas",
+        "Cozmin Ududec"
+      ],
+      "published": "2026-10-06"
+    },
     {
       "arxiv_id": "2610.07625",
       "source_url": "https://arxiv.org/abs/2610.07625",
@@ -53,108 +97,56 @@
       "published": "2026-10-04"
     },
     {
-      "arxiv_id": "2610.17184",
-      "source_url": "https://arxiv.org/abs/2610.17184",
-      "title": "DuoDiscover: Scaling Autonomous Discovery Beyond the Evaluation Bottleneck",
+      "arxiv_id": "2609.24972",
+      "source_url": "https://arxiv.org/abs/2609.24972",
+      "title": "RRSI: Regularized Recursive Self-Improvement of Agent Harnesses",
       "authors": [
-        "Shubham Agarwal",
-        "Akshat Gupta",
-        "Mike Heddes",
-        "Dilara Soylu",
-        "Rui Meng",
-        "Patrick Tser Jern Kon",
-        "Jiefeng Chen",
-        "Mert Cemri",
-        "Shu Liu",
-        "Abe Gonzalez",
-        "Akanksha Jain",
-        "Bhavana Dalvi Mishra",
-        "Linfeng Song",
-        "Vilobh Meshram",
-        "Xiangru Tang",
-        "Jinsung Yoon",
-        "Aditya Parameswaran",
-        "Ion Stoica",
-        "Vahab Mirrokni",
+        "Peng Xia",
+        "Rujun Han",
+        "Zifeng Wang",
+        "Yanfei Chen",
+        "Yufan Zhuang",
+        "Yoonho Lee",
+        "Chengsong Huang",
+        "Han Yu",
+        "Zhongying CuiZhu",
+        "Yifei Ming",
+        "Huaxiu Yao",
         "Burak Gokturk",
-        "Parthasarathy Ranganathan",
         "Tomas Pfister",
-        "Nanyun Peng",
-        "Chun-Liang Li"
+        "Chen-Yu Lee"
       ],
-      "published": "2026-10-12"
+      "published": "2026-09-21"
     },
     {
-      "arxiv_id": "2507.13334",
-      "source_url": "https://arxiv.org/abs/2507.13334",
-      "title": "A Survey of Context Engineering for Large Language Models",
+      "arxiv_id": "2609.18094",
+      "source_url": "https://arxiv.org/abs/2609.18094",
+      "title": "Agora: Git as Shared Memory for Collective AutoResearch",
       "authors": [
-        "Lingrui Mei",
-        "Jiayu Yao",
-        "Yuyao Ge",
-        "Yiwei Wang",
-        "Baolong Bi",
-        "Yujun Cai",
-        "Jiazhi Liu",
-        "Mingyu Li",
-        "Zhong-Zhi Li",
-        "Duzhen Zhang",
-        "Chenlin Zhou",
-        "Jiayi Mao",
-        "Tianze Xia",
-        "Jiafeng Guo",
-        "Shenghua Liu"
+        "Yifan Zhang",
+        "Yunheng Zou",
+        "Shaokun Zhang",
+        "Jian Hu",
+        "Hao Zhang",
+        "Binfeng Xu",
+        "Jan Kautz",
+        "Yi Dong"
       ],
-      "published": "2025-07-17"
+      "published": "2026-09-16"
     },
     {
-      "arxiv_id": "2606.10209",
-      "source_url": "https://arxiv.org/abs/2606.10209",
-      "title": "Less Context, Better Agents: Efficient Context Engineering for Long-Horizon Tool-Using LLM Agents",
+      "arxiv_id": "2609.15983",
+      "source_url": "https://arxiv.org/abs/2609.15983",
+      "title": "Stellar Colosseum: A Many-Agent Harness for Long-Horizon Research in Mathematics and Theoretical Computer Science",
       "authors": [
-        "Abhilasha Lodha",
-        "Mahsa Pahlavikhah Varnosfaderani",
-        "Abir Chakraborty",
-        "Abhinav Mithal"
+        "Honghao Lin",
+        "David P. Woodruff",
+        "Yuan Deng",
+        "Jieming Mao",
+        "Song Zuo",
+        "Vahab Mirrokni"
       ],
-      "published": "2026-06-08"
-    },
-    {
-      "arxiv_id": "2608.06663",
-      "source_url": "https://arxiv.org/abs/2608.06663",
-      "title": "The Horizon Gap: Planning, Memory, Execution, Training, and Evaluation for Long-Horizon LLM Agents",
-      "authors": [
-        "Mingguang Chen",
-        "Licheng Wang",
-        "Bo Qu"
-      ],
-      "published": "2026-08-07"
-    },
-    {
-      "arxiv_id": "2610.08364",
-      "source_url": "https://arxiv.org/abs/2610.08364",
-      "title": "Transect: Retaining Observability for Long-Horizon LLM Agent Evaluations",
-      "authors": [
-        "Toby D. Pilditch",
-        "Konstantinos Voudouris",
-        "Alexandra Abbas",
-        "Cozmin Ududec"
-      ],
-      "published": "2026-10-06"
-    },
-    {
-      "arxiv_id": "2605.23950",
-      "source_url": "https://arxiv.org/abs/2605.23950",
-      "title": "Stop Comparing LLM Agents Without Disclosing the Harness",
-      "authors": [
-        "Yunbei Zhang",
-        "Janet Wang",
-        "Yingqiang Ge",
-        "Weijie Xu",
-        "Jihun Hamm",
-        "Chandan K. Reddy"
-      ],
-      "published": "2026-05-07"
+      "published": "2026-09-14"
     },
     {
       "arxiv_id": "2608.13417",
@@ -178,20 +170,64 @@
       "published": "2026-08-13"
     },
     {
-      "arxiv_id": "2609.18094",
-      "source_url": "https://arxiv.org/abs/2609.18094",
-      "title": "Agora: Git as Shared Memory for Collective AutoResearch",
+      "arxiv_id": "2608.06663",
+      "source_url": "https://arxiv.org/abs/2608.06663",
+      "title": "The Horizon Gap: Planning, Memory, Execution, Training, and Evaluation for Long-Horizon LLM Agents",
       "authors": [
-        "Yifan Zhang",
-        "Yunheng Zou",
-        "Shaokun Zhang",
-        "Jian Hu",
-        "Hao Zhang",
-        "Binfeng Xu",
-        "Jan Kautz",
-        "Yi Dong"
+        "Mingguang Chen",
+        "Licheng Wang",
+        "Bo Qu"
       ],
-      "published": "2026-09-16"
+      "published": "2026-08-07"
+    },
+    {
+      "arxiv_id": "2606.10209",
+      "source_url": "https://arxiv.org/abs/2606.10209",
+      "title": "Less Context, Better Agents: Efficient Context Engineering for Long-Horizon Tool-Using LLM Agents",
+      "authors": [
+        "Abhilasha Lodha",
+        "Mahsa Pahlavikhah Varnosfaderani",
+        "Abir Chakraborty",
+        "Abhinav Mithal"
+      ],
+      "published": "2026-06-08"
+    },
+    {
+      "arxiv_id": "2605.23950",
+      "source_url": "https://arxiv.org/abs/2605.23950",
+      "title": "Stop Comparing LLM Agents Without Disclosing the Harness",
+      "authors": [
+        "Yunbei Zhang",
+        "Janet Wang",
+        "Yingqiang Ge",
+        "Weijie Xu",
+        "Jihun Hamm",
+        "Chandan K. Reddy"
+      ],
+      "published": "2026-05-07"
+    },
+    {
+      "arxiv_id": "2507.13334",
+      "source_url": "https://arxiv.org/abs/2507.13334",
+      "title": "A Survey of Context Engineering for Large Language Models",
+      "authors": [
+        "Lingrui Mei",
+        "Jiayu Yao",
+        "Yuyao Ge",
+        "Yiwei Wang",
+        "Baolong Bi",
+        "Yujun Cai",
+        "Jiazhi Liu",
+        "Mingyu Li",
+        "Zhong-Zhi Li",
+        "Duzhen Zhang",
+        "Chenlin Zhou",
+        "Jiayi Mao",
+        "Tianze Xia",
+        "Jiafeng Guo",
+        "Shenghua Liu"
+      ],
+      "published": "2025-07-17"
     }
   ]
 }

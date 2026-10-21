@@ -1,4 +1,4 @@
-# 別ワーカーへの引き継ぎプロンプト（2026-10-21）
+# 別ワーカーへの引き継ぎプロンプト（2026-10-21 / 2026-10-21 改訂）
 
 `docs/literature-triage-2026-10-21.md` で優先順 5 件に絞った文献について、
 **新しいチャットに貼り付けて開始できる**プロンプトをまとめた。
@@ -8,19 +8,28 @@
 
 ---
 
-## ⚠️ 全プロンプト共通の重要制約（必ず読んでから使うこと）
+## ⚠️ 初版の誤りを訂正した（2026-10-21）
 
-### 1. このサンドボックスからは arXiv に到達できない
+**初版は「このサンドボックスからは arxiv.org に到達できない」と書いていた。これは誤りだった。**
 
- outbound が許可されているホストは
- `github.com` / `codeload.github.com` / `api.github.com` / `registry.npmjs.org` / `pypi.org` / `files.pythonhosted.org`
- のみ。**`arxiv.org` は含まれない。** したがって原典を自分で取得できない。
+人間の指摘で再確認した結果：
 
-### 2. 5 件すべてが書誌スナップショットに存在しない
+| 経路 | arxiv.org | 根拠 |
+|---|---|---|
+| サンドボックスの `curl` / `python3` | ❌ **到達できない** | `curl https://arxiv.org/abs/2609.24972` → `SSL_ERROR_SYSCALL`（実測） |
+| **Arena の `fetch_page` / `web_search`** | ✅ **到達できる** | 実際に `https://arxiv.org/abs/2609.24972` と `.../2609.15983` を取得できた（実測） |
 
-`tests/fixtures/arxiv_metadata_snapshot.json`（10件）に、今回の 5 件は**1件も入っていない**（確認済み）。
+さらに **`tests/fixtures/arxiv_metadata_snapshot.json` の `capture_method` には
+「arxiv abs pages read via web fetch tool」と書いてあった**——このリポジトリは
+**すでに web fetch で arXiv を取得していた**。初版の制約は、システム側の
+「outbound 許可ホスト」という記述を**過剰に一般化して**書いたものだった。
 
-そして `scripts/check_citations.py` は、
+**したがって「経路A／経路B」の二分は撤回する。** ワーカーは**自分で原典を取得できる**。
+
+### ただし 1 つだけ残る本当の制約
+
+`scripts/check_citations.py` は、**スナップショットに無い arXiv ID を `MISSING`＝失敗**
+として扱う（CI ゲート5）。
 
 ```
 entry = entries.get(arxiv_id)
@@ -28,38 +37,23 @@ if entry is None:
     report.append(f"MISSING {source_id} {arxiv_id} (not in metadata snapshot)")
 ```
 
-**「スナップショットに無い arXiv ID」を `MISSING`＝失敗**として扱う（CI ゲート5）。
+したがって **`state/sources.jsonl` に登録する前に、
+`tests/fixtures/arxiv_metadata_snapshot.json` へ確認済み書誌を追記する**必要がある。
+これは**原典を読めるかどうかとは無関係**の、CI をネットワーク非依存に保つための要件である。
 
-### 3. したがって——**原典なしで `sources.jsonl` に登録してはならない**
-
-やると **CI が赤になる**。原典を確認できない状態で書誌を登録することは
-**内容の捏造リスク**と**ゲート破損**の両方を招くので、禁止する。
-
-### 4. 推奨する進め方（2 つの経路）
-
-- **経路 A（推奨）**：人間が原典（PDF / HTML）を入手してチャットに添付する。
-  ワーカーはそれを読み、`tests/fixtures/arxiv_metadata_snapshot.json` に
-  **確認できた書誌（arxiv_id / title / authors / published）を追記**したうえで
-  `state/sources.jsonl` に登録する。これなら全ゲートが緑を保てる。
-- **経路 B（原典が無い場合）**：`state/` には**一切書き込まない**。
-  代わりに `contributions/2026-10-2X_<paper>_triage.md` として
-  「**未照合メモ**」を書き、冒頭に
-  「**本メモは `abstract_summary_ja`（日本語要約）のみに基づく。原典未照合。証拠段階 C。
-  `state/` には登録していない**」と明記する。
-
-**どちらの経路を採るかは、プロンプト冒頭で人間が指定する。**
+**優先 1・2 については当方で追記済み**（下記の verified 書誌）。
+優先 3〜5 を担当する場合は、自分で abs ページを取得して追記すること。
 
 ---
 
 ## 共通の前置き（各プロンプトに含めている内容）
 
-- リポジトリ `/home/user/ResearchOS`、ブランチ `arena/ac3628ba-researchos`
+- リポジトリ `/home/user/ResearchOS`
 - **報告は日本語**
-- 証拠段階の使い分け：**A**＝自前で実行・測定した結果 / **B**＝原典の逐語引用 / **C**＝原典数値からの導出・未照合の記述
-- ID は `python3 scripts/new_id.py SRC --count 1 --date 2026102X` で採番する（連番禁止・並行作業での衝突防止）
-- `state/` と `README.md` への書き込みは統合役の担当（`docs/parallel-work-ownership.md` §2）。
-  **経路 A で `sources.jsonl` を触る場合は、その旨を明示して報告すること**
-- 変更後は**全 8 ゲート**を走らせる（下記）
+- 証拠段階：**A**＝自前で実行・測定した結果 / **B**＝原典の逐語引用 / **C**＝原典数値からの導出・未照合の記述
+- ID は `python3 scripts/new_id.py SRC --count 1 --date 2026102X` で採番（連番禁止）
+- `state/` と `README.md` への書き込みは統合役の担当（`docs/parallel-work-ownership.md` §2）
+- 変更後は**全 8 ゲート**を走らせる
 - **「明らかな誤りは放置せず直す」**——ただし人間判断を要する削除は勝手に行わず、エスカレートする
 
 ```sh
@@ -77,138 +71,163 @@ python3 scripts/check_doc_numbers.py             # ゲート8
 
 # 優先 1：RRSI（`arXiv:2609.24972`）★ 最優先
 
-> 以下のプロンプトを新しいチャットに貼り付けて開始してください。
-> `【経路A】`/`【経路B】` はどちらか一方を消してください。
+**verified 書誌（2026-10-21 に abs ページで確認済み／スナップショット追記済み）**
+
+- Title: *RRSI: Regularized Recursive Self-Improvement of Agent Harnesses*
+- Authors: Peng Xia, Rujun Han, Zifeng Wang, Yanfei Chen, Yufan Zhuang, Yoonho Lee,
+  Chengsong Huang, Han Yu, Zhongying CuiZhu, Yifei Ming, Huaxiu Yao, Burak Gokturk,
+  Tomas Pfister, Chen-Yu Lee（14名）
+- 現在版 **v3**（2026-10-04）。v1 2026-09-21、v2 2026-09-23
+  —— **インベントリは `v2` と記録していたので 1 世代古い**
+- cs.LG / cs.AI / cs.CL
+- **コード: https://github.com/google-research/rrsi** （`github.com` は**サンドボックスからも到達可能**）
 
 ```
-あなたは ResearchOS リポジトリ（/home/user/ResearchOS、ブランチ arena/ac3628ba-researchos）
-の文献調査ワーカーです。報告は日本語でお願いします。
+あなたは ResearchOS リポジトリ（/home/user/ResearchOS）の文献調査ワーカーです。
+報告は日本語でお願いします。
 
 ## 目的
 arXiv:2609.24972 "RRSI: Regularized Recursive Self-Improvement of Agent Harnesses"
-を精読し、本リポジトリ（arena.ai + GitHub による小規模 GitSwarm 型の研究運用）に
+を読み、本リポジトリ（arena.ai + GitHub による小規模 GitSwarm 型の研究運用）に
 実装できる具體的な設計要素を抽出してください。
 
-【経路A】原典を添付します。それを読んでください。
-【経路B】原典はありません。docs/literature-inventory-2026-10-19.jsonl の
-        paper_id=arXiv:2609.24972v2 の abstract_summary_ja と researchos_mapping と
-        researchos_design_influence_assessment を根拠にしてください。
+## 原典の取得方法（重要）
+この環境からのアクセスには 2 種類あります。
+- Arena の fetch_page / web_search ツール → **arxiv.org に到達できます**（実測済み）
+- サンドボックスの curl / python3 → **到達できません**（SSL エラー）
+
+したがって **fetch_page で取得してください**。
+  https://arxiv.org/abs/2609.24972      （書誌・抄録）
+  https://arxiv.org/html/2609.24972v3   （本文 HTML）
+  https://github.com/google-research/rrsi （コード。github.com は curl でも可）
+抄録だけでなく**本文に当たる**こと。特に §手法 の proposer / critic / pruner の
+具體的なアルゴリズムと、表の数値を読み取ってください。
 
 ## なぜこの論文か（背景）
 本リポジトリは「ハーネスが性能差の帰属先である」という論点を繰り返し扱ってきました
 （arXiv:2605.23950 の HV/MV=7.80、監査 ID 14、報告 §3.3）。しかし
-**「ではハーネスをどう改善するか」の方法論を持っていません**。
-RRSI はそれに直接答える候補です。
+**「ではハーネスをどう改善するか」の方法論を持っていません**。RRSI はそれに直接答えます。
 
-すでに粗検討（docs/literature-triage-2026-10-21.md）で、RRSI の設計要素と
-本リポジトリの既存機構の対応表を作ってあります。実装済なのは上 3 行だけで、
-**下 2 行が未実装**です。ここを埋める具體手法を知りたい。
+すでに粗検討（docs/literature-triage-2026-10-21.md）で対応表を作ってあり、
+実装済なのは上 3 行だけで、**下 2 行が未実装**でした。
 
 | RRSI の要素 | 本リポジトリ | 状態 |
 |---|---|---|
 | 差分単位でハーネス変更を評価 | PR ＋ CI 8 ゲート | ✅ |
 | 変更の仮説・diff・スコア・採否を記録 | state/verifications.jsonl / hypotheses.jsonl | ✅ |
 | 失敗を次ラウンドへ再投入 | 監査の「未対応」リスト | ✅ |
-| **固定タスクへの過適合を避ける（hold-out/OOD 分離）** | — | ❌ 未実装 |
-| **低寄与コンポーネントの剪定** | — | ❌ 未実装 |
+| **固定タスクへの過適合を避ける（hold-out/OOD 分離）** | scripts/holdout_eval.py | **当方で暫定実装済** |
+| **低寄与コンポーネントの剪定** | scripts/prune_candidates.py | **当方で暫定実装済** |
+
+**重要**：下 2 行は**抄録の要約だけを根拠に当方が設計した暫定実装**です。
+あなたの仕事は「実装を擁護する」ことではなく、
+**原典に照らして妥当かを判定し、ずれていれば設計を直すこと**です。遠慮なく指摘してください。
 
 ## 特に知りたいこと（優先順）
-1. **過適合回避の具體手法**：1ラウンドの編集数制限は「いくつ」か、その根拠は何か。
-   過去の採否・仮説履歴をどう使って探索の偏りを抑えるのか。
-   hold-out と OOD は**どう分けて**定義されているか。
-2. **剪定の判定基準**：「価値の乏しいコンポーネント」をどう測るか。
-   閾値・観測期間・統計的有意性の要件はあるか。**剪定の誤判定をどう防ぐか**。
-3. **採用条件**：候補リーク・評価ノイズ・性能とコストの関係を、それぞれ
-   どう検査して採用可否に織り込むか。
-4. **再現に必要な最小構成**：本リポジトリ規模（並列セッション 2〜4、台帳 49 EVD、
-   CI 8 ゲート、決定論的検査のみ、モデル学習なし）で**現実に実装できる部分**と
+1. **proposer の temporally annealed budget**：編集数の上限は**具体的にいくつか**。
+   時間とともにどう減衰するか。その根拠と、上限を破った場合の扱い。
+2. **critic の判定基準**：「benchmark-specific な提案」を**どう見分けるか**。
+   當方は hold-out 分割で代用しました（scripts/holdout_eval.py）が、
+   原典の critic はそれとは別物の可能性があります。**差分を明示してください。**
+3. **pruner の判定基準**：「too small / too expensive / no longer useful」の
+   **それぞれの閾値と測り方**。當方は has_tests / referenced_in_docs / imported_by
+   という代理指標を使いましたが、これは原典の基準ではありません。**原典の基準を寫してください。**
+4. **evolution history による未探索軌跡の促進**：具體的に何を記録し、どう探索を偏らせるか。
+5. **再現に必要な最小構成**：本リポジトリ規模（並列セッション 2〜4、EVD 49、CI 8 ゲート、
+   決定論的検査のみ、**モデル学習なし**）で**現実に実装できる部分**と
    **学習を前提とするため不可な部分**を分けてください。
+   なお RRSI は「30% fewer policy tokens」を成果に挙げています——
+   **コスト削減が目的の一部**である点に注意してください。
 
 ## 制約（必ず守ること）
-- **このサンドボックスからは arxiv.org に到達できません**（許可ホストは github.com 等のみ）。
-  自分で取得しようとしないでください。
-- 5 件すべて tests/fixtures/arxiv_metadata_snapshot.json に**存在しません**。
-  scripts/check_citations.py は「スナップショットに無い arXiv ID」を MISSING＝失敗
-  として CI ゲート5 を赤にします。**原典を確認できない状態で state/sources.jsonl に
-  登録してはいけません。**
-  - 【経路A】原典を読めた場合のみ、スナップショットに確認済み書誌を追記したうえで登録可。
-  - 【経路B】state/ には一切書き込まないこと。
+- **原典を読まずに結論を出さない。** 抄録だけで判断しないこと。
+- `state/sources.jsonl` に登録する前に
+  `tests/fixtures/arxiv_metadata_snapshot.json` へ確認済み書誌を追記する
+  （**優先1は當方が追記済み**。内容が食い違っていたら**訂正して報告**すること）。
+  追記しないと scripts/check_citations.py が MISSING として CI ゲート5 を赤にします。
 - ID は python3 scripts/new_id.py SRC --count 1 --date 2026102X で採番（連番禁止）。
-- 証拠段階 A/B/C を必ず明記。原典未照合の記述は必ず C とラベル付けする。
-- 原典を読んでいない内容を「読んだ」ように書かないこと。
+- 証拠段階 A/B/C を必ず明記。引用は逐語で、要約と混ぜない。
+- 人間判断を要する削除・撤回は**勝手に行わず**、報告して指示を仰ぐ。
 
 ## 成果物
-【経路A】contributions/2026-10-2X_rrsi_reading.md ＋ state/sources.jsonl への SRC 登録
-        ＋ 主要箇所の EVD（3〜6件）＋ VER 1件
-【経路B】contributions/2026-10-2X_rrsi_triage.md のみ（state/ は触らない）。
-        冒頭に「原典未照合・証拠段階 C・state/ 未登録」を明記。
+- contributions/2026-10-2X_rrsi_reading.md
+- state/sources.jsonl への SRC 登録（スナップショットは追記済み）
+- 主要箇所の EVD（5〜8件）＋ VER 1件
+- **當方の暫定実装（holdout_eval.py / prune_candidates.py）への判定**：
+  妥当／要修正／撤回 のいずれかを、根拠つきで明示する
 
 ## 完了条件
-全 8 ゲートが exit 0 であること（下記を実行して確認）。
-
-python3 -m unittest discover -s tests && python3 gitswarm/benchmarks/benchmark.py --check \
-&& python3 gitswarm/readout_sim.py --check && python3 scripts/validate_state.py \
-&& python3 scripts/check_citations.py && python3 scripts/check_memo_citations.py \
-&& python3 scripts/check_memo_ledger_refs.py && python3 scripts/check_doc_numbers.py
-
-## 途中で判断に迷ったら
-人間判断を要する削除・撤回は**勝手に行わず**、報告して指示を仰いでください。
+全 8 ゲートが exit 0 であること。
 ```
 
 ---
 
 # 優先 2：Stellar Colosseum（`arXiv:2609.15983`）
 
+**verified 書誌（2026-10-21 に abs ページで確認済み／スナップショット追記済み）**
+
+- Title: *Stellar Colosseum: A Many-Agent Harness for Long-Horizon Research in
+  Mathematics and Theoretical Computer Science*
+- Authors: Honghao Lin, David P. Woodruff, Yuan Deng, Jieming Mao, Song Zuo,
+  Vahab Mirrokni（6名）
+- 現在版 **v2**（2026-09-15）。v1 2026-09-14
+- cs.AI / cs.CL / cs.CL
+- 抄録で判明済みの點：readiness gate（経路が分解可能か判定）／
+  section-level subproblems／verifier の指摘を**影響箇所へ戻す**／
+  **targeted falsification**／**overlapping random-sample tree aggregation**
+  ／Google Antigravity の Teamwork framework に "Long Proof" pattern として統合済み
+
 ```
-あなたは ResearchOS リポジトリ（/home/user/ResearchOS、ブランチ arena/ac3628ba-researchos）
-の文献調査ワーカーです。報告は日本語でお願いします。
+あなたは ResearchOS リポジトリ（/home/user/ResearchOS）の文献調査ワーカーです。
+報告は日本語でお願いします。
 
 ## 目的
 arXiv:2609.15983 "Stellar Colosseum: A Many-Agent Harness for Long-Horizon Research
-in Mathematics and Theoretical Computer Science" を精読し、
+in Mathematics and Theoretical Computer Science" を読み、
 **「反証を影響箇所へ戻す修復ループ」**の具體的なデータ構造を抽出してください。
 
-【経路A】原典を添付します。それを読んでください。
-【経路B】原典はありません。docs/literature-inventory-2026-10-19.jsonl の
-        paper_id=arXiv:2609.15983v2 の各フィールドを根拠にしてください。
+## 原典の取得方法（重要）
+- Arena の fetch_page / web_search → **arxiv.org に到達できます**（実測済み）
+- サンドボックスの curl / python3 → 到達できません
+
+fetch_page で取得してください。
+  https://arxiv.org/abs/2609.15983
+  https://arxiv.org/html/2609.15983v2
+抄録だけでなく**本文**に当たり、特に readiness gate の判定式と、
+verifier の指摘を影響箇所へ戻すときの**データ構造（フィールド名）**を寫してください。
 
 ## なぜこの論文か（背景）
-本リポジトリの台帳 state/claims.jsonl は counterclaim_ids（反証）を持ちます
+本リポジトリの state/claims.jsonl は counterclaim_ids（反証）を持ちます
 （監査 ID 5 で空だったのを 4 件紐付け済み）。しかし
 **反証を「記録」するだけで、その反証が主張のどの部分を崩すか＝影響箇所への
 返し方を持っていません**。state/verifications.jsonl の VER は target_id を
 1 つしか持たず、「どこへ返すか」が表現できない。
 
-本論文の要約には「節単位の依存関係を持つサブ問題を作り、Verifier の指摘を
+本論文の抄録には「節単位の依存関係を持つサブ問題を作り、Verifier の指摘を
 影響箇所へ戻す」とあります。**この「戻し方」のデータモデル**が知りたい。
 
 ## 特に知りたいこと（優先順）
-1. **readiness gate の判定基準**：「分解可能な成熟度に達したか」を何で判定するか。
-   閾値・シグナル・判定の失敗時の扱い。
-2. **反証のルーティング**：Verifier の指摘を「影響箇所」へ戻すとき、
-   影響箇所はどう表現されているか（グラフ？依存リスト？部分問題 ID？）。
-   **具體的なフィールド名やデータ構造**があればそのまま写してください。
-3. **並列候補の統合**：複数候補と批判をどう統合するか。多数決か、スコアか、
-   構造的な差分か。本リポジトリの gitswarm/readout_sim.py（同質ワーカーの多数決＝
-   共通モード障害の決定論的測定）との違いも論じてください。
-4. **本リポジトリ規模で実装できる部分**：タスクは数学/TCS の証明構築であり、
+1. **readiness gate の判定基準**：「分解可能な成熟度に達したか」を**何で**判定するか。
+   閾値・シグナル・判定失敗時の扱い。**數式または擬似コードがあればそのまま寫す。**
+2. **反証のルーティング**：影響箇所をどう表現するか（グラフ？依存リスト？subproblem ID？）。
+   **具體的なフィールド名やデータ構造**を寫す。
+3. **overlapping random-sample tree aggregation**：候補と批判をどう統合するか。
+   多数決か、スコアか、構造的差分か。本リポジトリの gitswarm/readout_sim.py
+   （同質ワーカーの多数決＝共通モード障害の決定論的測定）との違いも論じる。
+4. **本リポジトリ規模で実装できるか**：タスクは数学/TCS の証明構築であり、
    本リポジトリは「非定量的な研究プロセスの研究」です。
-   **そのまま転用できるか、それとも抽象だけ借用すべきか**を明示してください。
+   **そのまま転用できるか、抽象だけ借用すべきか**を明示する。
 
 ## 制約（必ず守ること）
-- **このサンドボックスからは arxiv.org に到達できません**（許可ホストは github.com 等のみ）。
-- 本論文は tests/fixtures/arxiv_metadata_snapshot.json に**存在しません**。
-  scripts/check_citations.py は「スナップショットに無い arXiv ID」を MISSING＝失敗として
-  CI ゲート5 を赤にします。**原典を確認できない状態で state/sources.jsonl に
-  登録してはいけません。**
-  - 【経路A】原典を読めた場合のみ、スナップショットに確認済み書誌を追記したうえで登録可。
-  - 【経路B】state/ には一切書き込まないこと。
-- ID は python3 scripts/new_id.py SRC --count 1 --date 2026102X で採番（連番禁止）。
-- 証拠段階 A/B/C を明記。原典未照合の記述は必ず C とする。
+- **原典を読まずに結論を出さない。**
+- `state/sources.jsonl` 登録前に `tests/fixtures/arxiv_metadata_snapshot.json` へ
+  確認済み書誌を追記（**優先2も當方が追記済み**。食い違いがあれば訂正して報告）。
+- ID は python3 scripts/new_id.py SRC --count 1 --date 2026102X で採番。
+- 証拠段階 A/B/C を明記。引用は逐語。
+- 人間判断を要する削除・撤回は報告して指示を仰ぐ。
 
 ## 成果物
-【経路A】contributions/2026-10-2X_stellar_colosseum_reading.md ＋ SRC 登録 ＋ EVD 3〜5件
-【経路B】contributions/2026-10-2X_stellar_colosseum_triage.md のみ（state/ は触らない）
+contributions/2026-10-2X_stellar_colosseum_reading.md ＋ SRC 登録 ＋ EVD 4〜6件
 
 ## 完了条件
 全 8 ゲートが exit 0 であること。
@@ -218,17 +237,24 @@ in Mathematics and Theoretical Computer Science" を精読し、
 
 # 優先 3：The Agentic Scientist（`arXiv:2610.18933`）
 
+**スナップショット未追記**——自分で abs ページを取得して追記すること。
+
 ```
-あなたは ResearchOS リポジトリ（/home/user/ResearchOS、ブランチ arena/ac3628ba-researchos）
-の文献調査ワーカーです。報告は日本語でお願いします。
+あなたは ResearchOS リポジトリ（/home/user/ResearchOS）の文献調査ワーカーです。
+報告は日本語でお願いします。
 
 ## 目的
 arXiv:2610.18933 "The Agentic Scientist: Orchestrating Coding Agents for Automated
-Scientific (Co-)Discovery" を精読し、**段階別ルーブリック検証**の具體例を抽出してください。
+Scientific (Co-)Discovery" を読み、**段階別ルーブリック検証**の具體例を抽出してください。
 
-【経路A】原典を添付します。それを読んでください。
-【経路B】原典はありません。docs/literature-inventory-2026-10-19.jsonl の
-        paper_id=arXiv:2610.18933v1 の各フィールドを根拠にしてください。
+## 原典の取得方法（重要）
+- Arena の fetch_page / web_search → **arxiv.org に到達できます**（実測済み）
+- サンドボックスの curl / python3 → 到達できません
+
+fetch_page で取得してください。
+  https://arxiv.org/abs/2610.18933
+  https://arxiv.org/html/2610.18933v1
+抄録だけでなく**本文**に当たってください。
 
 ## なぜこの論文か（背景）
 本リポジトリは草案化→調査→統合→報告を、並列セッションと統合役の裁定で
@@ -244,27 +270,25 @@ Scientific (Co-)Discovery" を精読し、**段階別ルーブリック検証**�
 ## 特に知りたいこと（優先順）
 1. 各段階（草案化／アイデア生成／計画／サンドボックス実験／結果統合／
    ベースライン・アブレーション／事後分析／報告）に**それぞれどんな検証基準**を
-   課しているか。表にまとめてください。
+   課しているか。表にまとめる。
 2. **事後分析段階**の検証内容（本リポジトリに最も不足している部分）。
 3. 段階の**遷移条件**——次へ進む基準と、戻る基準。
 4. 本リポジトリの 8 ゲートと突き合わせ、**「自前で実験を持たない」本リポジトリに
-   転用できる部分**とできない部分を分けてください（本リポジトリは LLM 実験を
-   実行できません）。
+   転用できる部分**とできない部分を分ける（本リポジトリは LLM 実験を実行できません）。
 
 ## 制約（必ず守ること）
-- **このサンドボックスからは arxiv.org に到達できません**（許可ホストは github.com 等のみ）。
-- 本論文は tests/fixtures/arxiv_metadata_snapshot.json に**存在しません**。
-  scripts/check_citations.py は「スナップショットに無い arXiv ID」を MISSING＝失敗として
-  CI ゲート5 を赤にします。**原典を確認できない状態で state/sources.jsonl に
-  登録してはいけません。**
-  - 【経路A】原典を読めた場合のみ、スナップショットに確認済み書誌を追記したうえで登録可。
-  - 【経路B】state/ には一切書き込まないこと。
-- ID は python3 scripts/new_id.py SRC --count 1 --date 2026102X で採番（連番禁止）。
-- 証拠段階 A/B/C を明記。原典未照合の記述は必ず C とする。
+- **原典を読まずに結論を出さない。**
+- **本論文は tests/fixtures/arxiv_metadata_snapshot.json に未登録です。**
+  自分で abs ページを取得し、確認できた書誌
+  （arxiv_id / source_url / title / authors / published）を**追記してから**
+  state/sources.jsonl に登録すること。追記しないと
+  scripts/check_citations.py が MISSING として CI ゲート5 を赤にします。
+- ID は python3 scripts/new_id.py SRC --count 1 --date 2026102X で採番。
+- 証拠段階 A/B/C を明記。引用は逐語。
 
 ## 成果物
-【経路A】contributions/2026-10-2X_agentic_scientist_reading.md ＋ SRC 登録 ＋ EVD 3〜5件
-【経路B】contributions/2026-10-2X_agentic_scientist_triage.md のみ（state/ は触らない）
+contributions/2026-10-2X_agentic_scientist_reading.md
+＋ スナップショット追記 ＋ SRC 登録 ＋ EVD 3〜5件
 
 ## 完了条件
 全 8 ゲートが exit 0 であること。
@@ -274,18 +298,25 @@ Scientific (Co-)Discovery" を精読し、**段階別ルーブリック検証**�
 
 # 優先 4：SHELDON（`arXiv:2610.18025`）
 
+**スナップショット未追記**——自分で abs ページを取得して追記すること。
+
 ```
-あなたは ResearchOS リポジトリ（/home/user/ResearchOS、ブランチ arena/ac3628ba-researchos）
-の文献調査ワーカーです。報告は日本語でお願いします。
+あなたは ResearchOS リポジトリ（/home/user/ResearchOS）の文献調査ワーカーです。
+報告は日本語でお願いします。
 
 ## 目的
 arXiv:2610.18025 "SHELDON: Reasoning through Dual Search over Hypothesis and
-Observation Spaces" を精読し、**仮説空間と観測空間を分離して管理するデータモデル**
+Observation Spaces" を読み、**仮説空間と観測空間を分離して管理するデータモデル**
 を抽出してください。
 
-【経路A】原典を添付します。それを読んでください。
-【経路B】原典はありません。docs/literature-inventory-2026-10-19.jsonl の
-        paper_id=arXiv:2610.18025v1 の各フィールドを根拠にしてください。
+## 原典の取得方法（重要）
+- Arena の fetch_page / web_search → **arxiv.org に到達できます**（実測済み）
+- サンドボックスの curl / python3 → 到達できません
+
+fetch_page で取得してください。
+  https://arxiv.org/abs/2610.18025
+  https://arxiv.org/html/2610.18025v1
+抄録だけでなく**本文**に当たること。
 
 ## なぜこの論文か（背景）
 本リポジトリの state/hypotheses.jsonl（2件）は**仮説しか持っておらず、
@@ -304,23 +335,18 @@ Observation Spaces" を精読し、**仮説空間と観測空間を分離して�
 2. 「仮説が説明できない観測」を**どう検出**するか。決定論的に判定できるか、
    それとも推論が要るか。**本リポジトリの決定論的 CI で実装可能か**が要点です。
 3. 検出後に**何を誘発**するか（新しい調査？新しい仮説？）と、その優先付け。
-4. 本リポジトリの台帳（EVD 49 / CLM 8 / VER 29 / HYP 2）に適用した場合、
-   **スキーマ変更の具體案**をください。後方互換（既存レコードを壊さない）を前提とすること。
+4. 本リポジトリの台帳（EVD 49 / CLM 8 / VER 29 / HYP 2）に適用した場合の
+   **スキーマ変更の具體案**。後方互換（既存レコードを壊さない）を前提とする。
 
 ## 制約（必ず守ること）
-- **このサンドボックスからは arxiv.org に到達できません**（許可ホストは github.com 等のみ）。
-- 本論文は tests/fixtures/arxiv_metadata_snapshot.json に**存在しません**。
-  scripts/check_citations.py は「スナップショットに無い arXiv ID」を MISSING＝失敗として
-  CI ゲート5 を赤にします。**原典を確認できない状態で state/sources.jsonl に
-  登録してはいけません。**
-  - 【経路A】原典を読めた場合のみ、スナップショットに確認済み書誌を追記したうえで登録可。
-  - 【経路B】state/ には一切書き込まないこと。
-- ID は python3 scripts/new_id.py SRC --count 1 --date 2026102X で採番（連番禁止）。
-- 証拠段階 A/B/C を明記。原典未照合の記述は必ず C とする。
+- **原典を読まずに結論を出さない。**
+- **本論文は tests/fixtures/arxiv_metadata_snapshot.json に未登録です。**
+  自分で abs ページを取得し、確認できた書誌を**追記してから** sources.jsonl に登録する。
+- ID は python3 scripts/new_id.py SRC --count 1 --date 2026102X で採番。
+- 証拠段階 A/B/C を明記。引用は逐語。
 
 ## 成果物
-【経路A】contributions/2026-10-2X_sheldon_reading.md ＋ SRC 登録 ＋ EVD 3〜5件
-【経路B】contributions/2026-10-2X_sheldon_triage.md のみ（state/ は触らない）
+contributions/2026-10-2X_sheldon_reading.md ＋ スナップショット追記 ＋ SRC 登録 ＋ EVD 3〜5件
 
 ## 完了条件
 全 8 ゲートが exit 0 であること。
@@ -330,55 +356,54 @@ Observation Spaces" を精読し、**仮説空間と観測空間を分離して�
 
 # 優先 5：RLTL;DR（`arXiv:2609.37633`）
 
+**スナップショット未追記**——自分で abs ページを取得して追記すること。
+
 ```
-あなたは ResearchOS リポジトリ（/home/user/ResearchOS、ブランチ arena/ac3628ba-researchos）
-の文献調査ワーカーです。報告は日本語でお願いします。
+あなたは ResearchOS リポジトリ（/home/user/ResearchOS）の文献調査ワーカーです。
+報告は日本語でお願いします。
 
 ## 目的
 arXiv:2609.37633 "RLTL;DR: Self-improvement by Internalizing Self-generated Feedback"
-を精読し、**Verifier の評価を短い知見に圧縮して再利用する形式**を抽出してください。
+を読み、**Verifier の評価を短い知見に圧縮して再利用する形式**を抽出してください。
 
-【経路A】原典を添付します。それを読んでください。
-【経路B】原典はありません。docs/literature-inventory-2026-10-19.jsonl の
-        paper_id=arXiv:2609.37633v1 の各フィールドを根拠にしてください。
+## 原典の取得方法（重要）
+- Arena の fetch_page / web_search → **arxiv.org に到達できます**（実測済み）
+- サンドボックスの curl / python3 → 到達できません
+
+fetch_page で取得してください。
+  https://arxiv.org/abs/2609.37633
+  https://arxiv.org/html/2609.37633v1
+抄録だけでなく**本文**に当たること。
 
 ## なぜこの論文か（背景）
 本リポジトリの state/verifications.jsonl（29件）の rationale は**長文で、
 書かれた後に再利用されていません**。統合役が次に同じ種の判断をするとき、
 過去の VER を読み直す必要があります。
 
-本論文は「失敗後に Verifier が出した評価を、短い insight へ圧縮し、次の rollout へ
-渡す」とあります。**この圧縮形式**が本リポジトリの運用に使えそうです。
-
 ## 重要な但し書き
 本リポジトリは **LLM の学習を行いません**。したがって論文の主眼である
 "internalize"（推論時に insight を明示しなくても性能を保つ＝モデル内部化）は
 **採用できません**。**必要なのは「形式」だけ**です。
-論文を読む際は「内部化」の部分と「圧縮形式」の部分を分けて整理してください。
+「内部化」の部分と「圧縮形式」の部分を分けて整理してください。
 
 ## 特に知りたいこと（優先順）
-1. insight の**具體的な形式**：長さ・構造・必須フィールド。実例を写してください。
-2. **圧縮の手続き**：何から何を落とすか。捨てられる情報と捨てられない情報の基準。
+1. insight の**具體的な形式**：長さ・構造・必須フィールド。実例を寫す。
+2. **圧縮の手続き**：何から何を落とすか。捨ててよい情報と捨ててはいけない情報の基準。
 3. **再利用の条件**：どんなときに過去の insight を引くか（類似度？タグ？）。
-4. 本リポジトリへの適用案：VER レコードに insight フィールドを足すなら、
-   どんなスキーマか。**既存 29 件を壊さない後方互換案**をください。
+4. 本リポジトリへの適用案：VER レコードに insight フィールドを足すならどんなスキーマか。
+   **既存 29 件を壊さない後方互換案**を出す。
 5. **失敗モード**：圧縮で何が失われるか。本リポジトリのように「事実性」が
    重要な用途で、圧縮が危険なケースはあるか。
 
 ## 制約（必ず守ること）
-- **このサンドボックスからは arxiv.org に到達できません**（許可ホストは github.com 等のみ）。
-- 本論文は tests/fixtures/arxiv_metadata_snapshot.json に**存在しません**。
-  scripts/check_citations.py は「スナップショットに無い arXiv ID」を MISSING＝失敗として
-  CI ゲート5 を赤にします。**原典を確認できない状態で state/sources.jsonl に
-  登録してはいけません。**
-  - 【経路A】原典を読めた場合のみ、スナップショットに確認済み書誌を追記したうえで登録可。
-  - 【経路B】state/ には一切書き込まないこと。
-- ID は python3 scripts/new_id.py SRC --count 1 --date 2026102X で採番（連番禁止）。
-- 証拠段階 A/B/C を明記。原典未照合の記述は必ず C とする。
+- **原典を読まずに結論を出さない。**
+- **本論文は tests/fixtures/arxiv_metadata_snapshot.json に未登録です。**
+  自分で abs ページを取得し、確認できた書誌を**追記してから** sources.jsonl に登録する。
+- ID は python3 scripts/new_id.py SRC --count 1 --date 2026102X で採番。
+- 証拠段階 A/B/C を明記。引用は逐語。
 
 ## 成果物
-【経路A】contributions/2026-10-2X_rltldr_reading.md ＋ SRC 登録 ＋ EVD 3〜5件
-【経路B】contributions/2026-10-2X_rltldr_triage.md のみ（state/ は触らない）
+contributions/2026-10-2X_rltldr_reading.md ＋ スナップショット追記 ＋ SRC 登録 ＋ EVD 3〜5件
 
 ## 完了条件
 全 8 ゲートが exit 0 であること。
@@ -389,21 +414,24 @@ arXiv:2609.37633 "RLTL;DR: Self-improvement by Internalizing Self-generated Feed
 ## 使い方
 
 1. 上から順に、**1 チャットにつき 1 本**貼り付けて開始する。
-2. 各プロンプトの `【経路A】` / `【経路B】` は**必ずどちらかを消す**こと
-   （両方残すと指示が矛盾する）。
-3. **経路 A を採る場合**、原典（PDF または HTML のテキスト）をチャットに添付する。
+2. ワーカーは**自分で原典を取得できる**（Arena の `fetch_page`）。添付は不要。
+3. **優先 1・2 は書誌を當方がスナップショットに追記済み**。
+   優先 3〜5 は**ワーカー自身が追記してから** `sources.jsonl` に登録する。
 4. ワーカーが `state/` を触った場合、**統合役が内容を確認してから** `main` へ取り込む。
-5. 優先 1（RRSI）の成果は、本リポジトリの**未実装 2 項目**
-   （過適合回避・剪定）に直結する。最優先で回すこと。
+5. 優先 1（RRSI）の最重要の成果は、**當方の暫定実装
+   （`scripts/holdout_eval.py` / `scripts/prune_candidates.py`）への判定**である。
+   これらは抄録要約だけを根拠に設計したもので、**原典の基準とは異なる可能性が高い**。
 
 ## 残っている前提リスク
 
-本トリアージは**要約に基づく暫定選別**であり、原典に当たっていない。
+本トリアージの**優先順位**はインベントリの要約に基づく暫定選別である。
 インベントリ自身が次を明記している：
 
 > 「RRSI と ResearchOS の間には設計上の高い関連があるが、ResearchOS で
 > 実装済み／採用済みと確認できる証拠はない」
 
 すなわち **RRSI を優先 1 としたのは要約の内容であって、設計時に実際に参照されたという
-来歴ではない**。この 2 つを混同しないこと。原典を読んだ結果、
-期待外れであった場合は**遠慮なく順位を下げてよい**。
+来歴ではない**。原典を読んだ結果、期待外れであれば**遠慮なく順位を下げてよい**。
+
+また、**インベントリの版情報が 1 世代古い**（RRSI を `v2` と記録、実際の現在版は `v3`）。
+インベントリの他の書誌情報も古い可能性があるため、**数値や版を引用する前に必ず原典で確認する**こと。
