@@ -1,0 +1,346 @@
+{
+  "experiment": "single-vs-multi-worker extraction, docs/single-vs-multi-experiment-2026-10-21.md",
+  "role": "X4 truth (blind, fixed before opening arm output JSONs)",
+  "created_at_utc": "2026-10-21T09:15:50Z",
+  "source": {
+    "paper": "RLTLDR: Self-improvement by Internalizing Self-generated Feedback",
+    "version": "v2",
+    "abs_url": "https://arxiv.org/abs/2609.37633v2",
+    "html_url": "https://arxiv.org/html/2609.37633v2",
+    "retrieved_at_utc": "2026-10-21T09:15:50Z",
+    "retrieval_route": "Arena web fetch; abs page (2 chunks, chunk 0 used) and HTML v2 (all 16 chunks)",
+    "version_marker": "arXiv:2609.37633v2 [cs.LG] 19 Oct 2026",
+    "pdf_used": false
+  },
+  "base_commit": "ccf76aa654c1344e7bc7862bc835cf1420c98ff8",
+  "base_commit_note": "Designated common start commit in the X3-P2/X3-P3 prompts. The four arms did not in fact share one base commit; actual bases are reported in 2026-10-21_svm_results.md.",
+  "procedure": "Design §8.1 blind procedure. This file was written and committed before any arm output JSON was opened. Values were determined from the fixed v2 HTML/abs pages only. No arm value was consulted. No item was excluded: all 51 items had a determinate answer under the design's counting and typing rules.",
+  "items": [
+    {
+      "id": "Q01",
+      "value": 9,
+      "location": "abs page, Authors field",
+      "evidence_excerpt": "Michael Kirchhof, Eleonora Gualdoni, Andrew Szot, Khashayar Gatmiry, Aryo Lotfi, Abbas Kazerouni, Omar Attia, Sanjoy Chowdhury, Alexander Toshev"
+    },
+    {
+      "id": "Q02",
+      "value": "2026-10-19",
+      "location": "abs page, Submission history, [v2]",
+      "evidence_excerpt": "[v2] Mon, 19 Oct 2026 11:45:34 UTC"
+    },
+    {
+      "id": "Q03",
+      "value": ["cs.LG", "cs.AI", "cs.CL"],
+      "location": "abs page, Subjects field",
+      "evidence_excerpt": "Machine Learning (cs.LG); Artificial Intelligence (cs.AI); Computation and Language (cs.CL); Machine Learning (stat.ML)",
+      "note": "Only cs.XX codes are asked; stat.ML is excluded by the item's own rule."
+    },
+    {
+      "id": "Q04",
+      "value": "Apple",
+      "location": "HTML v2 opening author block",
+      "evidence_excerpt": "Affiliation: Apple"
+    },
+    {
+      "id": "Q05",
+      "value": 12,
+      "location": "Abstract paragraph (abs and HTML identical)",
+      "evidence_excerpt": "achieving a Pass@1 of 14-31% with insights in context during training and, crucially, 12-13% when no insight is in context at eval time"
+    },
+    {
+      "id": "Q06",
+      "value": 13,
+      "location": "Abstract paragraph (abs and HTML identical)",
+      "evidence_excerpt": "achieving a Pass@1 of 14-31% with insights in context during training and, crucially, 12-13% when no insight is in context at eval time"
+    },
+    {
+      "id": "Q07",
+      "value": 8,
+      "location": "HTML v2 first-level headings",
+      "evidence_excerpt": "1 Introduction; 2 Related Works; 3 Methods; 4 RLTL;DR breaks through the learning barrier; 5 Reducing to the secret sauce: From RLTL;DR to SFTL;DR; 6 What makes for good insights?; 7 Discussion; 8 Conclusion and outlook"
+    },
+    {
+      "id": "Q08",
+      "value": 6,
+      "location": "HTML v2 appendix headings after References",
+      "evidence_excerpt": "Appendix A Prompts and details of RLTL;DR; Appendix B Reproducing the RLTL;DR Implementation; Appendix C Examples of generated insights; Appendix D How to evaluate without confounders; Appendix E Additional analyses of the main run; Appendix F Understanding and simplifying insight"
+    },
+    {
+      "id": "Q09",
+      "value": 9,
+      "location": "HTML v2 Table captions, main text and appendices",
+      "evidence_excerpt": "Table 1 ... Table 9 (captions 'Table 1:' through 'Table 9:')"
+    },
+    {
+      "id": "Q10",
+      "value": 13,
+      "location": "HTML v2 Figure captions, main text and appendices",
+      "evidence_excerpt": "Figure 1 ... Figure 13 (captions 'Figure 1:' through 'Figure 13:')"
+    },
+    {
+      "id": "Q11",
+      "value": [6, 8],
+      "location": "§1, Figure 1 caption",
+      "evidence_excerpt": "When the running average success rate of the task is high enough, like in the 6th and 8th rollout, we attempt the task without insights."
+    },
+    {
+      "id": "Q12",
+      "value": 17,
+      "location": "§1, paragraph introducing insight backpropagation (repeated at end of §3.3)",
+      "evidence_excerpt": "We activate the backpropagation mask on the self-generated insight tokens that are in the context (≈17 tokens per insight)."
+    },
+    {
+      "id": "Q13",
+      "value": "Remember to paginate search results.",
+      "location": "§1, quoted TL;DR example",
+      "evidence_excerpt": "a higher-level TL;DR insight like \"Remember to paginate search results.\""
+    },
+    {
+      "id": "Q14",
+      "value": ["advantage collapse", "learning cliff", "exploration inefficiency"],
+      "location": "§2, 'The learning barrier of RLVR' paragraph",
+      "evidence_excerpt": "a phenomenon variously named advantage collapse, the learning cliff, or exploration inefficiency",
+      "variants": [
+        ["advantage collapse", "the learning cliff", "exploration inefficiency"]
+      ]
+    },
+    {
+      "id": "Q15",
+      "value": ["source", "explicitness", "transfer mechanism"],
+      "location": "§2, 'Guiding exploration with privileged information' paragraph",
+      "evidence_excerpt": "These approaches differ along three axes: the source of the guidance, its explicitness, and the transfer mechanism to ensure the policy still performs when no guidance is available at evaluation time.",
+      "variants": [
+        ["source of the guidance", "explicitness", "transfer mechanism"]
+      ]
+    },
+    {
+      "id": "Q16",
+      "value": ["SDPO", "RLTF"],
+      "location": "§2, 'Internalizing context into weights' paragraph",
+      "evidence_excerpt": "Closest to us are SDPO (Hübotter et al., 2026) and RLTF (Song et al., 2026), which turn feedback into a self-distillation signal over the rollout."
+    },
+    {
+      "id": "Q17",
+      "value": 50,
+      "location": "§3.1, POMDP paragraph",
+      "evidence_excerpt": "The episode ends at step T when the agent emits an end-of-task action or reaches the maximum episode horizon of 50 actions."
+    },
+    {
+      "id": "Q18",
+      "value": 0.2,
+      "location": "§3.1, paragraph introducing the GRPO loss",
+      "evidence_excerpt": "multiplied with the advantages, and clipped with ε = 0.2 to give the GRPO loss"
+    },
+    {
+      "id": "Q19",
+      "value": 50,
+      "location": "§3.2, insight insertion rule",
+      "evidence_excerpt": "Whenever at the k-th attempt ≤ 50% of the attempts 1,...,k-1 are successful, we insert all insights collected so far."
+    },
+    {
+      "id": "Q20",
+      "value": 4.5,
+      "location": "§3.2, paragraph on asynchronous rollout collection",
+      "evidence_excerpt": "But with asynchronous rollout collection with continuous batching and caching, at K=8 we observe the sampling phase to be 4.5× slower."
+    },
+    {
+      "id": "Q21",
+      "value": 0.5,
+      "location": "§3.3, insight internalization strength",
+      "evidence_excerpt": "We show in Section E.3 that RLTL;DR is robust to the choice of λ and that λ = 0.5 is a good default."
+    },
+    {
+      "id": "Q22",
+      "value": "Sort the notes to find the most recent one.",
+      "location": "§3.3, concrete backpropagation example, second insight",
+      "evidence_excerpt": "It backpropagates \"Sort the notes to find the most recent one.\" the same way, conditional on the task, first insight, and start of the second insight message."
+    },
+    {
+      "id": "Q23",
+      "value": "Qwen 3.5 9B (with thinking)",
+      "location": "§4.1 Datasets, paragraph on filtering to Pass@128=0",
+      "evidence_excerpt": "We use tasks where our policy, Qwen 3.5 9B (with thinking), has no successes in 128 attempts, i.e., Pass@128=0.",
+      "variants": [
+        "Qwen 3.5 9B",
+        "Qwen 3.5 9B Thinking",
+        "Qwen 3.5 9B (thinking)"
+      ],
+      "note": "The paper itself uses 'Qwen 3.5 9B (with thinking)' here, 'Qwen 3.5 9B Thinking' in §1/E.8, and 'Qwen 3.5 9B' elsewhere. The design pre-flagged Q23 as a format-difference-prone item; these forms are defined as allowed variants, and any remaining difference is to be manually judged as 書式差, not 事実誤り."
+    },
+    {
+      "id": "Q24",
+      "value": 458,
+      "location": "§4.1 Datasets, Pass@128=0 filtering results",
+      "evidence_excerpt": "This filters down SAPI to 458 tasks."
+    },
+    {
+      "id": "Q25",
+      "value": 123,
+      "location": "§4.1 Datasets, Pass@128=0 filtering results",
+      "evidence_excerpt": "Leetcode has 123 remaining tasks."
+    },
+    {
+      "id": "Q26",
+      "value": 1624,
+      "location": "§4.1, 'Deconfounded evaluation' / heldout sets paragraph",
+      "evidence_excerpt": "SAPI has 1624 tasks on 4 unseen apps."
+    },
+    {
+      "id": "Q27",
+      "value": ["RLTF-SD", "Strategy-guided Exploration (SGE)", "GRPO"],
+      "location": "§4.1 Baselines",
+      "evidence_excerpt": "We compare RLTL;DR to three baselines. RLTF-SD ... Second, we compare against Strategy-guided Exploration (SGE, Szot et al., 2026). ... Finally, we compare against a standard GRPO baseline.",
+      "variants": [
+        ["RLTF-SD", "SGE", "GRPO"],
+        ["RLTF-SD", "Strategy-guided Exploration", "GRPO"],
+        ["RLTF-SD", "Strategy-guided exploration (SGE)", "GRPO"]
+      ]
+    },
+    {
+      "id": "Q28",
+      "value": 91.1,
+      "location": "Table 1, row RLTL;DR, column SAPI",
+      "evidence_excerpt": "| RLTL;DR | 91.1% | 61.7% | 49.1% |"
+    },
+    {
+      "id": "Q29",
+      "value": 33.7,
+      "location": "Table 1, row GRPO, column Appworld",
+      "evidence_excerpt": "| GRPO | 57.8% | 33.7% | 55.1% |"
+    },
+    {
+      "id": "Q30",
+      "value": 42.2,
+      "location": "Table 1, row RLTF-SD, column Leetcode",
+      "evidence_excerpt": "| RLTF-SD | 53.0% | 38.9% | 42.2% |"
+    },
+    {
+      "id": "Q31",
+      "value": 256,
+      "location": "§5.1 Dataset",
+      "evidence_excerpt": "The 642 tasks are split into 256 eval and 386 train tasks."
+    },
+    {
+      "id": "Q32",
+      "value": 17.0,
+      "location": "Table 2, row 'RLTL;DR, no GRPO loss, only L_SFT', column Eval Pass@1",
+      "evidence_excerpt": "| RLTL;DR, no GRPO loss, only L_SFT | 9.2M | 839k | 20.0% | 17.0% |"
+    },
+    {
+      "id": "Q33",
+      "value": 68000,
+      "location": "Table 2, row 'SFTL;DR on insights, deduplicated', column Backward Tokens",
+      "evidence_excerpt": "| SFTL;DR on insights, deduplicated | 4.6M | 68k | 19.1% | 16.9% |; prose: 'Its 4.6M forward (context) and 68k backwards (insight) tokens'",
+      "note": "HTML renders '6868k' in places (duplicated numeral); the table row and prose both support 68k = 68000 under the design's k→×1000 rule."
+    },
+    {
+      "id": "Q34",
+      "value": 0.6,
+      "location": "Table 2 caption",
+      "evidence_excerpt": "All results are ±0.6% standard deviation."
+    },
+    {
+      "id": "Q35",
+      "value": "You need to mark the article as read instead of just viewing it",
+      "location": "§6 opening paragraph, quoted example",
+      "evidence_excerpt": "typically, a single sentence (17 words on average), like \"You need to mark the article as read instead of just viewing it\""
+    },
+    {
+      "id": "Q36",
+      "value": 3.4,
+      "location": "Table 3, row 'Student, no information about failed unit tests (only success)', column Train Pass@1",
+      "evidence_excerpt": "| Student, no information about failed unit tests (only success) | 16 | 03.4% | 10.0% |"
+    },
+    {
+      "id": "Q37",
+      "value": [1, 2, 4, 8],
+      "location": "§6, 'Amount of insight' paragraph",
+      "evidence_excerpt": "We set the maximum number of insights in the context to 1, 2, 4, and 8, instead of the default 16."
+    },
+    {
+      "id": "Q38",
+      "value": ["summary", "feedback", "wrong_step_id", "corrected_step", "hint"],
+      "location": "Appendix A.1, Prompt 1 final output-format specification",
+      "evidence_excerpt": "The format should be: { \"summary\": \"...\", \"feedback\": \"...\", \"wrong_step_id\": \"integer\", \"corrected_step\": \"...\", \"hint\": \"...\"}"
+    },
+    {
+      "id": "Q39",
+      "value": ["KL Divergence", "Token-level policy gradients", "Removing the standard deviation"],
+      "location": "Appendix A.3.1, paragraph-opening headings",
+      "evidence_excerpt": "KL Divergence. ... Token-level policy gradients. ... Removing the standard deviation."
+    },
+    {
+      "id": "Q40",
+      "value": 75,
+      "location": "Appendix A.3.2 Positive-ratio filtering",
+      "evidence_excerpt": "we filter rollouts to ensure that 75% have a positive reward."
+    },
+    {
+      "id": "Q41",
+      "value": 21,
+      "location": "Table 4, row 'Avg attempts per task (due to async collection)', column Appworld/SAPI",
+      "evidence_excerpt": "| Avg attempts per task (due to async collection) | 21 | 26 |"
+    },
+    {
+      "id": "Q42",
+      "value": 32,
+      "location": "Table 4, row 'Global batchsize', column Leetcode",
+      "evidence_excerpt": "| Global batchsize | 256 | 32 |"
+    },
+    {
+      "id": "Q43",
+      "value": 75,
+      "location": "Appendix F.1, Table 8 footnote on the Self-play insight SFT row",
+      "evidence_excerpt": "This run's training crashed at update 75, so its value is averaged over the 75 available updates rather than the full 80."
+    },
+    {
+      "id": "Q44",
+      "value": 15.3,
+      "location": "Table 5, row 'Wrong capitalization', column Share",
+      "evidence_excerpt": "| 15.3% | Wrong capitalization | ... |"
+    },
+    {
+      "id": "Q45",
+      "value": "Call complete_task without passing an answer parameter for non-QA tasks.",
+      "location": "Table 5, row 'Extra parameter', column 'Examples of insight'",
+      "evidence_excerpt": "Call complete_task without passing an answer parameter for non-QA tasks."
+    },
+    {
+      "id": "Q46",
+      "value": "Remove the answer parameter from the complete task call.",
+      "location": "Appendix C.2, Table 6, failure type 'answer argument passed to a non-QA task', row TL;DR insight",
+      "evidence_excerpt": "TL;DR insight: \"Remove the answer parameter from the complete task call.\""
+    },
+    {
+      "id": "Q47",
+      "value": 20,
+      "location": "Appendix D.2, 'Insight too-easy ratio' paragraph",
+      "evidence_excerpt": "It cannot be prevented that this occasionally happens, but we aim to keep this ratio below 20%."
+    },
+    {
+      "id": "Q48",
+      "value": 92,
+      "location": "Appendix E.4, paragraph describing Figure 5",
+      "evidence_excerpt": "with within-visit dissimilarity averaging 0.19 against 0.82 across visits (n=92 revisited tasks)."
+    },
+    {
+      "id": "Q49",
+      "value": 0.034,
+      "location": "Appendix E.5, 'Insight reliance remains mild' paragraph",
+      "evidence_excerpt": "reliance rising, but only mildly: from +0.009 averaged over the first half of training to +0.034 over the second."
+    },
+    {
+      "id": "Q50",
+      "value": 57,
+      "location": "Appendix E.8, Figure 11 caption",
+      "evidence_excerpt": "Conditioning on previous failed attempts finds a solution for ∼57% of tasks, while a single insight recovers ∼38% and i.i.d. sampling ∼6%."
+    },
+    {
+      "id": "Q51",
+      "value": 9.6,
+      "location": "Appendix F.2, Table 9, row 'Off-policy training', column Eval Pass@1",
+      "evidence_excerpt": "| Off-policy training | 9.6% |"
+    }
+  ],
+  "excluded": []
+}
