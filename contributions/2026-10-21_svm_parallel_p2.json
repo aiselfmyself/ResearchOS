@@ -1,0 +1,144 @@
+{
+  "arm": "parallel",
+  "worker": "P2",
+  "base_commit": "241152453378166ed66577bafe24637cc1c76f94",
+  "items": [
+    {
+      "id": "Q02",
+      "value": "2026-10-19",
+      "location": "abs ページ(https://arxiv.org/abs/2609.37633v2) Submission history の [v2] 項: Mon, 19 Oct 2026 11:45:34 UTC（v1 は Tue, 29 Sep 2026）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q05",
+      "value": 12,
+      "location": "Abstract（abs・HTML 共通の要旨段落）: \"a Pass@1 of 14–31% with insights in context during training and, crucially, 12–13% when no insight is in context at eval time\" の範囲の下限",
+      "confidence": "high"
+    },
+    {
+      "id": "Q08",
+      "value": 6,
+      "location": "HTML 版 References 後の見出し Appendix A〜Appendix F（6件）。Appendix Contents は英大文字1字でないため不算入、A.1 等の小節も不算入",
+      "confidence": "high"
+    },
+    {
+      "id": "Q14",
+      "value": [
+        "advantage collapse",
+        "the learning cliff",
+        "exploration inefficiency"
+      ],
+      "location": "§2 Related Works「The learning barrier of RLVR.」段落: \"a phenomenon variously named advantage collapse, the learning cliff, or exploration inefficiency\"",
+      "confidence": "high"
+    },
+    {
+      "id": "Q18",
+      "value": 0.2,
+      "location": "§3.1 3.1 RL and GRPO preliminaries、GRPO 損失式 (3.1) 直前の記述 \"clipped with ε=0.2\"",
+      "confidence": "high"
+    },
+    {
+      "id": "Q19",
+      "value": 50,
+      "location": "§3.2 第1段落 \"Whenever at the k-th attempt ≤50% of the attempts 1,…,k−1 are successful, we insert all insights collected so far\"",
+      "confidence": "high"
+    },
+    {
+      "id": "Q21",
+      "value": 0.5,
+      "location": "§3.3 Insight internalization 末尾 \"λ=0.5 is a good default\"",
+      "confidence": "high"
+    },
+    {
+      "id": "Q24",
+      "value": 458,
+      "location": "§4.1 Datasets 第2段落 \"This filters down SAPI to 458 tasks\"",
+      "confidence": "high"
+    },
+    {
+      "id": "Q29",
+      "value": 33.7,
+      "location": "Table 1（Pass@1 on heldout eval sets after training on the Pass@128=0 splits）、行 GRPO・列 Appworld",
+      "confidence": "high"
+    },
+    {
+      "id": "Q32",
+      "value": 17.0,
+      "location": "Table 2、行 \"RLTL;DR, no GRPO loss, only L_SFT\"・列 Eval Pass@1",
+      "confidence": "high"
+    },
+    {
+      "id": "Q35",
+      "value": "You need to mark the article as read instead of just viewing it",
+      "location": "§6 What makes for good insights? 冒頭第1段落の引用（\"see Appendix C\" の直前）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q37",
+      "value": [1, 2, 4, 8],
+      "location": "§6「Amount of insight.」段落: \"We set the maximum number of insights in the context to 1, 2, 4, and 8, instead of the default 16\"",
+      "confidence": "high"
+    },
+    {
+      "id": "Q39",
+      "value": [
+        "KL Divergence",
+        "Token-level policy gradients",
+        "Removing the standard deviation"
+      ],
+      "location": "Appendix A.3.1「Changes taken over from DAPO」直下の各パラグラフ冒頭見出し（原典は太字＋末尾ピリオド。列挙要素としてピリオドを落とした）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q42",
+      "value": 32,
+      "location": "Table 4（Hyperparameters used for train runs）、行 \"Global batchsize\"・列 Leetcode",
+      "confidence": "high"
+    },
+    {
+      "id": "Q45",
+      "value": "Call complete_task without passing an answer parameter for non-QA tasks.",
+      "location": "Appendix C.1 Example TL;DR insights、Table 5 の行 \"Extra parameter\"（Share 11.2%）に掲げられた唯一の insight 例",
+      "confidence": "high"
+    },
+    {
+      "id": "Q48",
+      "value": 92,
+      "location": "Appendix E.4 Insight evolution over time 第2段落末 \"(n=92 revisited tasks)\"",
+      "confidence": "high"
+    },
+    {
+      "id": "Q51",
+      "value": 9.6,
+      "location": "Appendix F.2、Table 9（Ablations of the RLTL;DR loss）、行 \"Off-policy training\"・列 Eval Pass@1",
+      "confidence": "high"
+    }
+  ],
+  "session_log": {
+    "arm": "parallel",
+    "worker": "P2",
+    "branch": "arena/8a4884af-researchos",
+    "base_commit": "241152453378166ed66577bafe24637cc1c76f94",
+    "started_at_utc": "2026-10-21T08:50:35Z",
+    "finished_at_utc": "2026-10-21T08:58:44Z",
+    "tool_calls": {
+      "total": 29,
+      "by_kind": {
+        "bash": 9,
+        "page_fetch": 17,
+        "file_read": 1,
+        "file_write": 2
+      }
+    },
+    "files_read": [
+      "docs/single-vs-multi-experiment-2026-10-21.md",
+      "https://arxiv.org/html/2609.37633v2",
+      "https://arxiv.org/abs/2609.37633v2"
+    ],
+    "output_files": [
+      "contributions/2026-10-21_svm_parallel_p2.json",
+      "contributions/2026-10-21_svm_parallel_p2.md"
+    ],
+    "notes": "版表記の転記: HTML 版冒頭は「arXiv:2609.37633v2 [cs.LG] 19 Oct 2026」、abs ページは「arXiv:2609.37633v2 (cs) [Submitted on 29 Sep 2026 (v1), last revised 19 Oct 2026 (this version, v2)]」。v2 を確認して抽出した（PDF 未使用、HTML を web fetch で全16チャンク取得）。base_commit 不一致: 指定の共通開始コミット ccf76aa654c1344e7bc7862bc835cf1420c98ff8 に対し、開始時 HEAD は 241152453378166ed66577bafe24637cc1c76f94（7コミット先、HEAD の第1親が ccf76aa、第2親は別ブランチ）。初回指示の停止条件に従い 08:50:35Z に抽出を開始せず停止して人間へ報告し、再指示（当該停止条件を本 P2 について解除、開始コミット不一致を伴う参考実行として継続）を受けて 08:57:12Z に HEAD を再確認して再開した。待機・再指示待ちを含むため、本ログは厳密な同条件比較の記録ではない。checkout/reset/rebase/ブランチ再作成は未実施。他アーム・他ワーカーのブランチ・PR・成果物は参照せず、統合・真値確定も未実施。UI 上の表示モデル名は確認できず unknown。tool_calls は内容確定までの自己申告値（bash 1回=1、16チャンク取得+abs 1回=17、設計文書読取1、メモとJSONの書込2）。内容確定後のゲート実行8コマンドとPR作成の呼び出しは本総数に含まない（設計文書 §10 の finished_at_utc の定義どおり）。値が見つからず null とした項目は無し（17/17 で所在を特定）。書式判断: Q39 は原典見出しの末尾ピリオドを落とし、Q45 は HTML のエスケープ表記 complete\\_task を complete_task として提出した。Q35 は §6 冒頭の引用文（\"instead of\" 側）であり、Table 5 の類似文（\"rather than\" 側）ではない。"
+  }
+}
