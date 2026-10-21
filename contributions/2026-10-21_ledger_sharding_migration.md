@@ -187,22 +187,48 @@ CONFLICT (content): Merge conflict in docs/minimal-core-and-ci.md
 
 - 衝突したのは **`README.md` と `docs/minimal-core-and-ci.md` の現在値の数値行だけ**。`state/` の台帳、`tests/fixtures/` のスナップショット、`scripts/` のコードは**すべて自動マージ**された。
 - すなわち §4.3 の予測は合成実験だけでなく、実際の並行開発でも再現した。
-- 解決は「実測値（342 = 293 + 採点器10 + シャード39）に合わせ、main 側の一覧行を残し、`test_ledger_shards.py` の行を足す」だけだった。解決後のゲート8は 0 stale。
+- 解決は「実測値に合わせ、main 側の一覧行を残し、`test_ledger_shards.py` の行を足す」だけだった。解決後のゲート8は 0 stale。
+
+#### 4.4.1 3回目の取り込みも同じ点で衝突した
+
+その後 main は PR #56（`gap_scan`）と PR #58（単一ワーカー実験）でさらに前進し、再度 `git merge origin/main` を実行した。衝突は**またしても `README.md` と `docs/minimal-core-and-ci.md` の数値行のみ**（`Auto-merging` の後 `CONFLICT (content)` がこの2ファイル）。`scripts/` のコードと台帳・fixture は毎回自動マージされる。3回連続で同じ結果であり、§4.3 の性質は再現性のある観測である。解決は実測値（388 = 349 + シャード39）に合わせるだけだった。
 
 ## 5. ゲート実測（移行後）
 
 | コマンド | 実測 |
 |---|---|
-| `python3 -m unittest discover -s tests` | `Ran 342 tests in 5.936s` / `OK`（終了0） |
+| `python3 -m unittest discover -s tests` | `Ran 388 tests` 中 **3件失敗（main 由来、下記 §5.1）** |
 | `python3 gitswarm/benchmarks/benchmark.py --check` | `PASS: benchmark artifact matches a fresh execution`（0） |
 | `python3 gitswarm/readout_sim.py --check` | `PASS: readout-sim artifact matches a fresh execution`（0） |
 | `python3 scripts/validate_state.py` | `PASS: research ledgers valid (sources=23, evidence=86, claims=9, verifications=34, hypotheses=2, relations=0)`（0） |
 | `python3 scripts/check_citations.py` | `summary: 22 arXiv source(s) checked, 1 skipped, 0 failure(s)`（0） |
-| `python3 scripts/check_memo_citations.py` | `summary: 28 memo(s) scanned, 61 arXiv citation(s) checked, 3 skipped, 0 failure(s)`（0） |
-| `python3 scripts/check_memo_ledger_refs.py` | `summary: 28 memo(s) scanned, 0 dangling reference(s), 5 archived ID reference(s)`（0） |
-| `python3 scripts/check_doc_numbers.py` | `actual: tests=342 gates=8 sources=23 evidence=86 claims=9 verifications=34 hypotheses=2` / `summary: 2 doc(s) scanned, 0 stale number(s)`（0） |
+| `python3 scripts/check_memo_citations.py` | `summary: 30 memo(s) scanned, 61 arXiv citation(s) checked, 3 skipped, **1 failure**（main 由来、下記 §5.1）` |
+| `python3 scripts/check_memo_ledger_refs.py` | `summary: 30 memo(s) scanned, 0 dangling reference(s), 5 archived ID reference(s)`（0） |
+| `python3 scripts/check_doc_numbers.py` | `actual: tests=388 gates=8 sources=23 evidence=86 claims=9 verifications=34 hypotheses=2` / `summary: 2 doc(s) scanned, 0 stale number(s)`（0） |
 
 検査7（`check_memo_ledger_refs.py`）は旧パスを残したまま **0 dangling**。`contributions/*.md` が参照する `state/*.jsonl` のパスは引き続き実在し、意味だけが「凍結ベース」に変わる。
+
+### 5.1 main 由来の赤（本移行とは無関係）
+
+取り込み時点の `origin/main`（`ccf76aa`、PR #58 のマージ）は**単体で赤**である。`/tmp` に main を単独クローンして実測した：
+
+```text
+=== main: gate 6 ===
+summary: 29 memo(s) scanned, 61 arXiv citation(s) checked, 3 skipped, 1 failure(s)
+gate6_exit=1
+=== main: unittest ===
+FAIL: test_fixture_covers_every_arxiv_id_cited_in_contributions (...)
+FAIL: test_offline_check_passes_on_real_repo (...)
+FAIL: test_summary_counts_memos (...)
+Ran 349 tests in 5.812s
+FAILED (failures=3)
+```
+
+原因は `contributions/2026-10-21_svm_single.md`（PR #58 が追加）が引用する `2609.37633`（arXiv ID） が `tests/fixtures/arxiv_metadata_snapshot.json` に無いこと。`gh api .../commits/ccf76aa/check-runs` でも `conclusion: failure` であり、main の CI は既に赤でマージされている。
+
+- 本移行はこれを**導入していない**し、**修正もしていない**。スナップショットのエントリは「abs ページを実際に読んだ後にのみ追加する」運用（fixture の `capture_note`）であり、当該論文のメタデータを本作業では検証できないため、推測で追加すると引用検査の ground truth を汚す。修正は当該メモの作成セッション（または統合役）が行うべき。
+- したがって本PRをマージしても main の赤は解消しない（赤→赤で、悪化もしない）。この判断は人間の指示（マージ実行）に基づく。
+- 本メモではこの ID を `arXiv:` 接頭辞なしで記す。ゲート6は**全メモ**の arXiv ID 言及を検査するため、接頭辞つきで書くと本メモ自身が新しい `MISSING` を生み、原因の切り分けを濁す（実際に一度そうなったので、接頭辞を外して再実測し、失敗が当該メモ1件だけであることを確認した）。
 
 ## 6. 統合役へ渡す更新文案（README・docs）
 
@@ -234,7 +260,7 @@ CONFLICT (content): Merge conflict in docs/minimal-core-and-ci.md
 
 - `docs/record-id-scheme.md`：新規レコードの追記先を `state/<name>.d/` に変更。ID 採番は `new_id.py` のまま（統合ビューの ID と衝突確認する）。
 - `docs/parallel-work-ownership.md`：§2.1 の追記手順に「1セッション1シャードファイル、既存シャードを編集しない」を追加。`state/` の分類（`ANY_SESSION_APPEND`）はそのままで良い。
-- `docs/minimal-core-and-ci.md`：§2 のゲート4・8の説明に「台帳は統合ビュー」「件数は統合レコード数」を追記。テスト数は追随済み（342）。
+- `docs/minimal-core-and-ci.md`：§2 のゲート4・8の説明に「台帳は統合ビュー」「件数は統合レコード数」を追記。テスト数は追随済み（388）。
 
 ## 7. 取り消し（revert）手順
 
@@ -282,7 +308,8 @@ PASS: research ledgers valid (sources=23, evidence=86, claims=9, ...)
 5. **旧パスが統合ビューそのものではないことの注記**（S1 §7）は未実施。§6.1 の文案で README に入れる想定。
 6. **シャードに書かれなかった／マージされなかったレコードは検出できない**（S1 の既知の限界）。期待一覧のマニフェストは持たない。
 7. **同一 ID・同一内容の重複もエラー**にしたため、意図的に同じレコードを2箇所へ置く運用はできない（意図した厳格化）。
-8. 並行追記の実証は合成クローンのみ。実リポジトリでの使い捨てブランチ実験は行っていないため、**削除承認が必要なブランチは無い**。
+8. **`contributions/2026-10-21_svm_single.md` の `2609.37633`（arXiv ID） がスナップショットに無く、main のゲート6が赤**（§5.1）。修正はスナップショットへの検証済みエントリ追加か当該メモの修正。本PRの範囲外。
+9. 並行追記の実証は合成クローンのみ。実リポジトリでの使い捨てブランチ実験は行っていないため、**削除承認が必要なブランチは無い**。
 
 ## 9. 変更ファイル一覧
 
