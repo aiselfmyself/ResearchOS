@@ -2,7 +2,7 @@
   "schema": "researchos/arxiv-metadata-snapshot/v1",
   "captured_at": "2026-10-20",
   "capture_method": "arxiv abs pages (https://arxiv.org/abs/<id>) read via web fetch tool",
-  "capture_note": "Bundled so CI needs no network. Entries are added only after the abs page has actually been read. 2609.24972 and 2609.15983 were added 2026-10-21 after verification that Arena's web-fetch tool can read arxiv.org even though the sandbox's own curl cannot. 2610.18025 (SHELDON) was added 2026-10-21 by the same procedure: the abs page was fetched and read, and the full HTML v1 was read for the body quotes.",
+  "capture_note": "Bundled so CI needs no network. Entries are added only after the abs page has actually been read. 2609.24972 and 2609.15983 were added 2026-10-21 after verification that Arena's web-fetch tool can read arxiv.org even though the sandbox's own curl cannot. 2610.18025 (SHELDON) was added 2026-10-21 by the same procedure: the abs page was fetched and read, and the full HTML v1 was read for the body quotes. 2610.18933 (The Agentic Scientist) was added 2026-10-21 by the same procedure: the abs page was fetched and read (submitted 13 Oct 2026, v1 only, 88 pages, CC BY 4.0), and the full HTML v1 was read across all 34 chunks for the body quotes.",
   "entries": [
     {
       "arxiv_id": "2610.17184",
@@ -347,6 +347,19 @@
         "Liang Xiao"
       ],
       "published": "2026-09-26"
+    },
+    {
+      "arxiv_id": "2610.18933",
+      "source_url": "https://arxiv.org/abs/2610.18933",
+      "title": "The Agentic Scientist: Orchestrating Coding Agents for Automated Scientific (Co-)Discovery",
+      "authors": [
+        "Robert Tjarko Lange",
+        "Luca Grillotti",
+        "Yutaro Yamada",
+        "Rujikorn Charakorn",
+        "David Ha"
+      ],
+      "published": "2026-10-13"
     }
   ]
 }
