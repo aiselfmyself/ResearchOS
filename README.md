@@ -17,6 +17,10 @@
 >
 > **「ハーネスは順位を変えるか」の決着（報告 §7 未解決 #9）**：[8]（9 組中 6 組で順位逆転）と [9]（順位ではなく安定性に効く）は**矛盾ではなく、同じ量 R =（モデル間の広がり）/（ハーネス間の広がり）の逆側にいる**——[8] は R = 0.358、[9] は R = 3.5〜16.9。閾値 R ~ 1 はリファレンス 3 ケースすべてで予測と観測が一致する（`scripts/harness_regime.py --reference`）。**ただしタスク領域（SWE-bench 修正 vs 長期 AI 研究）と交絡しており因果は未分離**で、データ点も 2 つのため仮説にとどまる（`EVD-20261021-c38d` / `VER-20261021-ab99`：3/3 一致だが **warn**）。
 >
+> **RRSI の 2 項目を実装（2026-10-21）**：`scripts/holdout_eval.py`（過適合回避・hold-out/OOD 分離）と
+> `scripts/prune_candidates.py`（低寄与コンポーネントの剪定）。いずれも**計測器で、ゲートではない**。
+> 剪定は**報告のみで削除しない**——ゲートの削除は `main` の保証を変えるため人間の判断とする。
+>
 > **`rho` の実測（報告 §7 未解決 #1）**：`scripts/estimate_rho.py` を新設し、`gitswarm/readout_sim.py` の自由パラメータだった共通モード項 `rho` を実データから推定する経路を与えた。**結論は「既存データでは測れない」**——本リポジトリ唯一の反復ペア（Agora A/A'）は正解既知の共同判定項目が 8 件・誤り 0 件で識別不能。検出力解析では `rho=0.30` の検出に約 1,454 件を要し、**8 件は 2〜3 桁不足**する。測定法を「対誤り相関の計数」から「過程の直接計装」へ切り替える必要がある（`EVD-20261021-4c6f`）。
 >
 > **証拠の紐付け完了**：`scripts/check_memo_ledger_refs.py` の新設に伴い調べたところ、
@@ -47,6 +51,10 @@ scripts/
                         実測値と突き合わせて検出する（**CI8番目のゲート**。
                         監査 ID 19。監査は ID 12 と ID 14 で同型の欠陥を
                         2 回とも手作業で見つけていた）
+  holdout_eval.py       検査器を dev / hold-out 分割で評価し、過適合を検出する
+                        （計測器。RRSI の hold-out/OOD 分離の実装）
+  prune_candidates.py   低寄与コンポーネントを報告する（計測器。**何も削除しない**。
+                        RRSI の剪定の実装。削除は人間の判断）
 gitswarm/
   problem.py solvers/  30都市TSPの決定論的ソルバ群（greedy/random/two_opt/SA）
   benchmarks/          複数シード実行＋成果物照合（--write/--check）
@@ -65,7 +73,9 @@ tests/
   test_estimate_rho.py         rho 推定器の回帰テスト（13件）
   test_harness_regime.py       R の単位変換と閾値判定の回帰テスト（14件）
   test_check_doc_numbers.py    文書内の陳腐化した数値の検査テスト（21件）
-                               ── 合計 205件
+  test_holdout_eval.py         hold-out 分割と過適合判定のテスト（18件）
+  test_prune_candidates.py     低寄与コンポーネント報告のテスト（19件）
+                               ── 合計 242件
 contributions/         研究ノート（統合レポート・調査メモ・全文読解レポート・共通モード測定）
 docs/                  分析レポートと設計記録（並行作業の所有マップは docs/parallel-work-ownership.md。強制力なし）
 .github/workflows/
@@ -76,7 +86,7 @@ docs/                  分析レポートと設計記録（並行作業の所有
 ## 使い方
 
 ```sh
-# 1. テスト（約5秒・205件）
+# 1. テスト（約5秒・242件）
 python3 -m unittest discover -s tests -v
 
 # 2. ベンチマークの再現性確認（fresh実行と成果物の照合）
