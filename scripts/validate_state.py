@@ -7,7 +7,12 @@ Scope (deliberately small -- see docs/minimal-core-and-ci.md):
   * Schema checks driven by schemas/*.json: required fields, types, enums,
     array item types. Extra fields are allowed (as in JSON Schema draft-07
     when additionalProperties is unset).
-  * ID uniqueness within each ledger.
+  * ID uniqueness within each ledger. Since 2026-10-21 a ledger is the union
+    of a frozen base file (`state/<name>.jsonl`) and its session shards
+    (`state/<name>.d/*.jsonl`, see scripts/ledger_store.py and
+    contributions/2026-10-21_ledger_sharding_migration.md). Uniqueness is
+    checked across the union, and a duplicate reports both origins. Every
+    other check below also runs over the union.
   * Record-ID format: new records use PREFIX-YYYYMMDD-xxxx so that two
     branches cannot mint the same ID; the pre-2026-10-20 sequential IDs are
     grandfathered up to a frozen maximum (docs/record-id-scheme.md).
@@ -50,9 +55,15 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 ROOT = Path(__file__).resolve().parents[1]
+
+try:
+    import ledger_store
+except ImportError:  # running as scripts/validate_state.py
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import ledger_store
 
 # collection -> (ledger file, schema file, id key)
 COLLECTIONS: Dict[str, Tuple[str, str, str]] = {
@@ -116,26 +127,25 @@ ID_PATTERN = re.compile(r"^(?P<prefix>[A-Z]{3})-(?P<date>\d{8})-(?P<suffix>[0-9a
 LEGACY_PATTERN = re.compile(r"^(?P<prefix>[A-Z]{3})-(?P<num>\d{3})$")
 
 
+def load_ledger_records(
+    path: Path,
+) -> Tuple[List[Dict[str, Any]], List[str], List[str]]:
+    """Return (records, errors, origins) of one ledger's union view.
+
+    ``origins[i]`` is the ``"<file>:<line>"`` of ``records[i]``: the frozen
+    base file first, then each shard file in filename order.
+    """
+    return ledger_store.load_ledger(path)
+
+
 def load_jsonl(path: Path) -> Tuple[List[Dict[str, Any]], List[str]]:
-    """Return (records, errors). Every line must be a JSON object."""
-    records: List[Dict[str, Any]] = []
-    errors: List[str] = []
-    try:
-        text = path.read_text(encoding="utf-8")
-    except FileNotFoundError:
-        return records, [f"{path}: file not found"]
-    for lineno, line in enumerate(text.splitlines(), start=1):
-        if not line.strip():
-            continue
-        try:
-            record = json.loads(line)
-        except json.JSONDecodeError as exc:
-            errors.append(f"{path}:{lineno}: invalid JSON: {exc}")
-            continue
-        if not isinstance(record, dict):
-            errors.append(f"{path}:{lineno}: line is not a JSON object")
-            continue
-        records.append(record)
+    """Return (records, errors) of one ledger: base + shards.
+
+    Kept as the historical two-tuple API; it is shard-aware, so every caller
+    that used it before the 2026-10-21 migration reads the union view without
+    changing its own code.
+    """
+    records, errors, _origins = ledger_store.load_ledger(path)
     return records, errors
 
 
@@ -194,22 +204,36 @@ def validate_record(
 
 
 def check_uniqueness(
-    records: List[Dict[str, Any]], id_key: str, ledger: str
+    records: List[Dict[str, Any]],
+    id_key: str,
+    ledger: str,
+    origins: Optional[List[str]] = None,
 ) -> List[str]:
+    """Report duplicate IDs. With ``origins``, name both files explicitly.
+
+    ``origins`` is the parallel list from :func:`load_ledger_records`; without
+    it the historical line-number message is produced (used by tests that
+    validate an in-memory list).
+    """
     errors: List[str] = []
-    seen: Dict[str, int] = {}
-    for lineno, record in enumerate(records, start=1):
+    seen: Dict[str, str] = {}
+    for index, record in enumerate(records):
+        origin = (
+            origins[index]
+            if origins is not None and index < len(origins)
+            else f"{ledger}:line {index + 1}"
+        )
         rid = record.get(id_key)
         if not isinstance(rid, str):
-            errors.append(f"{ledger}:{lineno}: missing or non-string {id_key!r}")
+            errors.append(f"{ledger}:{index + 1}: missing or non-string {id_key!r}")
             continue
         if rid in seen:
             errors.append(
-                f"{ledger}:{lineno}: duplicate {id_key} {rid!r} "
-                f"(first seen at line {seen[rid]})"
+                f"{ledger}:{index + 1}: duplicate {id_key} {rid!r} "
+                f"(first seen at {seen[rid]}; also at {origin})"
             )
         else:
-            seen[rid] = lineno
+            seen[rid] = origin
     return errors
 
 
@@ -407,7 +431,7 @@ def run_all_checks(root: Path = ROOT) -> Dict[str, List[str]]:
     errors: List[str] = []
     data: Dict[str, List[Dict[str, Any]]] = {}
     for name, (ledger_rel, schema_rel, id_key) in COLLECTIONS.items():
-        records, load_errors = load_jsonl(root / ledger_rel)
+        records, load_errors, origins = load_ledger_records(root / ledger_rel)
         errors.extend(load_errors)
         try:
             schema = json.loads((root / schema_rel).read_text(encoding="utf-8"))
@@ -418,7 +442,7 @@ def run_all_checks(root: Path = ROOT) -> Dict[str, List[str]]:
         label = schema.get("title", name)
         for record in records:
             errors.extend(validate_record(record, schema, label))
-        errors.extend(check_uniqueness(records, id_key, ledger_rel))
+        errors.extend(check_uniqueness(records, id_key, ledger_rel, origins))
         errors.extend(
             check_id_format(records, id_key, ledger_rel, ID_PREFIXES[name])
         )
