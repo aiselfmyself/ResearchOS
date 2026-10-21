@@ -1,0 +1,378 @@
+{
+  "arm": "single",
+  "worker": "S",
+  "base_commit": "58d5f289d3818b9fe3a7e9a990f168718fb7f10b",
+  "items": [
+    {
+      "id": "Q01",
+      "value": 9,
+      "location": "abs ページ Authors 欄",
+      "confidence": "high"
+    },
+    {
+      "id": "Q02",
+      "value": "2026-10-19",
+      "location": "abs ページ Submission history [v2]（Mon, 19 Oct 2026）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q03",
+      "value": [
+        "cs.LG",
+        "cs.AI",
+        "cs.CL"
+      ],
+      "location": "abs ページ Subjects 欄（stat.ML は対象外）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q04",
+      "value": "Apple",
+      "location": "HTML 冒頭・著者ブロック Affiliation",
+      "confidence": "high"
+    },
+    {
+      "id": "Q05",
+      "value": 12,
+      "location": "HTML Abstract, no insight in context at eval time の Pass@1 12–13%",
+      "confidence": "high"
+    },
+    {
+      "id": "Q06",
+      "value": 13,
+      "location": "HTML Abstract, no insight in context at eval time の Pass@1 12–13%",
+      "confidence": "high"
+    },
+    {
+      "id": "Q07",
+      "value": 8,
+      "location": "HTML 本文の第一レベル見出し §1 Introduction–§8 Conclusion and outlook",
+      "confidence": "high"
+    },
+    {
+      "id": "Q08",
+      "value": 6,
+      "location": "HTML References 後、Appendix A–F の第一レベル見出し（Appendix Contents 除外）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q09",
+      "value": 9,
+      "location": "HTML の Table 1–9 キャプション（本文 §4–6、Appendix A/C/E/F）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q10",
+      "value": 13,
+      "location": "HTML の Figure 1–13 キャプション（本文 §1/§4、Appendix E）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q11",
+      "value": [
+        6,
+        8
+      ],
+      "location": "§1, Figure 1 キャプション（6th and 8th rollout）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q12",
+      "value": 17,
+      "location": "§1 Introduction, insight tokens の backpropagation mask を述べる段落（≈17 tokens）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q13",
+      "value": "Remember to paginate search results.",
+      "location": "§1 Introduction, TL;DR insight の引用例",
+      "confidence": "high"
+    },
+    {
+      "id": "Q14",
+      "value": [
+        "advantage collapse",
+        "the learning cliff",
+        "exploration inefficiency"
+      ],
+      "location": "§2 Related Works, The learning barrier of RLVR の段落",
+      "confidence": "high"
+    },
+    {
+      "id": "Q15",
+      "value": [
+        "source",
+        "explicitness",
+        "transfer mechanism"
+      ],
+      "location": "§2 Related Works, Guiding exploration with privileged information 冒頭",
+      "confidence": "high"
+    },
+    {
+      "id": "Q16",
+      "value": [
+        "SDPO",
+        "RLTF"
+      ],
+      "location": "§2 Related Works, Internalizing context into weights の段落",
+      "confidence": "high"
+    },
+    {
+      "id": "Q17",
+      "value": 50,
+      "location": "§3.1 RL and GRPO preliminaries, maximum episode horizon of 50 actions",
+      "confidence": "high"
+    },
+    {
+      "id": "Q18",
+      "value": 0.2,
+      "location": "§3.1 RL and GRPO preliminaries, 式 (3.1) 直前の ε=0.2",
+      "confidence": "high"
+    },
+    {
+      "id": "Q19",
+      "value": 50,
+      "location": "§3.2 Sequential self-generated insights, 挿入条件 ≤50%",
+      "confidence": "high"
+    },
+    {
+      "id": "Q20",
+      "value": 4.5,
+      "location": "§3.2 Sequential self-generated insights, K=8 で sampling phase 4.5×",
+      "confidence": "high"
+    },
+    {
+      "id": "Q21",
+      "value": 0.5,
+      "location": "§3.3 Insight internalization, λ=0.5 is a good default",
+      "confidence": "high"
+    },
+    {
+      "id": "Q22",
+      "value": "Sort the notes to find the most recent one.",
+      "location": "§3.3 Insight internalization, Figure 1 の2番目の insight の逆伝播例",
+      "confidence": "high"
+    },
+    {
+      "id": "Q23",
+      "value": "Qwen 3.5 9B (with thinking)",
+      "location": "§4.1 Experiment setup, Datasets の Pass@128=0 選別段落",
+      "confidence": "high"
+    },
+    {
+      "id": "Q24",
+      "value": 458,
+      "location": "§4.1 Experiment setup, Datasets の選別後 SAPI",
+      "confidence": "high"
+    },
+    {
+      "id": "Q25",
+      "value": 123,
+      "location": "§4.1 Experiment setup, Datasets の選別後 Leetcode",
+      "confidence": "high"
+    },
+    {
+      "id": "Q26",
+      "value": 1624,
+      "location": "§4.1 Experiment setup, Deconfounded evaluation の heldout SAPI",
+      "confidence": "high"
+    },
+    {
+      "id": "Q27",
+      "value": [
+        "RLTF-SD",
+        "Strategy-guided Exploration (SGE)",
+        "GRPO"
+      ],
+      "location": "§4.1 Experiment setup, Baselines（導入された3手法のみ）",
+      "confidence": "medium"
+    },
+    {
+      "id": "Q28",
+      "value": 91.1,
+      "location": "§4.2 Results, Table 1, RLTL;DR 行 × SAPI 列",
+      "confidence": "high"
+    },
+    {
+      "id": "Q29",
+      "value": 33.7,
+      "location": "§4.2 Results, Table 1, GRPO 行 × Appworld 列",
+      "confidence": "high"
+    },
+    {
+      "id": "Q30",
+      "value": 42.2,
+      "location": "§4.2 Results, Table 1, RLTF-SD 行 × Leetcode 列",
+      "confidence": "high"
+    },
+    {
+      "id": "Q31",
+      "value": 256,
+      "location": "§5.1 Experiment setup, Dataset（642 tasks を 256 eval / 386 train に分割）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q32",
+      "value": 17.0,
+      "location": "§5.2, Table 2, RLTL;DR, no GRPO loss, only L_SFT 行 × Eval Pass@1 列",
+      "confidence": "high"
+    },
+    {
+      "id": "Q33",
+      "value": 68000,
+      "location": "§5.2, Table 2, SFTL;DR on insights, deduplicated 行 × Backward Tokens 列（§5.2 本文の 68k backwards でも照合）",
+      "confidence": "medium"
+    },
+    {
+      "id": "Q34",
+      "value": 0.6,
+      "location": "§5.2, Table 2 キャプション末尾（±0.6% standard deviation）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q35",
+      "value": "You need to mark the article as read instead of just viewing it",
+      "location": "§6 What makes for good insights? 冒頭段落の引用例",
+      "confidence": "high"
+    },
+    {
+      "id": "Q36",
+      "value": 3.4,
+      "location": "§6, Table 3, Student, no information about failed unit tests (only success) 行 × Train Pass@1 列（§6 本文でも 3.4）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q37",
+      "value": [
+        1,
+        2,
+        4,
+        8
+      ],
+      "location": "§6, Amount of insight の段落（default 16 以外の最大個数）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q38",
+      "value": [
+        "summary",
+        "feedback",
+        "wrong_step_id",
+        "corrected_step",
+        "hint"
+      ],
+      "location": "Appendix A.1, Prompt 1 末尾の Output your answer in a JSON の形式指定",
+      "confidence": "high"
+    },
+    {
+      "id": "Q39",
+      "value": [
+        "KL Divergence",
+        "Token-level policy gradients",
+        "Removing the standard deviation"
+      ],
+      "location": "Appendix A.3.1 Changes taken over from DAPO, 直下の3段落の冒頭見出し",
+      "confidence": "medium"
+    },
+    {
+      "id": "Q40",
+      "value": 75,
+      "location": "Appendix A.3.2 Positive-ratio filtering, 75% positive reward",
+      "confidence": "high"
+    },
+    {
+      "id": "Q41",
+      "value": 21,
+      "location": "Appendix A.4, Table 4, Avg attempts per task (due to async collection) 行 × Appworld/SAPI 列",
+      "confidence": "high"
+    },
+    {
+      "id": "Q42",
+      "value": 32,
+      "location": "Appendix A.4, Table 4, Global batchsize 行 × Leetcode 列",
+      "confidence": "high"
+    },
+    {
+      "id": "Q43",
+      "value": 75,
+      "location": "Appendix F.1, Table 8 脚注（Self-play insight SFT 行、training crashed at update 75）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q44",
+      "value": 15.3,
+      "location": "Appendix C.1, Table 5, Wrong capitalization 行 × Share 列",
+      "confidence": "high"
+    },
+    {
+      "id": "Q45",
+      "value": "Call complete_task without passing an answer parameter for non-QA tasks.",
+      "location": "Appendix C.1, Table 5, Extra parameter 行 × Examples of insight 列（唯一の例）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q46",
+      "value": "Remove the answer parameter from the complete task call.",
+      "location": "Appendix C.2, Table 6, answer argument passed to a non-QA task の TL;DR insight 行",
+      "confidence": "high"
+    },
+    {
+      "id": "Q47",
+      "value": 20,
+      "location": "Appendix D.2 Gauging insight strength, Insight too-easy ratio の段落（below 20%）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q48",
+      "value": 92,
+      "location": "Appendix E.4 Insight evolution over time, revisited tasks の非類似度分析（n=92）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q49",
+      "value": 0.034,
+      "location": "Appendix E.5 Insight reliance remains mild, second half of training の平均 +0.034",
+      "confidence": "high"
+    },
+    {
+      "id": "Q50",
+      "value": 57,
+      "location": "Appendix E.8, Figure 11 キャプション（sequential insights で ∼57%）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q51",
+      "value": 9.6,
+      "location": "Appendix F.2, Table 9, Off-policy training 行 × Eval Pass@1 列",
+      "confidence": "high"
+    }
+  ],
+  "session_log": {
+    "arm": "single",
+    "worker": "S",
+    "branch": "arena/49a610b2-researchos",
+    "base_commit": "58d5f289d3818b9fe3a7e9a990f168718fb7f10b",
+    "started_at_utc": "2026-10-21T08:29:16Z",
+    "finished_at_utc": "2026-10-21T08:32:36Z",
+    "tool_calls": {
+      "total": 26,
+      "by_kind": {
+        "bash": 7,
+        "page_fetch": 17,
+        "file_write_edit": 2
+      }
+    },
+    "files_read": [
+      "docs/single-vs-multi-experiment-2026-10-21.md",
+      "https://arxiv.org/html/2609.37633v2",
+      "https://arxiv.org/abs/2609.37633v2",
+      "contributions/2026-10-21_svm_single.md",
+      "contributions/2026-10-21_svm_single.json"
+    ],
+    "output_files": [
+      "contributions/2026-10-21_svm_single.json",
+      "contributions/2026-10-21_svm_single.md"
+    ],
+    "notes": "HTML 冒頭の版表記: arXiv:2609.37633v2 [cs.LG] 19 Oct 2026。UI 上のモデル名: unknown。PDF 不使用。Arena web fetch で HTML 全16チャンク、abs 冒頭1チャンク取得。設計文書は2回に分けて読んだ。HTML 表の重複レンダリング（Q33、Q36）は当該版の本文で照合した。ツール回数は成果物内容確定までの自己申告値で、後続のゲートと PR 操作は含めない。 初回の自己検査スクリプトは項目表の抽出処理で添字を誤り失敗したため、スクリプトを直して再検査し、51項目すべての形を確認した。"
+  }
+}
