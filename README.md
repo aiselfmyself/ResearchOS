@@ -62,20 +62,22 @@
 以下は**実測値**であり、`scripts/check_doc_numbers.py`（CI の 8 番目のゲート）が本文書の記述と
 リポジトリからの再計算値を突き合わせて検査する。算出コマンドは下記「使い方」節。
 
-- 台帳: sources=25 / evidence=93 / claims=9 / verifications=40 / hypotheses=7 / relations=247
-- 仮説サイクル台帳（2026-10-21 新設）: search_log=2 / runs=1 / predictions=1
+- 台帳: sources=27 / evidence=97 / claims=9 / verifications=40 / hypotheses=7 / relations=251
+- 仮説サイクル台帳（2026-10-21 新設）: search_log=7 / runs=2 / predictions=1
 - 関係台帳の中身（`scripts/gap_scan.py` の実測・ゲート対象外）:
-  unassessed **1 / 93 (1.1%)**、unexplained **25 / 93 (26.9%)**、unresolved のみ 0 件、
-  provisional **63 / 93**（`observation_key` の注釈 30 件により non-provisional 30 件）。
-  `support` は**既定で `derived_from` を除外した独立支持**を数え、除外した件数は
-  `support_derived_from` として併記する（2026-10-21。`--include-derived-from` で旧来の
-  数え方を再現できる）。生成元からの支持しか無い観測は `unexplained` に残る
-  （`contributions/2026-10-21_phase2_prerequisites.md` §4）。ただし `derived_from` は
-  ラウンド1以降の記録にしか無いため、**既存 4 仮説の support は生成元を含んだまま**である
-  （同 §4.4。遡っての同定は Phase 3 の `self_support.py`）
-- 観測キーの注釈: `state/evidence_keys.jsonl`（凍結ベース・空）＋`state/evidence_keys.d/*.jsonl` の **30 件**（30 EVD）
+  unassessed **1 / 97 (1.0%)**、unexplained **27 / 97 (27.8%)**、unresolved のみ 0 件、
+  provisional **67 / 97**（non-provisional 30 件）。
+  `support` は**既定で `derived_from: true` を除外した REL 数**を数え、除外件数は
+  `support_derived_from` として併記する。生成元からの支持しか無い観測は
+  `unexplained` に残る。ただし旧 REL の支持 **85 件**にはフラグが無く、
+  `gap_scan` はこれを false と同様に数える。**独立した出典85本を意味しない**。
+  `self_support.py` は欠測を unknown とし、旧 `evidence_ids` との重なり 66 件を
+  *生成元の証明ではない推定* として別枠に報告する（ラウンド2の記録は
+  `contributions/2026-10-21_phase3_round2.md`）。
+- 観測キーの注釈: `state/evidence_keys.jsonl`（凍結ベース・空）＋`state/evidence_keys.d/*.jsonl` の **32 件**（旧30件＋S3の未説明観測2件）。新 EVD はレコードに直接キー4件を持つ。単一出典のキーは検索の種にはなるが独立再観測ではない
 - 仮説の問いの注釈: `state/hypothesis_questions.jsonl`（凍結ベース・空）＋`state/hypothesis_questions.d/*.jsonl` の **7 件**（7 仮説・14 問い。分割前のレコード用）
-- テスト: 合計 559件（`tests/` の 22 ファイル。内訳は下記 §構成）
+- ラウンド2（`RUN-20261021-b13d`）：新 SRC 2・EVD 4・REL 4（support 2 は同じ SRC）・HYP 0。旧 REL の盲検再判定は 13/20 一致・旧 support 4/10 残存だが、判定者の独立性と正しさは未確認。新 REL の独立二重裁定は未実施。実質自動化率の分母も未記録
+- テスト: 合計 598件（`tests/` の 23 ファイル。内訳は下記 §構成）
 - CI ゲート: 8ゲート（`.github/workflows/core-check.yml` の `run:` を持つステップ数）
 - 監査 ID 18: **凍結**（2026-10-21、人間の決定）。科学的には未解決のまま、ID 18 の解決を目的とした
   探索・追加抽出・モデル×ハーネス統制比較は割り当てない。正本は `docs/id18-freeze-2026-10-21.md`
@@ -121,7 +123,8 @@ state/                 研究台帳。凍結ベース（state/*.jsonl）＋セ�
                        （state/<台帳名>.d/*.jsonl）の統合ビューとして読む（scripts/ledger_store.py。
                        追記はシャードへ。ベースは書き換えない）
                        evidence_keys.jsonl(+.d/) は EVD に observation_key を足す注釈
-                       （既存キーは上書きしない。validate_state / gap_scan が同じ view を読む）
+                       （既存キーは上書きしない。validate_state / gap_scan が同じ view を読む。
+                       単独キーは次の検索の種であり、別 SRC の裏付けを作るものではない）
                        hypothesis_questions.jsonl(+.d/) は分割前の仮説に
                        next_literature_questions を足す注釈（レコードが既に持つ場合は
                        影にできない。validate_state と next_queries が同じ view を読む）
@@ -166,6 +169,10 @@ scripts/
                         （計測器・CI非接続。台帳は読むだけ。計画は提案）
   hypothesis_questions.py 分割前の仮説のための問い overlay の読み込みと検査
                         （既知の仮説のみ・レコードの問いを影にしない）
+  self_support.py       support REL の自己生成元フラグを数える計測器（欠測は
+                        unknown。旧 evidence_ids との重なりは別の proxy）
+  relation_agreement.py S4 の二つの判定ファイルを仮説×観測で突き合わせる計測器
+                        （一致率・κ・旧 support 残存率。独立性・正解は保証しない）
 gitswarm/
   problem.py solvers/  30都市TSPの決定論的ソルバ群（greedy/random/two_opt/SA）
   benchmarks/          複数シード実行＋成果物照合（--write/--check）
@@ -197,7 +204,8 @@ tests/
   test_evidence_keys.py        observation_key 注釈（overlay）の付与・非上書き・重複検出・gap_scan 連携のテスト（17件）
   test_cycle_records.py        仮説サイクルの記録（QRY/RUN/PRD）と3つの来歴ゲートのテスト（57件）
   test_next_queries.py         S0/S7 のクエリ生成・重み付け・検索ログとの重複判定・質問 overlay のテスト（55件）
-                               ── 合計 559件
+  test_phase3_instruments.py  自己支持（欠測区別）・裁定一致率の計測器（39件）
+                               ── 合計 598件
 contributions/         研究ノート（統合レポート・調査メモ・全文読解レポート・共通モード測定）
 docs/                  分析レポートと設計記録（並行作業の所有マップは docs/parallel-work-ownership.md。強制力なし）
 .github/workflows/
@@ -208,7 +216,7 @@ docs/                  分析レポートと設計記録（並行作業の所有
 ## 使い方
 
 ```sh
-# 1. テスト（約5秒・559件）
+# 1. テスト（約5秒・598件）
 python3 -m unittest discover -s tests -v
 
 # 2. ベンチマークの再現性確認（fresh実行と成果物の照合）
@@ -233,6 +241,9 @@ python3 gitswarm/readout_sim.py --write
 # 次の検索計画（S0/S7 の計測器。CI ゲートではない）
 python3 scripts/next_queries.py            # 優先度順の計画
 python3 scripts/next_queries.py --json     # 機械可読（queries / already_searched / skipped）
+python3 scripts/self_support.py --json     # 明示フラグ内の自己支持率＋欠測・推定を分ける
+python3 scripts/relation_agreement.py --a contributions/2026-10-21_round2_adjudication_A.json \
+  --b contributions/2026-10-21_round2_adjudication_B.json --json  # 再裁定の一致（独立性は保証しない）
 
 # 台帳に追記するとき（凍結ベースは書き換えない。docs/record-id-scheme.md §2）
 python3 scripts/new_ledger_shard.py evidence --create   # シャードのパスを作る

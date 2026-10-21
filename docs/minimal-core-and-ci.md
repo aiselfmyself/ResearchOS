@@ -51,7 +51,7 @@
 
 ゲートするのは決定論的・再実行可能な**8検査**（2026-10-21 時点。初版は4検査で、2026-10-20 に 5・6 を、2026-10-21 に 7 を、同日 8 を追加した）：
 
-1. `python3 -m unittest discover -s tests -v` — **559テスト**（約3〜5秒）
+1. `python3 -m unittest discover -s tests -v` — **598テスト**（約3〜5秒）
 2. `python3 gitswarm/benchmarks/benchmark.py --check` — 成果物と fresh run の照合（許容誤差0.01）
 3. `python3 gitswarm/readout_sim.py --check` — 投票シミュレーション成果物と fresh run の照合
 4. `python3 scripts/validate_state.py` — 研究台帳のスキーマ・ID一意・参照整合性（**台帳内の** ID・パス参照の存在検査を含む）。台帳は**凍結ベース（`state/*.jsonl`）＋セッション別シャード（`state/<台帳名>.d/*.jsonl`）の統合ビュー**として検証される（`scripts/ledger_store.py`）。2026-10-21 から**来歴ゲート**（§2.5）も同じ検査に入った
@@ -295,6 +295,38 @@ S0 の「穴に紐づかないクエリは採らない」が空文化するた�
 **0 件**で、coverage クエリは生成されなかった——未説明観測を検索で攻めるには S3 の注釈が
 先に要る、という発見である。詳細は設計 §14 と
 `contributions/2026-10-21_phase2_next_queries.md`。
+
+---
+
+## 2.7 計測器：Phase 3 の自己支持と二重裁定（一致率）
+
+`self_support.py` は support REL を **`derived_from: true` / `false` / `unknown`** に分ける。
+古い REL にはフラグが無いので false に変換しない。自己支持率は**フラグ既知の部分集合**で
+計算し、全体については可能範囲を併記する。旧仮説の `evidence_ids` に含まれるという
+重なりは、生成元の確定ではないので別の `legacy_overlap_proxy` としてのみ報告する。
+`gap_scan` の `support_independent` は「明示 true を除いた REL 件数」であり、
+旧レコードを独立出典や非自己支持と保証する値ではない。
+
+`relation_agreement.py --a A.json --b B.json` は、`(hypothesis_id, observation_id)` を
+キーに、4値の verdict の一致を `measure_agreement.values_equal` と同じ規則で比較する。
+`unresolved` は有効な判定で、`null` や項目欠落は棄権・未実施。全件分母・両者判定済み
+分母の一致率、Cohen κ、A 側 support の残存を出す。**異なる session_id を書くだけでは
+独立性も正解も証明されない。** ラウンド2で使った盲検 packet と A/B 生判定は
+`contributions/2026-10-21_round2_blind_packet.json` と
+`contributions/2026-10-21_round2_adjudication_A.json` /
+`contributions/2026-10-21_round2_adjudication_B.json`。20 対で 13 一致、旧 support
+残存 4/10。ただし A は複数起源の歴史的 REL、B は現セッションの1エージェントであり、
+新規 REL の独立二重判定ではない。元 PRD を正式採点したとみなさない。
+
+ラウンド2では S3 が `unexplained` の EVD 2 件に原典照合済みの観測キーを付け、
+coverage 検索を初めて実行した。**キーは索引／検索の種であって、独立した再観測を
+捏造する手段ではない。** 単独出典の EVD は provisional のまま。
+詳細と、計画外検索を QRY の新シャードで訂正した経緯は
+`contributions/2026-10-21_phase3_round2.md`。
+
+**いずれも CI には入れない**（§2.6 と同じ計測器の standing）。不一致／欠測／
+自己支持率が高いという正常な研究結果をゲート失敗にしてはいけない。
+入力が読めない／壊れた場合にだけ exit 2、測定が完了したら 0。
 
 ---
 

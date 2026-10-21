@@ -1,0 +1,127 @@
+{
+  "session_id": "pre-round2-recorded-judgments",
+  "method": "Historical REL verdicts as of base_commit (multiple record origins; not one independent rater); original rationale deliberately omitted",
+  "base_commit": "33dfffb94baf05bc71ebaa03149a9b75302dd8e1",
+  "items": [
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-932f",
+      "verdict": "support",
+      "relation_id": "REL-20261021-4971"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-cd59",
+      "verdict": "neutral",
+      "relation_id": "REL-20261021-8ede"
+    },
+    {
+      "hypothesis_id": "HYP-20261021-fee7",
+      "observation_id": "EVD-004",
+      "verdict": "support",
+      "relation_id": "REL-20261021-ba0d"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-d515",
+      "verdict": "neutral",
+      "relation_id": "REL-20261021-5be5"
+    },
+    {
+      "hypothesis_id": "HYP-20261021-a10b",
+      "observation_id": "EVD-20261021-8fa6",
+      "verdict": "support",
+      "relation_id": "REL-20261021-cd93"
+    },
+    {
+      "hypothesis_id": "HYP-20261021-fee7",
+      "observation_id": "EVD-20261021-12a7",
+      "verdict": "support",
+      "relation_id": "REL-20261021-330f"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-e9fb",
+      "verdict": "neutral",
+      "relation_id": "REL-20261021-4565"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-4c6f",
+      "verdict": "unresolved",
+      "relation_id": "REL-20261021-c4b7"
+    },
+    {
+      "hypothesis_id": "HYP-20261021-fee7",
+      "observation_id": "EVD-20261021-de29",
+      "verdict": "support",
+      "relation_id": "REL-20261021-c97a"
+    },
+    {
+      "hypothesis_id": "HYP-20261021-fee7",
+      "observation_id": "EVD-20261021-6094",
+      "verdict": "support",
+      "relation_id": "REL-20261021-c26d"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261020-4c61",
+      "verdict": "neutral",
+      "relation_id": "REL-20261021-9f33"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261020-932f",
+      "verdict": "neutral",
+      "relation_id": "REL-20261021-b179"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261020-2336",
+      "verdict": "neutral",
+      "relation_id": "REL-20261021-9819"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261020-d515",
+      "verdict": "unresolved",
+      "relation_id": "REL-20261021-4ea9"
+    },
+    {
+      "hypothesis_id": "HYP-20261021-a10b",
+      "observation_id": "EVD-20261020-e9fb",
+      "verdict": "support",
+      "relation_id": "REL-20261021-29ae"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-cd59",
+      "verdict": "support",
+      "relation_id": "REL-20261021-19bc"
+    },
+    {
+      "hypothesis_id": "HYP-002",
+      "observation_id": "EVD-20261021-2aad",
+      "verdict": "neutral",
+      "relation_id": "REL-20261021-4109"
+    },
+    {
+      "hypothesis_id": "HYP-001",
+      "observation_id": "EVD-20261021-9959",
+      "verdict": "neutral",
+      "relation_id": "REL-20261021-dd1b"
+    },
+    {
+      "hypothesis_id": "HYP-20261021-4cdb",
+      "observation_id": "EVD-20261021-59ab",
+      "verdict": "support",
+      "relation_id": "REL-20261021-5f15"
+    },
+    {
+      "hypothesis_id": "HYP-20261021-4cdb",
+      "observation_id": "EVD-008",
+      "verdict": "support",
+      "relation_id": "REL-20261021-edb4"
+    }
+  ]
+}

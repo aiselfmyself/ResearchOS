@@ -594,7 +594,15 @@ class RealRepoTest(unittest.TestCase):
         totals = report["totals"]
         self.assertEqual(totals["hypotheses"], 7)
         self.assertEqual(totals["hypotheses_without_questions"], 0)
-        self.assertEqual(totals["questions"], len(report["queries"]) + totals["skipped_no_terms"] + totals["already_searched"] + totals["truncated"])
+        self.assertEqual(totals["planned"], len(report["queries"]))
+        self.assertEqual(totals["already_searched"], len(report["already_searched"]))
+        # Coverage queries are generated from EVD keys, not hypothesis
+        # questions; their addition must not break the accounting identity.
+        self.assertLessEqual(
+            sum(entry["kind"] == "hypothesis" and entry["channel"] == "keyword"
+                for entry in report["queries"] + report["already_searched"]),
+            totals["questions"],
+        )
         for entry in report["queries"]:
             self.assertTrue(entry["query"].strip())
             self.assertTrue(entry["derived_from"])
@@ -610,13 +618,13 @@ class RealRepoTest(unittest.TestCase):
 
     def test_the_cli_does_not_modify_the_ledgers(self):
         before = {
-            path.name: path.read_bytes()
-            for path in (ROOT / "state").glob("*.jsonl")
+            path.relative_to(ROOT): path.read_bytes()
+            for path in (ROOT / "state").rglob("*.jsonl")
         }
         code, out, _ = run_cli(["--json"])
         after = {
-            path.name: path.read_bytes()
-            for path in (ROOT / "state").glob("*.jsonl")
+            path.relative_to(ROOT): path.read_bytes()
+            for path in (ROOT / "state").rglob("*.jsonl")
         }
         self.assertEqual(code, 0)
         self.assertEqual(before, after)

@@ -52,10 +52,12 @@ independent corroboration (memo section 3.4, §7.2):
     if the REL says ``false``;
   * a non-boolean ``provisional`` is ignored and the derived value is used.
 
-The existing 2026-10-21 ledger has no ``observation_key`` on any EVD, so every
-observation is provisional and no refutation can be counted. That is the
-intended conservative default, not a bug: the baseline memo under
-``contributions/`` records the measured result.
+At the initial baseline, no EVD carried an ``observation_key`` and every
+observation was provisional. Later an overlay grouped independently observed
+keys, and S3 added *singleton search seeds* for unexplained EVDs (see
+``contributions/2026-10-21_phase3_round2.md``). A key alone does not make an
+observation non-provisional: another EVD from a DIFFERENT source must share
+that key. The baseline memo under ``contributions/`` preserves the old count.
 
 DERIVED-FROM SUPPORT IS NOT INDEPENDENT SUPPORT (2026-10-21 round 1)
 --------------------------------------------------------------------
