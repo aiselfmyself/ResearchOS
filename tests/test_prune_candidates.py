@@ -1,10 +1,10 @@
-"""Tests for scripts/prune_candidates.py (RRSI: low-contribution pruning).
+"""Tests for scripts/prune_candidates.py, a non-destructive usage inventory.
 
-RRSI prunes harness components of little value. This repository has been
-accumulating parts -- 4 CI gates to 8, 1 check script to 10 -- and nothing had
-asked which of them earn their place.
+The tool is inspired by the question of component utility but does not
+implement RRSI's measured-score pruning or token-cost rule. Its static signals
+are only prompts for human inspection, not utility measurements.
 
-The dangerous version of this tool is one that deletes things. Pruning is a
+The dangerous version of this tool is one that deletes things. Removal is a
 human judgement (a gate removal changes what `main` guarantees), so the
 property that matters most is pinned here directly:
 `test_never_deletes_anything` asserts the source contains no deletion calls,
