@@ -75,6 +75,8 @@ TARGETS: Dict[str, str] = {
 #: the observation_key overlay is not a ledger (no IDs of its own) but follows
 #: the same base + parts rule, so shards are created the same way.
 TARGETS["evidence_keys"] = vs.EVIDENCE_KEYS_LEDGER
+#: the next_literature_questions overlay follows the same base + parts rule.
+TARGETS["hypothesis_questions"] = vs.HYPOTHESIS_QUESTIONS_LEDGER
 #: the citation snapshot follows the same base + parts rule with a JSON suffix
 SNAPSHOT_TARGET = "arxiv_snapshot"
 TARGETS[SNAPSHOT_TARGET] = "tests/fixtures/arxiv_metadata_snapshot.json"

@@ -74,7 +74,8 @@
   ラウンド1以降の記録にしか無いため、**既存 4 仮説の support は生成元を含んだまま**である
   （同 §4.4。遡っての同定は Phase 3 の `self_support.py`）
 - 観測キーの注釈: `state/evidence_keys.jsonl`（凍結ベース・空）＋`state/evidence_keys.d/*.jsonl` の **30 件**（30 EVD）
-- テスト: 合計 504件（`tests/` の 21 ファイル。内訳は下記 §構成）
+- 仮説の問いの注釈: `state/hypothesis_questions.jsonl`（凍結ベース・空）＋`state/hypothesis_questions.d/*.jsonl` の **7 件**（7 仮説・14 問い。分割前のレコード用）
+- テスト: 合計 559件（`tests/` の 22 ファイル。内訳は下記 §構成）
 - CI ゲート: 8ゲート（`.github/workflows/core-check.yml` の `run:` を持つステップ数）
 - 監査 ID 18: **凍結**（2026-10-21、人間の決定）。科学的には未解決のまま、ID 18 の解決を目的とした
   探索・追加抽出・モデル×ハーネス統制比較は割り当てない。正本は `docs/id18-freeze-2026-10-21.md`
@@ -121,8 +122,12 @@ state/                 研究台帳。凍結ベース（state/*.jsonl）＋セ�
                        追記はシャードへ。ベースは書き換えない）
                        evidence_keys.jsonl(+.d/) は EVD に observation_key を足す注釈
                        （既存キーは上書きしない。validate_state / gap_scan が同じ view を読む）
+                       hypothesis_questions.jsonl(+.d/) は分割前の仮説に
+                       next_literature_questions を足す注釈（レコードが既に持つ場合は
+                       影にできない。validate_state と next_queries が同じ view を読む）
                        search_log/runs/predictions は仮説サイクルの記録（2026-10-21 新設・空で開始。
-                       derived_from / refutation_condition / next_observations を必須にする来歴ゲートは
+                       round / derived_from_evidence_ids / refutation_condition /
+                       next_literature_questions を必須にする来歴ゲートは
                        docs/minimal-core-and-ci.md §2.5）。cycle_exemptions.json は
                        2026-10-21 以前のレコードを持つファイルの一覧（免除は ID ではなくファイル単位）
 scripts/
@@ -155,6 +160,12 @@ scripts/
                         （計測器・CI非接続。unassessed / unexplained /
                         仮説別 verdict / 領域別の未評価件数。provisional は
                         fail-closed で、独立出典の再遭遇が無い反駁は数えない）
+  next_queries.py       S0/S7 のクエリ計画。next_literature_questions（無ければ
+                        hypothesis_questions overlay）を決定的にクエリへ変換し、
+                        gap_scan の unresolved / unexplained で重み付けする
+                        （計測器・CI非接続。台帳は読むだけ。計画は提案）
+  hypothesis_questions.py 分割前の仮説のための問い overlay の読み込みと検査
+                        （既知の仮説のみ・レコードの問いを影にしない）
 gitswarm/
   problem.py solvers/  30都市TSPの決定論的ソルバ群（greedy/random/two_opt/SA）
   benchmarks/          複数シード実行＋成果物照合（--write/--check）
@@ -185,7 +196,8 @@ tests/
   test_sync_doc_counts.py      文書内数値の機械同期のテスト（16件）
   test_evidence_keys.py        observation_key 注釈（overlay）の付与・非上書き・重複検出・gap_scan 連携のテスト（17件）
   test_cycle_records.py        仮説サイクルの記録（QRY/RUN/PRD）と3つの来歴ゲートのテスト（57件）
-                               ── 合計 504件
+  test_next_queries.py         S0/S7 のクエリ生成・重み付け・検索ログとの重複判定・質問 overlay のテスト（55件）
+                               ── 合計 559件
 contributions/         研究ノート（統合レポート・調査メモ・全文読解レポート・共通モード測定）
 docs/                  分析レポートと設計記録（並行作業の所有マップは docs/parallel-work-ownership.md。強制力なし）
 .github/workflows/
@@ -196,7 +208,7 @@ docs/                  分析レポートと設計記録（並行作業の所有
 ## 使い方
 
 ```sh
-# 1. テスト（約5秒・504件）
+# 1. テスト（約5秒・559件）
 python3 -m unittest discover -s tests -v
 
 # 2. ベンチマークの再現性確認（fresh実行と成果物の照合）
@@ -217,6 +229,10 @@ python3 scripts/check_memo_citations.py
 # 成果物の再生成（実行できることの証明。数値は不変のはず）
 python3 gitswarm/benchmarks/benchmark.py --write
 python3 gitswarm/readout_sim.py --write
+
+# 次の検索計画（S0/S7 の計測器。CI ゲートではない）
+python3 scripts/next_queries.py            # 優先度順の計画
+python3 scripts/next_queries.py --json     # 機械可読（queries / already_searched / skipped）
 
 # 台帳に追記するとき（凍結ベースは書き換えない。docs/record-id-scheme.md §2）
 python3 scripts/new_ledger_shard.py evidence --create   # シャードのパスを作る
