@@ -1,0 +1,179 @@
+[
+  {
+    "source_id": "SRC-20261020-07a3",
+    "arxiv_id": "2605.23950",
+    "memo_cited_version": "v1",
+    "version_read": "v1",
+    "is_latest": true,
+    "version_delta_note": "abs ページの投稿履歴は [v1] 2026-05-07 のみ。最新版＝v1 でメモ引用版と同一、差分なし。",
+    "claims": [
+      {
+        "claim_id": "C-07a3-01",
+        "verdict": "wrong_value",
+        "locator": "Abstract; §4 Evidence; §4.2 Controlled Factorial; Appendix B",
+        "source_text": "We support the thesis with two kinds of evidence: observational data from public leaderboards and a controlled factorial experiment under matched conditions. (§4) … Setup. We evaluate three frontier models, GPT-5.4, Kimi K2.6, and GLM-5.1 … across three harness configurations {H1,H2,H3} on a difficulty-stratified 100-task subset of SWE-bench Verified. Each (Mi,Hj) cell uses two independent runs … (§4.2)",
+        "notes": "「position paper」は正しい（Abstract: \"This position paper argues that…\"）が、「自前の実験を持たない」は誤り。原典 §4.2 はモデル 3 種 × ハーネス 3 種の計画格子実験（SWE-bench Verified subset100、各セル 2 回実行、Table 2 に結果、Appendix B に全仕様）を自前で実施し、HV/MV 比 7.80×・順位逆転 6/9 を報告している。メモ §4.3・§6 の「実験を持たない」という定性主張はこの自前実験を見落としている。該当箇所は存在するが主張内容が異なるため wrong_value とする（数値ではなく定性の不一致）。"
+      },
+      {
+        "claim_id": "C-07a3-02",
+        "verdict": "paraphrase_ok",
+        "locator": "Abstract; §3 The Binding Constraint Thesis",
+        "source_text": "We formalize and defend the Binding Constraint Thesis: in this regime, performance variance is governed more by harness configuration than by model choice, and current evaluation protocols therefore systematically misattribute harness-level gains to model improvements.",
+        "notes": "メモの「同等のフロンティア能力では harness 構成がモデル選択より性能分散を支配する」は Abstract（\"for long-horizon tasks evaluated across models with comparable frontier capability…\"）と §3 の thesis 定義の忠実な言い換え。"
+      },
+      {
+        "claim_id": "C-07a3-03",
+        "verdict": "verbatim",
+        "locator": "§1 Introduction; Table 1",
+        "source_text": "holding the model fixed while changing only the harness raises Terminal-Bench 2 pass@1 from 69.7% to 77.0% [17]",
+        "notes": "二次引用（外部ベンチマークの結果）。数値は原典に逐語通り存在するが、出所は同論文 ref [17]（AHE: Agentic Harness Engineering）。Table 1 でも 'TerminalBench 2 | GPT-5.4 (high) | AHE harness evolution | +7.3pp (69.7% → 77.0%)' として同じ外部出所に帰属。"
+      },
+      {
+        "claim_id": "C-07a3-04",
+        "verdict": "verbatim",
+        "locator": "§1 Introduction; §2.1; §4.1",
+        "source_text": "independent third-party benchmark monitoring reports up to 15 percentage points of scaffold-only variation on SWE-bench Verified [4]",
+        "notes": "二次引用（外部ベンチマークの結果）。出所は同論文 ref [4]（Epoch AI による第三者監視レポート）。§2.1/§4.1 では 'up to 11 percentage points of scaffold-only variation for GPT-5 and 15 points for Kimi K2 Thinking on SWE-bench Verified' とモデル別内訳があり、メモの「最大 15 ポイント」はこの上限値と一致。"
+      },
+      {
+        "claim_id": "C-07a3-05",
+        "verdict": "verbatim",
+        "locator": "§2.1; Table 1",
+        "source_text": "Under the standardized SEAL scaffold on SWE-bench Pro, Claude Opus 4.5 reaches 45.9%, while under Claude Code the same model reaches 55.4%.",
+        "notes": "二次引用（外部ベンチマークの結果）。出所は同論文 ref [25]（Morph SWE-Bench Pro leaderboard）。Table 1 にも 'SWE-bench Pro | Claude Opus 4.5 | SEAL → Claude Code | (45.9% → 55.4%)'。メモはモデル名（Claude Opus 4.5）を省略しているが、2 つの数値は完全一致。"
+      },
+      {
+        "claim_id": "C-07a3-06",
+        "verdict": "paraphrase_ok",
+        "locator": "§1 Introduction; §2.3; §5",
+        "source_text": "Valid comparisons require either a locked-harness protocol, where a single specified harness is applied to all models, or a factorial protocol, where harness choice is varied as a controlled factor and variance components are reported.",
+        "notes": "§5 では Harness Card による開示（disclosure standard）と variance decomposition protocol を提案。メモの 3 要素（harness 開示・locked-harness・factorial プロトコル）はいずれも原典に存在し、矛盾しない。"
+      },
+      {
+        "claim_id": "C-07a3-07",
+        "verdict": "paraphrase_ok",
+        "locator": "Abstract; §7 Conclusion and Discussion",
+        "source_text": "Until harness specifications are disclosed, leaderboard comparisons for long-horizon agents should be treated as incomplete and potentially misleading.",
+        "notes": "メモの「開示がない間は長期エージェントのリーダーボード比較は不完全かつ誤誘導的」はこの文（Abstract 末尾、§7 末尾でも繰り返し）の忠実な言い換え。"
+      },
+      {
+        "claim_id": "C-07a3-08",
+        "verdict": "verbatim",
+        "locator": "§1（引用マーカー [17] [4]）; §2.1（[25]）; Table 1 の Sources 行",
+        "source_text": "Sources: SWE-bench Pro data from Morph [25]. SWE-bench Verified scaffold reports from Vals AI and Anthropic [37, 32]. Terminal-Bench harness results from Trivedy, Meta-Harness, and AHE [36, 15, 17]. Tool-reduction case from Vercel [29]. Edit-tool harness result from Bölük [3].",
+        "notes": "二次引用の確認。C-07a3-03〜05 の 3 数値はいずれも Table 1 の Sources 行が示す外部ベンチマーク／監視レポート（Morph、Epoch AI、AHE 論文など）に由来し、同論文自身の実験（§4.2 の計画格子、Table 2）の数値ではない。メモ §6 の「二次引用である」という注記は正しい。"
+      }
+    ]
+  },
+  {
+    "source_id": "SRC-20261020-4cff",
+    "arxiv_id": "2608.13417",
+    "memo_cited_version": "v1",
+    "version_read": "v1",
+    "is_latest": true,
+    "version_delta_note": "abs ページの投稿履歴は [v1] 2026-08-13 のみ。最新版＝v1 でメモ引用版と同一、差分なし。",
+    "claims": [
+      {
+        "claim_id": "C-4cff-01",
+        "verdict": "verbatim",
+        "locator": "Abstract; §1 Introduction; §2.1 Evaluation Setting",
+        "source_text": "We therefore present a systematic evaluation of seven frontier models on 36 long-horizon tasks",
+        "notes": "§2.1: 36 タスクは AutoLab 由来の expert-curated タスクで、4 ファミリに 7/15/10/4 件。7 モデル = Claude-Opus-4.7, GPT-5.5, Gemini-3.1-Pro, GLM-5.2, Kimi-K2.7-Code, DeepSeek-V4-Pro, LongCat-2.0。"
+      },
+      {
+        "claim_id": "C-4cff-02",
+        "verdict": "verbatim",
+        "locator": "§1 Introduction; §3.1 Process Evaluation Design",
+        "source_text": "For each capability, we design a rule-based metric computed deterministically from verifier outcomes and recorded trajectory signals rather than LLM judgments.",
+        "notes": "LLM ジャッジは新奇性分析（§6）の補助分析にのみ使用され、プロセス指標 C1/C2/C3 は規則ベース（deterministic）。メモの主張は分解評価の手法についてのもので、その範囲では正しい。"
+      },
+      {
+        "claim_id": "C-4cff-03",
+        "verdict": "verbatim",
+        "locator": "§1 Introduction; §3.1 Process Evaluation Design",
+        "source_text": "we decompose the research process into three complementary capabilities: Solution Framing (C1), Execution (C2), and Feedback Control (C3).",
+        "notes": "指標名は原典どおり。§3.1 に各指標の定義（C1: 探索方向の質、C2: 実行の信頼性、C3: フィードバックからの保持・回復）。"
+      },
+      {
+        "claim_id": "C-4cff-04",
+        "verdict": "verbatim",
+        "locator": "§1 Introduction",
+        "source_text": "The full evaluation required approximately one hundred thousand U.S. dollars in model inference.",
+        "notes": "「約 10 万米ドル」は 'approximately one hundred thousand U.S. dollars' の逐語的対応。full evaluation = 7 モデル × 36 タスク × 3 rollouts = 756 rollouts。"
+      },
+      {
+        "claim_id": "C-4cff-05",
+        "verdict": "paraphrase_ok",
+        "locator": "Abstract; §1; §2.2",
+        "source_text": "their performance varies substantially across runs",
+        "notes": "§1 では信頼性の差が強調される：'The gap between the strongest and weakest models is 0.237 on avg@3 but only 0.122 on best@3.'（最強−最弱の開きが avg@3 で 0.237、best@3 で 0.122）。"
+      },
+      {
+        "claim_id": "C-4cff-06",
+        "verdict": "paraphrase_ok",
+        "locator": "Abstract; §3.2 Process Capability Results",
+        "source_text": "observed performance is shaped by multiple factors, including distinct process bottlenecks behind similar final outcomes",
+        "notes": "§3.2: 'Similar outcomes can conceal sharply different Execution and Feedback Control profiles.'（GPT-5.5 と Gemini-3.1-Pro は最終スコア 0.663/0.652・C1 同一 0.555 だが C2/C3 の配置が逆）。"
+      },
+      {
+        "claim_id": "C-4cff-07",
+        "verdict": "paraphrase_ok",
+        "locator": "Abstract; §6 Solution Novelty Analysis",
+        "source_text": "genuine methodological novelty remains rare",
+        "notes": "§6: 252 解のうち manual review 後に novel approaches と判定されたのは 3 解（1.2%）。最大類は composition-stacking（111/252 = 44.0%）。評価特化の近道（shortcuts）は 16 解（6.3%）で新奇性の 5 倍超。"
+      },
+      {
+        "claim_id": "C-4cff-08",
+        "verdict": "paraphrase_ok",
+        "locator": "Abstract; §5.1 Harness Comparison",
+        "source_text": "harness designs that affect performance stability",
+        "notes": "§5.1: 'harness choice primarily affects run-to-run stability rather than relative model ordering'。best@3 はハーネス間で最大差 0.035 と小さく、avg@3 が 0.014〜0.055 改善する形で安定性に差が出る。"
+      }
+    ]
+  },
+  {
+    "source_id": "SRC-003",
+    "arxiv_id": "2610.17184",
+    "memo_cited_version": "v1",
+    "version_read": "v1",
+    "is_latest": true,
+    "version_delta_note": "abs ページの投稿履歴は [v1] 2026-10-12 のみ。最新版＝v1 でメモ引用版と同一、差分なし。",
+    "claims": [
+      {
+        "claim_id": "C-003-01",
+        "verdict": "verbatim",
+        "locator": "Abstract; §3.1 Results",
+        "source_text": "On SWE-fficiency, it doubles the average speedup of human experts.",
+        "notes": "本文 §3.1: DuoDiscover は 15.02× geometric-mean speedup、人間エキスパート patch は 6.90×（比 ≈ 2.18 倍で 'doubles' と整合）。"
+      },
+      {
+        "claim_id": "C-003-02",
+        "verdict": "verbatim",
+        "locator": "Abstract; §3.1 Results",
+        "source_text": "On SOL-Exec, it ranks first on 121 of 235 kernels and in the top three on 212.",
+        "notes": "本文 §3.1 でも同文。平均 SOL score は 79.74%。"
+      },
+      {
+        "claim_id": "C-003-03",
+        "verdict": "verbatim",
+        "locator": "Abstract; §3.2 Real-world case studies",
+        "source_text": "On the heavily optimized vLLM and SQLite engines, DuoDiscover achieves 1.92\\times and 1.38\\times gains over the base code.",
+        "notes": "本文 §3.2: vLLM は 'ends at 1.92× geometric mean'（GLM-5.2 NVFP4, 8×B200, 4 つの SLO）、SQLite は 'ending at 1.38× against 1.12× for Claude Code'。"
+      },
+      {
+        "claim_id": "C-003-04",
+        "verdict": "verbatim",
+        "locator": "Abstract; §3.2 Real-world case studies (Table 2)",
+        "source_text": "DuoDiscover surpasses both AlphaEvolve-based ArchAgent v2 and the best human design, with 1.65\\times ArchAgent v2's gain using about 8,000 candidates over 16.7 days, against over 12,000 candidates and more than 40 days for ArchAgent v2",
+        "notes": "本文 §3.2 Table 2: DuoDiscover +6.31% overall vs ArchAgent v2 +3.82%（比 ≈ 1.65×）、候補数 8,000 vs 12,000 超、日数 16.7 vs 40 超。メモの「既存手法は 40 日超」は 'more than 40 days for ArchAgent v2' に対応。"
+      },
+      {
+        "claim_id": "C-003-05",
+        "verdict": "verbatim",
+        "locator": "Abstract; §3.2 Real-world case studies",
+        "source_text": "On a CPU microarchitecture optimization task with evaluations of up to 28 hours",
+        "notes": "本文 §3.2: 'A single true evaluation takes up to 28 hours running over 1,700 simulations.'（DPC4 データプレフェッチャ最適化課題）。"
+      }
+    ]
+  }
+]
