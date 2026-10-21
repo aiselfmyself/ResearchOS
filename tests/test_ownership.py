@@ -39,11 +39,17 @@ class TestClassify(unittest.TestCase):
         for path in (
             "README.md",
             "docs/minimal-core-and-ci.md",
-            "state/claims.jsonl",
-            "state",
             "gitswarm/artifacts/benchmark_matrix.json",
         ):
             self.assertEqual(co.classify(path), co.INTEGRATOR_ONLY, path)
+
+    def test_state_is_appendable_by_any_session(self):
+        # 2026-10-21: ledger appends and ID minting no longer need a human or
+        # the integrator. Deletion/rewriting is still human-gated, but this tool
+        # only sees paths, so it cannot tell the two apart -- see the map.
+        for path in ("state/claims.jsonl", "state", "state/evidence.jsonl"):
+            self.assertEqual(co.classify(path), co.ANY_SESSION_APPEND, path)
+        self.assertNotIn(co.ANY_SESSION_APPEND, co.CONFLICTING)
 
     def test_contributions_are_session_writable(self):
         self.assertEqual(
@@ -81,7 +87,7 @@ class TestClassify(unittest.TestCase):
         classes = co.classify_many(["./README.md", "README.md", "state/./evidence.jsonl"])
         self.assertEqual(
             classes,
-            {"README.md": co.INTEGRATOR_ONLY, "state/evidence.jsonl": co.INTEGRATOR_ONLY},
+            {"README.md": co.INTEGRATOR_ONLY, "state/evidence.jsonl": co.ANY_SESSION_APPEND},
         )
 
     def test_rejects_paths_that_escape_the_repository(self):

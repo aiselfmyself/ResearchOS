@@ -30,7 +30,7 @@
 | abs ページ | `https://arxiv.org/abs/2610.18933` を 2026-10-21 に取得。v1 のみ（submission history は v1 一件） |
 | 本文 | **`https://arxiv.org/html/2610.18933v1`（HTML v1）を全34チャンク取得して読了**。読んだ版は **v1（2026-10-13 投稿）** |
 | サンドボックスからの直接取得 | **不可**（`curl` / `python3` から arxiv.org へは到達できない）。Arena の fetch ツールは到達可 |
-| 版の確認 | abs ページで `arXiv:2610.18933v1` が最新版であることを確認（v2 以降なし） |
+| 版の確認 | abs ページで `arXiv:2610.18933v1` が最新版であることを確認（v2 以降なし）〔書誌照合：`VER-20261021-21b4`〕 |
 | 未読 | PDF 版（HTML v1 で読了したため同一内容と判断）、Figure の画像そのもの（キャプションと本文の記述のみ読了）、付録 C・D の生成論文 PDF の中身 |
 
 **証拠段階**（本リポジトリの4段階基準に準拠）：
@@ -100,7 +100,7 @@
 | 1 | 草案化（task drafting） | §3.1, F.5 | ①独立レビューエージェント ②ハーネス（決定論的） ③アライメント判定器 ④本番チェック | 実験デザインの査読と修復／**契約の検査と評価器のスモークテスト**／科学的忠実度の判定と**探索評価器と最終評価器の独立性・データ disjoint 性**の確認／初期プログラムが本番探索ワークロードを完走すること | 「すべての検査を通った版のみ」が並列探索へ進む | **スキャフォールドを修復**（同一段階内）。行き詰まりは「具体的なブロッカーを報告して非ゼロ終了」 |
 | 2 | アイデア生成（ideation） | §3.3, F.2 | 正規化器（決定論的） | 成果物の**正規化**：「欠落フィールド」と「ルーブリックIDの不一致」を**棄却**。メトリク型1件＋実装型1件以上のルーブリック必須。IDは stable snake_case。`target_rubrics.json` と `idea_bundle.json.target_rubrics` の**完全一致** | 正規化を通過したアイデア束のみが実行段階へ | **棄却**（修復ではない）。実行は「read-only」で禁止されているため差し戻し先が無い |
 | 3 | 計画（planning） | §3.3, §3.4 | 正規化器 ＋ 独立フィルタエージェント | ideation 側は**順序付き実装計画**を型付き契約の一部として検証。ベースライン／アブレーション側は「**関連性・実行可能性・単一変更の範囲（single-change scope）**」で提案をフィルタ。各アブレーションは**選択プログラムが導入した1つの革新を単離**しなければならない | フィルタ通過案のみが隔離ワークスペースを受け取る | **棄却**（採用しない）。修復ループの記述は無い |
-| 4 | サンドボックス実験 | §3.2, §3.3, F.3 | 評価器（`evaluate.py`）＋ルーブリック検証 | **edit–evaluate–verify ループ**（評価予算は呼び出し回数で計上）。「**2つの独立したゲート**」：(a) 全ルーブリック合格で契約完了、(b) ワーカー最良プログラムの更新には **correct かつ厳密に高いスコア**が必要 | `rubric_pass` または `cap_reached` のいずれかで停止。`overall_pass: true` で即停止 | `program_<idx+1>` を**修復として**作成（上限内）。上限に達したら打ち切り（`cap_reached`） |
+| 4 | サンドボックス実験 | §3.2, §3.3, F.3 | 評価器（`evaluate.py`）＋ルーブリック検証 | **edit–evaluate–verify ループ**（評価予算は呼び出し回数で計上）。「**2つの独立したゲート**」：(a) 全ルーブリック合格で契約完了、(b) ワーカー最良プログラムの更新には **correct かつ厳密に高いスコア**が必要〔証拠段階 B：`EVD-20261021-05ed`〕 | `rubric_pass` または `cap_reached` のいずれかで停止。`overall_pass: true` で即停止 | `program_<idx+1>` を**修復として**作成（上限内）。上限に達したら打ち切り（`cap_reached`） |
 | 5 | 結果統合（aggregation） | §3.2, §3.4, F.4 | 集約器（決定論的） | 全ワーカーの履歴を統合し「**最良の correct なプログラム**」を選択。複数シード実行の要約とメトリクを**シード／アブレーション／ベースライン横断でタスクごとに集約**。成果物CSVの**ファイル名・列スキーマ・出力構造を全変種で同一に保つ** | 選択プログラムが回顧的証拠生成フェーズの入力になる | 記述なし（選択は全ワーカー横断の比較なので失敗概念が無い） |
 | 6 | ベースライン／アブレーション | §3.4, F.4 | フィルタエージェント ＋ 評価器 ＋ ルーブリック検証 | 選択プログラムに追加メトリクを計装してから、選択／初期プログラムの **diff** から提案を生成。隔離ワークスペースで edit–evaluate–verify。アブレーションは **宣言された部品のみ**変更。変更なしの選択・初期プログラムと並べて評価 | `overall_pass: true` で停止 | ルーブリック不合格かつ上限未達なら **Step 1（編集）へ戻る**＝同一段階内。制御変種は「分析CSVルーブリックのみの不合格ならCSV書き出しを修正」 |
 | 7 | 事後分析（post-hoc） | §3.4 | **プログラム的検査**（決定論的）＋集約器 | 「提案→フィルタ→実行→集約」。**再学習・改変を伴う提案**と**利用不能な成果物を要求する提案**を棄却。対象は**凍結された**選択プログラム。チェックポイントが無ければ**ブートストラップ段階で evaluator を1回だけ再実行**し以後凍結 | （明示なし。§4 参照） | （明示なし。棄却のみが明記） |
@@ -165,7 +165,7 @@
 
 ### 4.1 本文の記述（全文・逐語）
 
-§3.4 の "Post-hoc analysis." 段落は**わずか5文**であり、事後分析に関する本文の記述はこれがすべてである。
+§3.4 の "Post-hoc analysis." 段落は**わずか5文**であり、事後分析に関する本文の記述はこれがすべてである。〔証拠段階 B：`EVD-20261021-a6fd`〕
 
 > 【逐語・§3.4 "Post-hoc analysis."】
 > "The post-hoc pipeline proposes, filters, executes, and aggregates diagnostics that characterize the behavior of the frozen selected program on the considered task. Diagnostics may run new inference or analyze existing artifacts, such as checkpoints and logs. Programmatic checks reject proposals that retrain or otherwise alter the selected program, or require unavailable artifacts. When no usable checkpoint exists, an optional bootstrap stage enables checkpoint saving and reruns the evaluator once; all subsequent analyses keep the resulting version frozen. The resulting post-hoc analyses, together with the baseline and ablation results, form the evidence that the paper writing phase turns into empirical claims."
@@ -213,7 +213,7 @@
 
 - 手法：preactivation を `z = z_syn + b` に分解し、① `E|b| / E|z_syn|`、② `|b| > |z_syn|` となる要素の割合、③ `b` の追加で preactivation の符号が反転する割合、を測定。検証例5,000件。
 - 結果：conv1_p は比 0.390・バイアス支配 30.5%・符号反転 14.9%。conv1_n は 0.379 / 31.2% / 15.2%。深い層は比 ≤ 0.0105・符号反転 < 0.004。全結合層は比 ≤ 0.0032・符号反転 < 0.001。
-- 結論【逐語】："These results suggest that negative biases primarily act as threshold shifts, especially in the first convolutional layer, rather than as a mechanism for violating Dale-style synaptic signs. The formal pathway-level excitatory and inhibitory structure remains intact, while bias offsets provide a limited stream-specific adjustment to activation thresholds."
+- 結論【逐語】〔証拠段階 B：`EVD-20261021-2804`〕："These results suggest that negative biases primarily act as threshold shifts, especially in the first convolutional layer, rather than as a mechanism for violating Dale-style synaptic signs. The formal pathway-level excitatory and inhibitory structure remains intact, while bias offsets provide a limited stream-specific adjustment to activation thresholds."
 
 → **これが本リポジトリにとって最も参照価値のある部分である**（§6.2 の候補C で述べる）。事後分析の実体は「**主張の解釈が本当に成り立つかを、凍結された対象に対して測る反証可能性つきの診断**」であって、追加実験によるスコア改善ではない。
 
@@ -300,7 +300,7 @@
 | AI Reviewer スコア／外部ピアレビュー | §5, §4.4 | 実行コストと人手が必要。かつ原典自身が「あくまで代理指標であり科学的正当性の証拠ではない」と明言 |
 | autoillustrate（図生成） | §3.6, App. E | 無関係 |
 
-> **注（Table 6 の知見）**【要約・数値は逐語】MNIST の Error Diffusion 実験で、手法妥当性ルーブリックの**厳格度と文言だけ**を変え、タスク・分割・探索予算・大まかな除外条件を固定して比較している。
+> **注（Table 6 の知見）**【要約・数値は逐語】〔証拠段階 B：`EVD-20261021-5607`〕MNIST の Error Diffusion 実験で、手法妥当性ルーブリックの**厳格度と文言だけ**を変え、タスク・分割・探索予算・大まかな除外条件を固定して比較している。
 > - **Loose**（誤逆伝播を明示的に禁じる文言なし）→ best validation accuracy **0.9694** だが **ED を実装していなかった**（"failed to implement ED"）
 > - **Intermediate**（backprop を明示的に禁止）→ **0.976**。**ED を正しく実装**
 > - **Strict**（backprop 禁止・`W^⊤` 後方輸送の禁止・1つの大域誤差符号による明示的な局所更新・詳細な極性不変条件）→ **0.9708**。探索が「大域／平均誤差ブロードキャスト型 ED」に制約された
@@ -309,7 +309,7 @@
 
 ### 6.4 原典自身が明記する限界（本リポジトリと同じ限界）
 
-【逐語・§6.3 "Rubric-specification sensitivity."】
+【逐語・§6.3 "Rubric-specification sensitivity."】〔証拠段階 B：`EVD-20261021-e31f`〕
 > "We observe a failure mode introduced by structural limitations of rubric-based verification: rubrics check only the criteria they enumerate, so they cannot catch violations of constraints that were never stated, and human researchers remain responsible for specifying tasks precisely and verifying that results respect their full intent. In two of the three Pi runs, we observed that the agent also modified the test-time evaluation procedure itself (e.g., using k-sample majority voting instead of the baseline's pass@1), which inflates the reported validation accuracy without improving the training algorithm. The task prompt asks the agent to improve the 'training' algorithm, but never explicitly requires a fixed evaluation procedure. No initial rubric item covers this evaluation-protocol integrity. Neither the evaluator nor the rubric gates flagged these programs, and we identified them after a manual post-hoc audit."
 
 【逐語・§8 Limitations】
@@ -344,7 +344,7 @@ print("DISTINCT TOTAL:", len(allun))
 PY
 ```
 
-**結果（2026-10-21 実行）**：
+**結果（2026-10-21 実行）**〔証拠段階 A：`VER-20261021-91a1`〕：
 
 | 台帳 | レコード数 | `additionalProperties` | スキーマ未定義キー |
 |---|---|---|---|
@@ -403,11 +403,13 @@ PY
 
 ---
 
-## 9. 書誌・EVD 候補（**提案のみ。台帳・スナップショットは未変更**）
+## 9. 台帳登録と採番（**2026-10-21 に実行済み**）
 
-指示に従い、`state/*.jsonl` と `tests/fixtures/arxiv_metadata_snapshot.json` には**一切手を付けていない**。以下は次作業への提案である。
+初稿では「提案のみ」としていた。同日、指示に基づき**実行した**。以下は提案内容と、実際に採番・登録した結果である。
 
-### 9.1 SRC 候補（1件）
+### 9.1 SRC（1件・登録済み）
+
+**登録ID：`SRC-20261021-8452`**（`python3 scripts/new_id.py SRC` で採番）
 
 | 項目 | 値（2026-10-21 取得） |
 |---|---|
@@ -422,21 +424,39 @@ PY
 | metadata_source | `https://arxiv.org/abs/2610.18933` |
 | 関連 | コード `https://github.com/SakanaAI/AI-Scientist-v3`、図生成 `https://github.com/SakanaAI/autoillustrate` |
 
-**前提作業：完了済み。** `tests/fixtures/arxiv_metadata_snapshot.json` への 2610.18933 追記は**本PRで実施した**（§1.1）。これに伴い本メモの表記も正規形式へ書き換え済みである。**未完了なのは SRC レコードの台帳登録と EVD / VER の採番だけ**であり、それらは本PRの範囲外として提案のまま残す（次作業への申し送り）。
+**照合結果**：`scripts/check_citations.py`（ゲート5）が `OK SRC-20261021-8452 2610.18933 (title/authors/year match)` を報告。スナップショットへの追記は先行PRで実施済み（§1.1）。
 
-### 9.2 EVD 候補（証拠段階 B、5件を提案）
+### 9.2 EVD（証拠段階 B、5件・登録済み）
 
-| 番 | 節 | 内容 | 使い所 |
-|---|---|---|---|
-| 1 | §3.3（Execution agent の2ゲート） | 「全ルーブリック合格で契約完了／最良更新には correct かつ厳密に高いスコア」の逐語 | 候補B（原則の明示化）の根拠 |
-| 2 | §3.4（Post-hoc analysis） | 逐語5文（§4.1 全文） | 調査項目2の中核 |
-| 3 | §6.3（Rubric-specification sensitivity） | ルーブリックの構造的限界と、評価プロトコル改変を人手監査で発見した事例の逐語 | 候補D 不採用の根拠、かつ `docs/minimal-core-and-ci.md` §2.1 の限界記述の裏付け |
-| 4 | Appendix B.3（Table 6） | ルーブリック厳格度のアブレーション（Loose 0.9694 / Intermediate 0.976 / Strict 0.9708） | 検証の強さと目的関数のトレードオフ |
-| 5 | Appendix B.3（Bias offsets and Dale-style sign preservation） | 事後分析の実例（preactivation 分解と3指標） | 候補F（反証診断の作法）の根拠 |
+**採番：`python3 scripts/new_id.py EVD --count 5`**
 
-### 9.3 VER 候補（証拠段階 A、1件を提案）
+| 番 | 登録ID | 節 | 内容 | 使い所 |
+|---|---|---|---|---|
+| 1 | `EVD-20261021-05ed` | §3.3（Execution agent の2ゲート） | 「全ルーブリック合格で契約完了／最良更新には correct かつ厳密に高いスコア」の逐語 | 候補B（原則の明示化）の根拠 |
+| 2 | `EVD-20261021-a6fd` | §3.4（Post-hoc analysis） | 逐語5文（§4.1 全文） | 調査項目2の中核 |
+| 3 | `EVD-20261021-e31f` | §6.3（Rubric-specification sensitivity） | ルーブリックの構造的限界と、評価プロトコル改変を人手監査で発見した事例の逐語 | 候補D 不採用の根拠、かつ `docs/minimal-core-and-ci.md` §2.1 の限界記述の裏付け |
+| 4 | `EVD-20261021-5607` | Appendix B.3（Table 6） | ルーブリック厳格度のアブレーション（Loose 0.9694 / Intermediate 0.976 / Strict 0.9708） | 検証の強さと目的関数のトレードオフ |
+| 5 | `EVD-20261021-2804` | Appendix B.3（Bias offsets and Dale-style sign preservation） | 事後分析の実例（preactivation 分解と3指標） | 候補F（反証診断の作法）の根拠 |
 
-§6.5 のスキーマ実測（未知キー延べ166件・11種類、必須キー欠落0件、5スキーマすべて `additionalProperties` 未指定）。再実行コマンドは §6.5 に掲載した。`verifier_type` は `deterministic` を想定。
+**正規化の注記（2件）**：
+
+- `EVD-20261021-e31f`：取得した HTML では数式中の `k` が重複描画され `using kk-sample majority voting` となっていた。LaTeX 描画由来の重複であり意味を持たないため `k-sample` に正規化し、レコードの `scope_note` に明記した。
+- `EVD-20261021-5607`：表の数値が同様に重複描画されていた（`0.96940.9694`）。同一値の2重描画であり、実際の値は `0.9694` / `0.976` / `0.9708` である。`scope_note` に明記した。
+
+いずれも `contributions/2026-10-21_stellar_colosseum_reading.md` が採った「garbled token を意味に踏み込む引用に使わない」方針に倣う。
+
+### 9.3 VER（2件・登録済み）
+
+**採番：`python3 scripts/new_id.py VER --count 2`**。提案は1件だったが、**2件に分けた**。理由は下の注記のとおり。
+
+| 登録ID | `target_id` | `verifier_type` | `result` | 内容 |
+|---|---|---|---|---|
+| `VER-20261021-21b4` | `SRC-20261021-8452` | `source_check` | `pass` | 書誌を abs ページ・スナップショット・ゲート5/6 の3経路で照合し一致。本文は HTML v1 全34チャンクを読了 |
+| `VER-20261021-91a1` | `SRC-20261021-8452` | `deterministic` | `warn` | §6.5 のスキーマ実測（未知キー延べ166件・11種類、必須キー欠落0件、5スキーマすべて `additionalProperties` 未指定）|
+
+**なぜ2件に分けたか**：提案時は1件（`deterministic`）だけを想定していたが、1件にまとめると `result` の意味が濁る。書誌照合は原典に対する検証であり pass/fail が意味を持つ。スキーマ実測は**本リポジトリ自身**に対する観測であって pass/fail ではなく観測事実なので `warn` にした。
+
+**なぜスキーマ実測を EVD にしないか**：EVD は原典の引用を格納する台帳であり `source_id` を必須とする。この測定は原典ではなく本リポジトリの観測なので、EVD の定義に合わない。`target_id` を `SRC-20261021-8452` にしているのは、この観測が当該論文の読解を契機に生じたという由来を示すためであり、原典の主張の是非を判定するものではない。レコードの `rationale` に同じ趣旨を明記した。
 
 ---
 
