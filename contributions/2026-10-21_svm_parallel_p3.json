@@ -1,0 +1,140 @@
+{
+  "arm": "parallel",
+  "worker": "P3",
+  "base_commit": "91a08f4321d4aee42bca6cb02641b7c32dce4539",
+  "items": [
+    {
+      "id": "Q03",
+      "value": ["cs.LG", "cs.AI", "cs.CL"],
+      "location": "abs ページ（https://arxiv.org/abs/2609.37633v2）Subjects 欄",
+      "confidence": "high"
+    },
+    {
+      "id": "Q06",
+      "value": 13,
+      "location": "要旨（abs・HTML 共通の Abstract 段落、「12-13% when no insight is in context at eval time」の上限）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q09",
+      "value": 9,
+      "location": "HTML 版全体（本文＋付録）の「Table N:」キャプション実体：Table 1〜Table 9",
+      "confidence": "high"
+    },
+    {
+      "id": "Q10",
+      "value": 13,
+      "location": "HTML 版全体（本文＋付録）の「Figure N:」キャプション実体：Figure 1〜Figure 13",
+      "confidence": "high"
+    },
+    {
+      "id": "Q12",
+      "value": 17,
+      "location": "§1 Introduction（insight を導入する段落、「≈17 tokens per insight」）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q15",
+      "value": ["source", "explicitness", "transfer mechanism"],
+      "location": "§2 Related Works、小段落「Guiding exploration with privileged information」（three axes の列挙）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q16",
+      "value": ["SDPO", "RLTF"],
+      "location": "§2 Related Works、小段落「Internalizing context into weights」（Closest to us are ...）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q22",
+      "value": "Sort the notes to find the most recent one.",
+      "location": "§3.3 Insight internalization（Figure 1 を用いた具体例の段落、2 番目に逆伝播される insight）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q23",
+      "value": "Qwen 3.5 9B (with thinking)",
+      "location": "§4.1 Experiment setup / Datasets（Pass@128=0 に選別する段落、「our policy, Qwen 3.5 9B (with thinking)」）",
+      "confidence": "medium"
+    },
+    {
+      "id": "Q26",
+      "value": 1624,
+      "location": "§4.1 Experiment setup（held-out 集合の説明段落、「SAPI has 1624 tasks on 4 unseen apps」）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q30",
+      "value": 42.2,
+      "location": "Table 1（RLTF-SD 行、Leetcode 列）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q33",
+      "value": 68000,
+      "location": "Table 2（「SFTL;DR on insights, deduplicated」行、Backward Tokens 列。HTML 表記は二重描画の「6868k」＝68k と確定）",
+      "confidence": "medium"
+    },
+    {
+      "id": "Q34",
+      "value": 0.6,
+      "location": "Table 2 キャプション（「All results are ±0.6% standard deviation」）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q40",
+      "value": 75,
+      "location": "Appendix A.3.2 Positive-ratio filtering（「ensure that 75% have a positive reward」）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q43",
+      "value": 75,
+      "location": "Appendix F.1、Table 8 の脚注（「This run's training crashed at update 75」）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q46",
+      "value": "Remove the answer parameter from the complete task call.",
+      "location": "Appendix C.2、Table 6（Failure type: answer argument passed to a non-QA task の TL;DR insight 行）",
+      "confidence": "high"
+    },
+    {
+      "id": "Q49",
+      "value": 0.034,
+      "location": "Appendix E.5 Insight reliance（「Insight reliance remains mild.」段落、訓練の後半で平均した値）",
+      "confidence": "high"
+    }
+  ],
+  "session_log": {
+    "arm": "parallel",
+    "worker": "P3",
+    "branch": "arena/f53b7182-researchos",
+    "base_commit": "91a08f4321d4aee42bca6cb02641b7c32dce4539",
+    "started_at_utc": "2026-10-21T09:09:19Z",
+    "finished_at_utc": "2026-10-21T09:11:11Z",
+    "tool_calls": {
+      "total": 32,
+      "by_kind": {
+        "bash": 12,
+        "ページ取得": 17,
+        "ファイル書込・編集": 3
+      }
+    },
+    "files_read": [
+      "docs/single-vs-multi-experiment-2026-10-21.md",
+      "scripts/check_memo_citations.py",
+      "scripts/check_doc_numbers.py",
+      "scripts/score_extraction.py",
+      "scripts/check_memo_ledger_refs.py",
+      "tests/fixtures/arxiv_metadata_snapshot.d/2026-10-21-850175eaa62c.json",
+      "https://arxiv.org/html/2609.37633v2",
+      "https://arxiv.org/abs/2609.37633v2"
+    ],
+    "output_files": [
+      "contributions/2026-10-21_svm_parallel_p3.json",
+      "contributions/2026-10-21_svm_parallel_p3.md"
+    ],
+    "notes": "【位置づけ】開始コミット不一致を許容した参考実行。厳密な同条件比較の一員として扱わない（条件逸脱の評価と統合は X4 と人間）。【開始コミット】当初予定の共通開始コミットは ccf76aa654c1344e7bc7862bc835cf1420c98ff8、実際の開始 HEAD は 91a08f4321d4aee42bca6cb02641b7c32dce4539 で不一致（実 HEAD は予定コミットの 13 コミット子孫。shallow clone のため初回は祖先判定が誤り、git fetch --unshallow で確定）。base_commit には実際の開始 HEAD を記録し、予定コミットから開始したとは記録していない。差分にはゲート用スクリプトの変更が含まれるため、本実行のゲートは当初の共通開始時点と異なるスクリプト版で走っている。【固定版の版表示（転記）】HTML 冒頭：arXiv:2609.37633v2 [cs.LG] 19 Oct 2026（見出し RLTLDR: Self-improvement by Internalizing Self-generated Feedback、所属 Apple、日付行 October 19, 2026）。abs ページ：arXiv:2609.37633v2 (cs)、last revised 19 Oct 2026 (this version, v2)、Submission history [v2] Mon, 19 Oct 2026 11:45:34 UTC。v2 を確認、別版への誘導なし。PDF は未使用、版なし URL も未使用。取得経路は Arena の web fetch（HTML 16 チャンク、abs 1 チャンク）。【停止・待機・再指示】前回の投入（2026-10-21T09:04:27Z 開始、tool_calls 7、成果物なし、ゲート未実行）では開始 HEAD の不一致と同一担当列の成果物の既存を理由に抽出を開始せず停止し、人間の再指示で本実行を開始した。本実行中の人間の応答待ちは無い。【手順逸脱・取得上の問題】(1) 祖先関係の確定のため git fetch origin <予定コミットのSHA> と git fetch --unshallow origin を実行（ブランチ切替・reset・rebase・rename はしていない）。(2) HTML の表は数値が二重描画される箇所があり（例 6868k＝68k）、同一表の他行と本文の 68k backwards で整合を確認して換算した。(3) 付録 C.1 の本文は Table 5 を「Figure 5」と表示する参照リンクの表記揺れがあるが、キャプションは Table 5: であり、E.4 に実体としての Figure 5: が別に存在するため計数に影響しない。(4) オフライン書誌スナップショットの分割ファイルの注記に他アーム成果物のファイル名が現れたが内容は未読（git diff --name-status の出力にも他成果物のファイル名のみ現れる、内容は未読）。【独立性】他アーム・他ワーカーのブランチ、PR、成果物の内容は見ていない。PR 一覧・gh は未使用。state/、既存メモ、コード、fixture、設計文書は未変更。【モデル名】UI 上に表示モデル名を確認できず unknown。【tool_calls の数え方】本実行（開始 09:09:19Z）の開始から本 JSON の書き込み（1 回）までを通算した 32。内訳は bash 12（うちゲート再確認用の読み取り 5、日時取得 2）、ページ取得 17（同一 HTML を 16 チャンク・abs を 1）、ファイル書込・編集 3（本メモの作成 1・修正 1・本 JSON の作成 1）。パイプ・複合コマンドでの重ね数えはしていない。前回の停止実行の 7 回は含まない。【finished_at_utc】JSON 内容を確定した時刻。その後の 8 ゲート実行と PR 作成の時間は含まない。"
+  }
+}
