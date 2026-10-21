@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ResearchOS Prediction",
+  "description": "A pre-registered, scorable prediction about a hypothesis. Registered before the observation is collected, so that a later judgement cannot quietly move the goalposts. Without controlled experiments this is the only mechanism left that keeps a hypothesis falsifiable: the probability makes the claim quantitative, and refutation_condition makes the failure condition explicit in advance. Scored with a Brier score once resolved (docs/2026-10-21_hypothesis-cycle-automation.md sections 3 (S6) and 8.5).",
+  "type": "object",
+  "required": ["prediction_id", "hypothesis_id", "registered_at", "probability", "statement"],
+  "properties": {
+    "prediction_id": {"type": "string"},
+    "hypothesis_id": {"type": "string"},
+    "registered_at": {"type": "string", "description": "YYYY-MM-DD or ISO timestamp; must precede the observation"},
+    "probability": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Self-declared probability that the prediction holds, range [0, 1]"
+    },
+    "statement": {"type": "string", "description": "The observation that is expected, stated so it can be checked"},
+    "refutation_condition": {
+      "type": "object",
+      "required": ["observable", "would_refute", "expected_if_true"],
+      "properties": {
+        "observable": {"type": "string"},
+        "would_refute": {"type": "string"},
+        "expected_if_true": {"type": "string"}
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "supported", "refuted", "unresolved"]
+    },
+    "resolved_at": {"type": "string"},
+    "resolution_note": {"type": "string"},
+    "superseded_by": {
+      "type": "string",
+      "description": "prediction_id of the replacement. A prediction is not edited in place; a changed condition is a new record, so the history of goalpost movement stays visible."
+    }
+  }
+}

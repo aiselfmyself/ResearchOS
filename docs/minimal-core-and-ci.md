@@ -51,10 +51,10 @@
 
 ゲートするのは決定論的・再実行可能な**8検査**（2026-10-21 時点。初版は4検査で、2026-10-20 に 5・6 を、2026-10-21 に 7 を、同日 8 を追加した）：
 
-1. `python3 -m unittest discover -s tests -v` — **437テスト**（約3〜5秒）
+1. `python3 -m unittest discover -s tests -v` — **477テスト**（約3〜5秒）
 2. `python3 gitswarm/benchmarks/benchmark.py --check` — 成果物と fresh run の照合（許容誤差0.01）
 3. `python3 gitswarm/readout_sim.py --check` — 投票シミュレーション成果物と fresh run の照合
-4. `python3 scripts/validate_state.py` — 研究台帳のスキーマ・ID一意・参照整合性（**台帳内の** ID・パス参照の存在検査を含む）。台帳は**凍結ベース（`state/*.jsonl`）＋セッション別シャード（`state/<台帳名>.d/*.jsonl`）の統合ビュー**として検証される（`scripts/ledger_store.py`）
+4. `python3 scripts/validate_state.py` — 研究台帳のスキーマ・ID一意・参照整合性（**台帳内の** ID・パス参照の存在検査を含む）。台帳は**凍結ベース（`state/*.jsonl`）＋セッション別シャード（`state/<台帳名>.d/*.jsonl`）の統合ビュー**として検証される（`scripts/ledger_store.py`）。2026-10-21 から**来歴ゲート**（§2.5）も同じ検査に入った
 5. `python3 scripts/check_citations.py` — 台帳書誌と同梱arXivスナップショットの照合（**オフライン・ネットワーク不要**。実API照合の `--live` は手動専用でゲートしない）
 6. `python3 scripts/check_memo_citations.py` — 調査メモ（`contributions/*.md`）の参考文献・本文中arXiv引用と同梱スナップショットの照合（オフライン）
 7. `python3 scripts/check_memo_ledger_refs.py` — 調査メモ内の**台帳ID参照とリポジトリパス参照の存在検査**（オフライン。2026-10-21 追加。後述 §2.1）
@@ -215,6 +215,40 @@ hold-out / OOD 評価を**分ける**ことである。
    `gitswarm.benchmarks.benchmark` には `test_<name>.py` が無いが、どちらも
    `tests/test_minimal_core.py` から実行されている。**ファイル名が一致しないだけで
    「テストされていない」と警告するのは偽陽性**だった（初版で実際に出た）。
+
+## 2.5 来歴ゲート：仮説サイクルの記録（2026-10-21 追加）
+
+**動機**——本リポジトリは定量検証（統制実験）を行わない方針を採りうる。その場合に
+「検証」の代わりに残るのは**反証可能性の記録**だけである。ところが 2026-10-21 の実測で、
+新規 4 仮説の「支持」の **94〜100% が、その仮説の生成に使った証拠そのもの**であり、
+関係台帳 241 件の `refute` は **0 件**だった。生成と裁定が同じ材料を共有し、それを
+記録する欄がなかったことが原因である。設計は `docs/2026-10-21_hypothesis-cycle-automation.md`。
+
+**追加した台帳**（いずれも凍結ベースは空で開始し、追記はシャードへ）:
+
+| 台帳 | ID | 何を記録するか |
+|---|---|---|
+| `state/search_log.jsonl` | `QRY` | 実行した検索（クエリ・日時・経路・ヒット数・採用した SRC）。「探して無かった」と「探していない」を区別する |
+| `state/runs.jsonl` | `RUN` | ラウンド番号・開始終了・**人間の介入回数**・コスト。自動化率を測るための計測記録 |
+| `state/predictions.jsonl` | `PRD` | 観測前に登録した予測（確率・反証条件・登録時刻）。後から条件を緩められないようにする |
+
+**ゲートするのは記録の存在だけ**であり、質の判断はしない。
+
+1. 新規 SRC は `query_id` を持ち、その QRY が `included_source_ids` で逆向きに参照する
+2. 新規 HYP は `round` / `derived_from_evidence_ids` / `refutation_condition`（3項目すべて非空）
+   / `next_observations`（非空）を持つ
+3. 新規 REL は `derived_from` / `searched_refutation` の真偽値を持ち、`derived_from=true` は
+   仮説側の `derived_from_evidence_ids` と一致する
+
+**免除はファイル単位**（`state/cycle_exemptions.json`）。シャードは 1 セッションが 1 回だけ書き、
+以後編集しないため、「既知のファイルに無い」＝「新しいレコード」が厳密に成り立つ。
+250 件の ID を列挙して保守する必要がない。
+
+**何を検出しないか**：支持が汚染されているか（自己支持率）、仮説が良いか、refute が十分か。
+いずれも計測器（Phase 3 の `scripts/self_support.py`）が報告し、人間が判断する。
+ゲートは「記録が無いこと」だけを失敗させる。
+
+---
 
 ## 3. なぜ旧テストをそのまま持ってこなかったか
 

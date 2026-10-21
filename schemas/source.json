@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "ResearchOS Source",
+  "description": "One bibliographic source. Since 2026-10-21 a source in a file not listed in state/cycle_exemptions.json must carry query_id, the search log entry (QRY) that produced it: a source that cannot point at the search that found it is exactly the kind of unsourced addition the citation gates cannot catch. See docs/2026-10-21_hypothesis-cycle-automation.md sections 3 (S1) and 5.",
   "type": "object",
   "required": ["source_id", "title", "authors", "year", "url", "type"],
   "properties": {
@@ -11,6 +12,10 @@
     "url": {"type": "string"},
     "type": {"type": "string", "enum": ["paper", "preprint", "book", "dataset", "code", "report"]},
     "venue": {"type": "string"},
-    "abstract_summary": {"type": "string"}
+    "abstract_summary": {"type": "string"},
+    "query_id": {
+      "type": "string",
+      "description": "QRY record for the search that produced this source. Required for every source in a non-exempt file; the QRY must also list this source_id in included_source_ids."
+    }
   }
 }

@@ -84,8 +84,14 @@ def _temp_repo(tmp: Path, shards: Optional[Dict[str, str]] = None) -> Path:
         os.symlink(entry, root / entry.name)
     state = root / "state"
     state.mkdir()
-    for ledger in LEDGERS:
-        shutil.copy(ROOT / "state" / f"{ledger}.jsonl", state / f"{ledger}.jsonl")
+    # Every collection, not a fixed tuple: a new ledger (2026-10-21 added
+    # search_log / runs / predictions) must not turn "file not found" into a
+    # failure in every test that builds a temporary copy.
+    for _name, (ledger_rel, _schema, _id_key) in vs.COLLECTIONS.items():
+        target = root / ledger_rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(ROOT / ledger_rel, target)
+    shutil.copy(ROOT / vs.CYCLE_EXEMPTIONS, root / vs.CYCLE_EXEMPTIONS)
     for rel, content in (shards or {}).items():
         path = root / rel
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -505,10 +511,13 @@ class BundledLedgerTest(unittest.TestCase):
                 self.assertEqual(raw_errors, [], f"{ledger_rel}: base unreadable")
                 self.assertEqual(errors, [], f"{ledger_rel}: shard problems")
                 self.assertEqual(union[: len(raw)], raw)
-                if name != "relations":
-                    # relations.jsonl is legitimately empty until the R3/R4
-                    # backfill writes the first verdicts.
-                    self.assertGreater(len(raw), 0, ledger_rel)
+                if name in {"relations", "search_log", "runs", "predictions"}:
+                    # Legitimately empty: relations until the R3/R4 backfill,
+                    # the three hypothesis-cycle ledgers until the loop runs.
+                    # This assertion guards against losing records, and an
+                    # empty base has none to lose.
+                    continue
+                self.assertGreater(len(raw), 0, ledger_rel)
 
     def test_every_ledger_view_is_valid(self):
         self.assertEqual(vs.run_all_checks(ROOT)["errors"], [])

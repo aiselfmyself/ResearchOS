@@ -41,6 +41,34 @@ Scope (deliberately small -- see docs/minimal-core-and-ci.md):
     schema-checked and reference-checked like the other ledgers. It has no
     legacy sequential IDs: REL-NNN is never accepted.
 
+  * The hypothesis-cycle ledgers (2026-10-21): search_log (QRY), runs (RUN),
+    predictions (PRD). They make the loop's inputs auditable -- which searches
+    were run, what a round cost, and what was predicted before the observation
+    existed. See docs/2026-10-21_hypothesis-cycle-automation.md.
+
+  * The cycle gates (2026-10-21). Records that predate this work are listed by
+    *origin file* in state/cycle_exemptions.json and are exempt; every record
+    in any other file must carry the cycle fields:
+
+        source.query_id                  -> a QRY record, which must list the
+                                            source in included_source_ids
+        hypothesis.round                 -> integer >= 1
+        hypothesis.derived_from_evidence_ids
+                                         -> the observations that GENERATED
+                                            the hypothesis (they can never also
+                                            be counted as its support)
+        hypothesis.refutation_condition  -> observable / would_refute /
+                                            expected_if_true, all non-empty
+        hypothesis.next_observations     -> non-empty list of strings
+        relation.derived_from            -> boolean
+        relation.searched_refutation     -> boolean
+
+    Exemption is by file, not by ID, because a shard is immutable and written
+    by one session: "not in a known file" is exactly "new record". A relation
+    that sets derived_from=true must name an observation listed in its
+    hypothesis's derived_from_evidence_ids (only checked when the hypothesis
+    itself carries the field, since legacy hypotheses never recorded theirs).
+
 Non-goals (frozen by design, not missing by accident):
   * No governance ledgers (sessions / proposals / reviews / approvals /
     review_queue), no role checks, no commit-trailer checks, no append-only
@@ -94,6 +122,20 @@ COLLECTIONS: Dict[str, Tuple[str, str, str]] = {
         "schemas/relation.json",
         "relation_id",
     ),
+    # Hypothesis-cycle ledgers (2026-10-21). Empty until the loop runs; the
+    # gates below are prospective, so an empty ledger is the correct initial
+    # state and is not treated as a failure.
+    "search_log": (
+        "state/search_log.jsonl",
+        "schemas/search_log.json",
+        "query_id",
+    ),
+    "runs": ("state/runs.jsonl", "schemas/run.json", "run_id"),
+    "predictions": (
+        "state/predictions.jsonl",
+        "schemas/prediction.json",
+        "prediction_id",
+    ),
 }
 
 # ---------------------------------------------------------------------------
@@ -120,6 +162,9 @@ ID_PREFIXES: Dict[str, str] = {
     "verifications": "VER",
     "hypotheses": "HYP",
     "relations": "REL",
+    "search_log": "QRY",
+    "runs": "RUN",
+    "predictions": "PRD",
 }
 
 # Frozen at 2026-10-20 when the non-sequential scheme was adopted.
@@ -138,6 +183,10 @@ LEGACY_PATTERN = re.compile(r"^(?P<prefix>[A-Z]{3})-(?P<num>\d{3})$")
 #: The observation_key overlay (see the module docstring). It is *not* one of
 #: COLLECTIONS: it has no IDs of its own, it only annotates existing EVDs.
 EVIDENCE_KEYS_LEDGER = "state/evidence_keys.jsonl"
+
+#: Files whose records predate the 2026-10-21 cycle gates (see the module
+#: docstring). Exemption is by *origin file*, so no per-record list is needed.
+CYCLE_EXEMPTIONS = "state/cycle_exemptions.json"
 
 
 def load_ledger_records(
@@ -401,6 +450,287 @@ def check_id_format(
     return errors
 
 
+# ---------------------------------------------------------------------------
+# Hypothesis-cycle gates (2026-10-21)
+#
+# WHY THESE EXIST
+# ---------------
+# The 2026-10-21 measurement of the ledger found that the four hypotheses added
+# on that day were "supported" by the very observations used to generate them
+# (94-100% of their support), and that the relation ledger contained zero
+# refutations out of 241. That is not a data error -- it is what happens when
+# generation and adjudication share a material and nothing records the
+# difference. A loop that generates hypotheses automatically would amplify it.
+#
+# The gates are therefore about *recorded provenance*, not about quality:
+#   * which search produced a source;
+#   * which observations produced a hypothesis;
+#   * what would refute it, written before it is looked for;
+#   * what to look for next.
+# Whether a hypothesis is good, or whether support is contaminated, is a human
+# judgement and stays an instrument's report (scripts/self_support.py is the
+# planned Phase 3 instrument), never a gate.
+#
+# Exemption is by origin file, listed in state/cycle_exemptions.json. Using the
+# file rather than the ID needs no maintenance as records accumulate, and a
+# shard is immutable, so a new file is exactly the set of new records.
+# ---------------------------------------------------------------------------
+REFUTATION_FIELDS = ("observable", "would_refute", "expected_if_true")
+
+
+def load_cycle_exemptions(path: Path) -> Tuple[set, List[str]]:
+    """Return (exempt relative paths, errors) from state/cycle_exemptions.json.
+
+    A missing file is an error rather than "nothing is exempt": without it the
+    validator cannot tell a grandfathered record from a new one, and silently
+    choosing either interpretation would either redden the whole repository or
+    switch the gates off. Both are worse than saying so.
+    """
+    errors: List[str] = []
+    try:
+        document = json.loads(Path(path).read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return set(), [
+            f"{path}: file not found; the cycle gates cannot distinguish "
+            f"legacy records from new ones without it"
+        ]
+    except (OSError, json.JSONDecodeError) as exc:
+        return set(), [f"{path}: {exc}"]
+    files = document.get("legacy_files")
+    if not isinstance(files, list) or not all(isinstance(f, str) for f in files):
+        return set(), [f"{path}: 'legacy_files' must be a list of strings"]
+    return {f.replace("\\", "/") for f in files}, errors
+
+
+def relative_origin(origin: str, root: Path) -> str:
+    """Return ``origin`` relative to ``root`` in POSIX form when possible.
+
+    Origins carry a ``:<line>`` suffix (``".../state/sources.jsonl:12"``), and
+    tests build temporary copies of the repository, so the path is absolute
+    there. Both are normalised away: an exemption names a *file*.
+    """
+    raw = origin
+    head, _, tail = raw.rpartition(":")
+    if head and tail.isdigit():
+        raw = head  # drop the ":<line>" suffix, keep the path
+    try:
+        path = Path(raw)
+        if not path.is_absolute():
+            return path.as_posix()
+        return path.resolve().relative_to(Path(root).resolve()).as_posix()
+    except (ValueError, OSError):
+        return Path(raw).as_posix()
+
+
+def _is_exempt(rel_origin: str, exempt_files: set) -> bool:
+    return rel_origin in exempt_files
+
+
+def _nonempty_string(value: Any) -> bool:
+    return isinstance(value, str) and bool(value.strip())
+
+
+def check_cycle_fields(
+    data: Dict[str, List[Dict[str, Any]]],
+    origins: Dict[str, List[str]],
+    exempt_files: set,
+    root: Path,
+) -> List[str]:
+    """Enforce the 2026-10-21 provenance fields on non-exempt records."""
+    errors: List[str] = []
+
+    def rel(name: str, index: int) -> str:
+        found = origins.get(name, [])
+        return relative_origin(found[index], root) if index < len(found) else ""
+
+    evidence_ids = {
+        r.get("evidence_id") for r in data.get("evidence", [])
+        if isinstance(r.get("evidence_id"), str)
+    }
+    source_ids = {
+        r.get("source_id") for r in data.get("sources", [])
+        if isinstance(r.get("source_id"), str)
+    }
+    query_by_id = {
+        r.get("query_id"): r for r in data.get("search_log", [])
+        if isinstance(r.get("query_id"), str)
+    }
+    hypothesis_by_id = {
+        r.get("hypothesis_id"): r for r in data.get("hypotheses", [])
+        if isinstance(r.get("hypothesis_id"), str)
+    }
+    known_ids = set(evidence_ids) | source_ids | set(query_by_id)
+    known_ids |= set(hypothesis_by_id)
+    known_ids |= {
+        r.get("relation_id") for r in data.get("relations", [])
+        if isinstance(r.get("relation_id"), str)
+    }
+    known_ids |= {
+        r.get("claim_id") for r in data.get("claims", [])
+        if isinstance(r.get("claim_id"), str)
+    }
+    known_ids |= {
+        r.get("verification_id") for r in data.get("verifications", [])
+        if isinstance(r.get("verification_id"), str)
+    }
+
+    # --- sources: every new source names the search that found it ---------
+    for index, record in enumerate(data.get("sources", [])):
+        if _is_exempt(rel("sources", index), exempt_files):
+            continue
+        sid = record.get("source_id")
+        query_id = record.get("query_id")
+        if not _nonempty_string(query_id):
+            errors.append(
+                f"source {sid}: missing query_id; a source added after "
+                f"2026-10-21 must point at the search log entry (QRY) that "
+                f"found it (docs/2026-10-21_hypothesis-cycle-automation.md "
+                f"section 5)"
+            )
+            continue
+        query = query_by_id.get(query_id)
+        if query is None:
+            errors.append(f"source {sid}: unknown query_id {query_id!r}")
+        else:
+            included = query.get("included_source_ids") or []
+            if sid not in included:
+                errors.append(
+                    f"source {sid}: query {query_id} does not list it in "
+                    f"included_source_ids"
+                )
+
+    # --- hypotheses: generation provenance, refutation, next observations -
+    for index, record in enumerate(data.get("hypotheses", [])):
+        if _is_exempt(rel("hypotheses", index), exempt_files):
+            continue
+        hid = record.get("hypothesis_id")
+        round_number = record.get("round")
+        if not isinstance(round_number, int) or isinstance(round_number, bool) \
+                or round_number < 1:
+            errors.append(
+                f"hypothesis {hid}: missing or invalid 'round' "
+                f"(integer >= 1); every hypothesis added after 2026-10-21 "
+                f"must say which loop round produced it"
+            )
+        derived = record.get("derived_from_evidence_ids")
+        if not isinstance(derived, list):
+            errors.append(
+                f"hypothesis {hid}: missing 'derived_from_evidence_ids'; "
+                f"record which observations produced the hypothesis so they "
+                f"can be excluded from its support"
+            )
+        else:
+            for eid in derived:
+                if eid not in evidence_ids:
+                    errors.append(
+                        f"hypothesis {hid}: unknown derived_from evidence_id "
+                        f"{eid!r}"
+                    )
+        condition = record.get("refutation_condition")
+        if not isinstance(condition, dict):
+            errors.append(
+                f"hypothesis {hid}: missing 'refutation_condition'; a "
+                f"hypothesis without a stated refutation is a summary, not a "
+                f"hypothesis"
+            )
+        else:
+            for field in REFUTATION_FIELDS:
+                if not _nonempty_string(condition.get(field)):
+                    errors.append(
+                        f"hypothesis {hid}: refutation_condition.{field} must "
+                        f"be a non-empty string"
+                    )
+        next_observations = record.get("next_observations")
+        if not isinstance(next_observations, list) or not next_observations:
+            errors.append(
+                f"hypothesis {hid}: 'next_observations' must be a non-empty "
+                f"list; the search planner turns these into queries"
+            )
+        elif not all(_nonempty_string(item) for item in next_observations):
+            errors.append(
+                f"hypothesis {hid}: every next_observations item must be a "
+                f"non-empty string"
+            )
+
+    # --- relations: derived flag, and the refutation actually searched ----
+    for index, record in enumerate(data.get("relations", [])):
+        if _is_exempt(rel("relations", index), exempt_files):
+            continue
+        rid = record.get("relation_id")
+        if not isinstance(record.get("derived_from"), bool):
+            errors.append(
+                f"relation {rid}: missing boolean 'derived_from' "
+                f"(was this observation used to generate the hypothesis?)"
+            )
+        if not isinstance(record.get("searched_refutation"), bool):
+            errors.append(
+                f"relation {rid}: missing boolean 'searched_refutation' "
+                f"('no refutation found' and 'no refutation searched for' are "
+                f"different states)"
+            )
+        if record.get("derived_from") is True:
+            hypothesis = hypothesis_by_id.get(record.get("hypothesis_id"))
+            declared = (
+                hypothesis.get("derived_from_evidence_ids")
+                if isinstance(hypothesis, dict) else None
+            )
+            # Only checkable when the hypothesis recorded its own inputs;
+            # legacy hypotheses never did, so the flag is left as declared.
+            if isinstance(declared, list) \
+                    and record.get("observation_id") not in declared:
+                errors.append(
+                    f"relation {rid}: derived_from=true but observation "
+                    f"{record.get('observation_id')!r} is not in hypothesis "
+                    f"{record.get('hypothesis_id')}.derived_from_evidence_ids"
+                )
+
+    # --- search log: what the query claims to have found ------------------
+    for record in data.get("search_log", []):
+        qid = record.get("query_id")
+        included = record.get("included_source_ids") or []
+        if not isinstance(included, list):
+            errors.append(f"search_log {qid}: included_source_ids must be a list")
+            continue
+        for sid in included:
+            if sid not in source_ids:
+                errors.append(
+                    f"search_log {qid}: unknown included source_id {sid!r}"
+                )
+        derived = record.get("derived_from") or []
+        if not isinstance(derived, list):
+            errors.append(f"search_log {qid}: derived_from must be a list")
+            continue
+        for token in derived:
+            if token not in known_ids:
+                errors.append(f"search_log {qid}: unknown derived_from {token!r}")
+
+    # --- runs: a round number, a non-negative intervention count ----------
+    for record in data.get("runs", []):
+        rid = record.get("run_id")
+        round_number = record.get("round")
+        if not isinstance(round_number, int) or isinstance(round_number, bool) \
+                or round_number < 1:
+            errors.append(f"run {rid}: 'round' must be an integer >= 1")
+        interventions = record.get("human_interventions")
+        if not isinstance(interventions, int) \
+                or isinstance(interventions, bool) or interventions < 0:
+            errors.append(
+                f"run {rid}: 'human_interventions' must be an integer >= 0"
+            )
+
+    # --- predictions: a probability in [0, 1] -----------------------------
+    for record in data.get("predictions", []):
+        pid = record.get("prediction_id")
+        probability = record.get("probability")
+        if not isinstance(probability, (int, float)) \
+                or isinstance(probability, bool) or not 0.0 <= probability <= 1.0:
+            errors.append(
+                f"prediction {pid}: 'probability' must be a number in [0, 1]"
+            )
+
+    return errors
+
+
 def check_references(data: Dict[str, List[Dict[str, Any]]]) -> List[str]:
     errors: List[str] = []
     ids = {
@@ -457,6 +787,11 @@ def check_references(data: Dict[str, List[Dict[str, Any]]]) -> List[str]:
         target = record.get("target_id")
         if isinstance(target, str) and not _exists(target):
             errors.append(f"verification {vid}: unknown target_id {target!r}")
+    for record in data.get("predictions", []):
+        pid = record.get("prediction_id")
+        hid = record.get("hypothesis_id")
+        if isinstance(hid, str) and hid not in ids.get("hypotheses", set()):
+            errors.append(f"prediction {pid}: unknown hypothesis_id {hid!r}")
     return errors
 
 
@@ -476,7 +811,7 @@ def check_references(data: Dict[str, List[Dict[str, Any]]]) -> List[str]:
 # filenames ("run_simulation.py") and ordinary prose stay untouched.
 # ---------------------------------------------------------------------------
 ID_TOKEN_RE = re.compile(
-    r"(?<![-\w])(?P<prefix>SRC|EVD|CLM|VER|HYP|REL)"
+    r"(?<![-\w])(?P<prefix>SRC|EVD|CLM|VER|HYP|REL|QRY|RUN|PRD)"
     r"-(?:\d{3}|\d{8}-[0-9a-f]{4})(?![-\w])"
 )
 PATH_TOKEN_RE = re.compile(
@@ -546,10 +881,12 @@ def check_cross_references(
 def run_all_checks(root: Path = ROOT) -> Dict[str, List[str]]:
     errors: List[str] = []
     data: Dict[str, List[Dict[str, Any]]] = {}
+    origins_by_name: Dict[str, List[str]] = {}
     key_mapping, key_errors = load_evidence_keys(root / EVIDENCE_KEYS_LEDGER)
     errors.extend(key_errors)
     for name, (ledger_rel, schema_rel, id_key) in COLLECTIONS.items():
         records, load_errors, origins = load_ledger_records(root / ledger_rel)
+        origins_by_name[name] = origins
         if name == "evidence":
             # The overlay adds observation_key to existing records; every other
             # check (schema, IDs, references, prose) then sees the same view
@@ -572,6 +909,9 @@ def run_all_checks(root: Path = ROOT) -> Dict[str, List[str]]:
         data[name] = records
     errors.extend(check_evidence_keys(data.get("evidence", []), key_mapping))
     errors.extend(check_references(data))
+    exempt_files, exempt_errors = load_cycle_exemptions(root / CYCLE_EXEMPTIONS)
+    errors.extend(exempt_errors)
+    errors.extend(check_cycle_fields(data, origins_by_name, exempt_files, root))
     errors.extend(check_cross_references(data, root))
     return {"errors": errors}
 

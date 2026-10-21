@@ -44,6 +44,10 @@ PREFIXES = {
     "VER": "state/verifications.jsonl",
     "HYP": "state/hypotheses.jsonl",
     "REL": "state/relations.jsonl",
+    # Hypothesis-cycle ledgers (2026-10-21).
+    "QRY": "state/search_log.jsonl",
+    "RUN": "state/runs.jsonl",
+    "PRD": "state/predictions.jsonl",
 }
 
 ID_KEYS = {
@@ -53,6 +57,9 @@ ID_KEYS = {
     "VER": "verification_id",
     "HYP": "hypothesis_id",
     "REL": "relation_id",
+    "QRY": "query_id",
+    "RUN": "run_id",
+    "PRD": "prediction_id",
 }
 
 

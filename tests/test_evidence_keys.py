@@ -71,6 +71,13 @@ def _state_dir(tmp: str, evidences=None, overlay=None, overlay_shard_name=None):
     _write_jsonl(state / "verifications.jsonl", [])
     _write_jsonl(state / "hypotheses.jsonl", [{"hypothesis_id": "HYP-001", "statement": "s", "status": "testing"}])
     _write_jsonl(state / "relations.jsonl", [])
+    # Every other collection must have a base file, or the validator reports
+    # "file not found" for it (the hypothesis-cycle ledgers are new).
+    for name, (ledger_rel, _schema, _id_key) in vs.COLLECTIONS.items():
+        path = Path(tmp) / ledger_rel
+        if not path.exists():
+            _write_jsonl(path, [])
+    shutil.copy(ROOT / vs.CYCLE_EXEMPTIONS, state / "cycle_exemptions.json")
     if overlay is not None:
         name = overlay_shard_name or "2026-10-21-0123456789ab.jsonl"
         path = state / "evidence_keys.d" / name
