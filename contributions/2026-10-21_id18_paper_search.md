@@ -282,3 +282,14 @@
 - 検証済みの一次資料で ID 18 の要件（同一タスク × 能力水準の複数 × ハーネスの格子 × 数値）を**完全に満たす論文はまだない**。
 - 候補の状況：GAIA（2606.08529、部分的）、SWE-bench Pro（2609.32459、部分的、数値は図）。
 - 「R ≈ 1」を検証済みとは言わない。既存の交絡（タスク領域、評価方式、予算、provider）は未解消。
+
+### 8.5 候補 B・C・D の本文確認（2026-10-21、HTML v1）
+
+前回 abstract のみだった 3 件を本文で確認した。本節は `arena/007d7f60-researchos`（コミット `89a6971`）の内容を、凍結ベースを書き換えないシャード形式へ変換して取り込んだものである。新規の `EVD-20261021-1439` と `EVD-20261021-8ebb` は evidence シャードへ追加し、既存の `EVD-20261021-e06c`、`EVD-20261021-589c`、`EVD-20261021-d78f` への本文確認の記述は、対応する VER レコードとして追記した。変換対応表は `contributions/2026-10-21_id18_shard_conversion.md`。
+
+- **arXiv:2609.17394（候補 B）**：abstract の 29.8pp は §4.1 で確認。ただし、単一モデル（claude-3-5-sonnet, 9 scaffold）の値で、モデル内 scaffold 範囲の中央値は 15.6pp。additive fit では scaffold 効果範囲 37.6pp、model 効果範囲 47.9pp、比 0.78（R²=0.989）。論文は「not causal effects or fractions of variance explained」と明記。観測データであり、R の証拠としては弱い。
+- **arXiv:2610.00651（候補 C）**：abstract の範囲（系 0.935–0.994、モデル 0.148–0.841）は §5.1 で確認（9 ベンチマーク）。§5.2 の「σM²−σA² は約 50%」「task 固有の scaffold 分散が model を上回る確率 84%」も確認。ただし、これは HAL・Harbor の観測データに対するベイズ G-theory の decision study であり、統制格子の分散比ではない。
+- **arXiv:2607.22585（候補 D）**：abstract の「0–8 pp」は §4.1 Table 2 のペア差と整合（本文は「harness range 2–8 pp」「across models 4–10 pp」）。モデルは 2 のみ、n=50、95% CI は約 ±14pp で、本文自身が「most pairwise pass-rate differences are not statistically distinguishable from zero」と述べる。
+- **検算不一致**：本文 Table 4（失敗カテゴリ別の solved 数）は Table 2 と 1–2 件ずれる（Goose Qwen 23 vs 24、Goose MiniMax 17 vs 19、OpenCode MiniMax 22 vs 23、OpenHands MiniMax 21 vs 23）。Table 2 と Table 5 の合計は一致。Table 4 を使うと harness 差は 10pp となり、本文の範囲と食い違う。論文の表の内部整合性の限界として記録する。
+
+判定：候補 B・C・D はいずれも ID 18 の要件（同一タスク × 能力水準の格子 × 統制）は満たさない。どれも R の証拠としては使えない。候補 D は 2 モデルのみで、model 軸が弱い。
