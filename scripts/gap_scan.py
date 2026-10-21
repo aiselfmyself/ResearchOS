@@ -122,9 +122,20 @@ def ledger_path(name: str, state_dir: Path) -> Path:
 
 
 def load_ledger(name: str, state_dir: Path) -> List[Dict[str, Any]]:
-    """Read one ledger; raise LedgerError instead of guessing at broken input."""
+    """Read one ledger; raise LedgerError instead of guessing at broken input.
+
+    For ``evidence`` the ``observation_key`` overlay (see
+    ``validate_state.load_evidence_keys``) is applied first, so the
+    ``provisional`` derivation below sees the keys the way the validator does.
+    """
     path = ledger_path(name, state_dir)
     records, errors = vs.load_jsonl(path)
+    if name == "evidence":
+        mapping, key_errors = vs.load_evidence_keys(
+            state_dir / Path(vs.EVIDENCE_KEYS_LEDGER).name
+        )
+        errors = errors + key_errors
+        records = vs.apply_evidence_keys(records, mapping)
     if errors:
         raise LedgerError("; ".join(errors))
     return records

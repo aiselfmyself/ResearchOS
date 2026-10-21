@@ -27,6 +27,15 @@ Scope (deliberately small -- see docs/minimal-core-and-ci.md):
       relation.observation_id   -> evidence
       relation.source_id        -> sources               (optional field)
 
+  * The observation_key overlay state/evidence_keys.jsonl (frozen base, empty
+    until 2026-10-21) plus its shards state/evidence_keys.d/*.jsonl. It adds
+    an optional ``observation_key`` to an existing EVD without rewriting the
+    frozen evidence ledger: SHELDON's ``provisional`` rule groups observations
+    by that key, and a record cannot be edited in place once written.
+    Each overlay record is {evidence_id, observation_key, ...}; the key is
+    only ever added, never replaced (the validator refuses a second key for
+    the same evidence_id, and never overrides a key the EVD already has).
+
   * The relation ledger state/relations.jsonl (E_t: hypothesis x observation
     -> support/refute/neutral/unresolved; SHELDON reading section 5.1) is
     schema-checked and reference-checked like the other ledgers. It has no
@@ -126,6 +135,10 @@ LEGACY_MAX: Dict[str, int] = {
 ID_PATTERN = re.compile(r"^(?P<prefix>[A-Z]{3})-(?P<date>\d{8})-(?P<suffix>[0-9a-f]{4})$")
 LEGACY_PATTERN = re.compile(r"^(?P<prefix>[A-Z]{3})-(?P<num>\d{3})$")
 
+#: The observation_key overlay (see the module docstring). It is *not* one of
+#: COLLECTIONS: it has no IDs of its own, it only annotates existing EVDs.
+EVIDENCE_KEYS_LEDGER = "state/evidence_keys.jsonl"
+
 
 def load_ledger_records(
     path: Path,
@@ -147,6 +160,109 @@ def load_jsonl(path: Path) -> Tuple[List[Dict[str, Any]], List[str]]:
     """
     records, errors, _origins = ledger_store.load_ledger(path)
     return records, errors
+
+
+# ---------------------------------------------------------------------------
+# observation_key overlay (2026-10-21)
+#
+# An EVD record is append-only: once it is in state/evidence.jsonl or a shard
+# it is never edited, and writing a second record with the same evidence_id
+# would be reported as a duplicate. But SHELDON's ``provisional`` rule needs
+# ``observation_key`` on the EVD, so the key has to be added *somewhere else*.
+# The overlay is that place: ``state/evidence_keys.jsonl`` (frozen base) plus
+# ``state/evidence_keys.d/<YYYY-MM-DD>-<12 hex>.jsonl`` shards, one record per
+# annotated EVD. It follows the same base + parts rule as the ledgers
+# (scripts/ledger_store.py) without being one of them: it has no ID of its own
+# and it cannot change anything except adding a key that is not yet present.
+# ---------------------------------------------------------------------------
+def load_evidence_keys(
+    path: Path,
+) -> Tuple[Dict[str, str], List[str]]:
+    """Return (evidence_id -> observation_key, errors) of the overlay.
+
+    A missing base file with no shards means "no overlay yet" and is not an
+    error. Malformed records, a shard without its base, and two keys for the
+    same evidence are errors: silently keeping one of them is exactly the
+    failure mode the sharded ledgers are designed to report.
+    """
+    path = Path(path)
+    errors: List[str] = []
+    records: List[Dict[str, Any]] = []
+    origins: List[str] = []
+    if path.exists():
+        records, load_errors, origins = ledger_store.load_ledger(path)
+        errors.extend(load_errors)
+    else:
+        shards = ledger_store.shard_files(path, ledger_store.SHARD_SUFFIX)
+        if shards:
+            errors.append(
+                f"{path}: base file not found but {len(shards)} shard(s) "
+                f"exist; the overlay shards would be read against nothing"
+            )
+    mapping: Dict[str, str] = {}
+    first_origin: Dict[str, str] = {}
+    for index, record in enumerate(records):
+        origin = origins[index] if index < len(origins) else str(path)
+        evidence_id = record.get("evidence_id")
+        key = record.get("observation_key")
+        if not isinstance(evidence_id, str) or not evidence_id.strip():
+            errors.append(
+                f"{origin}: overlay record has no usable evidence_id"
+            )
+            continue
+        if not isinstance(key, str) or not key.strip():
+            errors.append(
+                f"{origin}: overlay record for {evidence_id} has no usable "
+                f"observation_key"
+            )
+            continue
+        if evidence_id in first_origin:
+            errors.append(
+                f"duplicate overlay key for {evidence_id}: "
+                f"{first_origin[evidence_id]} and {origin}"
+            )
+            continue
+        first_origin[evidence_id] = origin
+        mapping[evidence_id] = key.strip()
+    return mapping, errors
+
+
+def apply_evidence_keys(
+    evidences: List[Dict[str, Any]], mapping: Dict[str, str]
+) -> List[Dict[str, Any]]:
+    """Return copies of ``evidences`` with the overlay key added where absent.
+
+    An ``observation_key`` already on the EVD is never replaced: the overlay is
+    an annotation, not a correction, and silently overriding a recorded value
+    would make the ledger disagree with itself.
+    """
+    result: List[Dict[str, Any]] = []
+    for record in evidences:
+        evidence_id = record.get("evidence_id")
+        key = mapping.get(evidence_id) if isinstance(evidence_id, str) else None
+        existing = record.get("observation_key")
+        has_key = isinstance(existing, str) and existing.strip()
+        if key and not has_key:
+            record = dict(record)
+            record["observation_key"] = key
+        result.append(record)
+    return result
+
+
+def check_evidence_keys(
+    evidences: List[Dict[str, Any]], mapping: Dict[str, str]
+) -> List[str]:
+    """Every overlay key must name an EVD that exists (fail closed)."""
+    ids = {
+        record.get("evidence_id")
+        for record in evidences
+        if isinstance(record.get("evidence_id"), str)
+    }
+    return [
+        f"{EVIDENCE_KEYS_LEDGER}: observation_key for unknown evidence_id {eid!r}"
+        for eid in sorted(mapping)
+        if eid not in ids
+    ]
 
 
 def _check_type(value: Any, expected: str) -> bool:
@@ -430,8 +546,15 @@ def check_cross_references(
 def run_all_checks(root: Path = ROOT) -> Dict[str, List[str]]:
     errors: List[str] = []
     data: Dict[str, List[Dict[str, Any]]] = {}
+    key_mapping, key_errors = load_evidence_keys(root / EVIDENCE_KEYS_LEDGER)
+    errors.extend(key_errors)
     for name, (ledger_rel, schema_rel, id_key) in COLLECTIONS.items():
         records, load_errors, origins = load_ledger_records(root / ledger_rel)
+        if name == "evidence":
+            # The overlay adds observation_key to existing records; every other
+            # check (schema, IDs, references, prose) then sees the same view
+            # that scripts/gap_scan.py measures.
+            records = apply_evidence_keys(records, key_mapping)
         errors.extend(load_errors)
         try:
             schema = json.loads((root / schema_rel).read_text(encoding="utf-8"))
@@ -447,6 +570,7 @@ def run_all_checks(root: Path = ROOT) -> Dict[str, List[str]]:
             check_id_format(records, id_key, ledger_rel, ID_PREFIXES[name])
         )
         data[name] = records
+    errors.extend(check_evidence_keys(data.get("evidence", []), key_mapping))
     errors.extend(check_references(data))
     errors.extend(check_cross_references(data, root))
     return {"errors": errors}

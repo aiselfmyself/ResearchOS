@@ -62,13 +62,23 @@
 以下は**実測値**であり、`scripts/check_doc_numbers.py`（CI の 8 番目のゲート）が本文書の記述と
 リポジトリからの再計算値を突き合わせて検査する。算出コマンドは下記「使い方」節。
 
-- 台帳: sources=23 / evidence=86 / claims=9 / verifications=34 / hypotheses=2 / relations=0
-- テスト: 合計 420件（`tests/` の 19 ファイル。内訳は下記 §構成）
+- 台帳: sources=23 / evidence=86 / claims=9 / verifications=34 / hypotheses=6 / relations=235
+- 関係台帳の中身（`scripts/gap_scan.py` の実測・ゲート対象外）:
+  unassessed **0 / 86 (0.0%)**、unexplained **20 / 86 (23.3%)**、unresolved のみ 0 件、
+  provisional **56 / 86**（`observation_key` の注釈 30 件により non-provisional 30 件）
+- 観測キーの注釈: `state/evidence_keys.jsonl`（凍結ベース・空）＋`state/evidence_keys.d/*.jsonl` の **30 件**（30 EVD）
+- テスト: 合計 437件（`tests/` の 20 ファイル。内訳は下記 §構成）
 - CI ゲート: 8ゲート（`.github/workflows/core-check.yml` の `run:` を持つステップ数）
 
 台帳の件数は**凍結ベースとシャードの統合ビューのレコード数**である。既存の `state/*.jsonl` は
 凍結ベースであり、2026-10-21 以降の追記先は `state/<台帳名>.d/<YYYY-MM-DD>-<12桁hex>.jsonl`。
 旧パスは**全件一覧ではない**（履歴的な参照はそのまま解決する）。
+
+**関係台帳（REL）は 2026-10-21 に投入された。** 既存 2 仮説への裁定 172 行（`HYP-001` 12/0/63/11、
+`HYP-002` 11/0/71/4。順に support/refute/neutral/unresolved）と、新仮説 4 件（`HYP-20261021-*`）への
+63 行の計 235 行。`refute` は **0 件**だが、これは「反駁が無い」ではなく、`observation_key` の
+無い単独出典の反駁が `provisional` として数えられないため（fail-closed）。判断の記録は
+`contributions/2026-10-21_relation_backfill_integration.md` にある。
 
 **なぜこの節を引用ブロック（`>`）で書かないか** —— ゲートは「`>` で始まる行」を**過去の
 スナップショット**として数値検査から除外する。上の各段落で日付付きに述べた件数はその時点の
@@ -77,9 +87,10 @@
 検出された。現況監査 ID 21。`docs/minimal-core-and-ci.md` §4 の「書式上の注意」と同じ事由）。
 **したがって現況の数値は必ずこの節に追記する**こと。
 
-参考（ゲートの検査対象外。算出方法は `contributions/2026-10-21_current-status-audit.md` §1.2）：
-出典 22 件のうち EVD を持たないものは 0 件。EVD 81 件のうちいずれの HYP にも紐づかないものは
-75 件（92.6%）。
+参考（ゲートの検査対象外。算出方法は `contributions/2026-10-21_current-status-audit.md` §1.2 と
+`scripts/gap_scan.py`）：出典 23 件のうち EVD を持たないものは 0 件。EVD 86 件のうち support の REL を
+持たないものは **20 件（23.3%）**。この 20 件は「書誌監査など仮説の対象外 6 件」「外部化しても
+再現性が崩れた負の開示 3 件」「統制欠如による保留 11 件」に分かれ、support を付けるべき観測ではない。
 
 ## 構成
 
@@ -89,6 +100,8 @@ schemas/               研究オブジェクトのスキーマ（source/evidence
 state/                 研究台帳。凍結ベース（state/*.jsonl）＋セッション別シャード
                        （state/<台帳名>.d/*.jsonl）の統合ビューとして読む（scripts/ledger_store.py。
                        追記はシャードへ。ベースは書き換えない）
+                       evidence_keys.jsonl(+.d/) は EVD に observation_key を足す注釈
+                       （既存キーは上書きしない。validate_state / gap_scan が同じ view を読む）
 scripts/
   validate_state.py    研究台帳の決定論的検証器（標準ライブラリのみ）
   new_id.py            非連番レコードIDの採番器（並行作業のID衝突対策。統合ビューのIDと衝突確認）
@@ -147,7 +160,8 @@ tests/
   test_ledger_shards.py        台帳シャード（凍結ベース＋サイドカー）の読取・件数・参照整合性（39件）
   test_new_ledger_shard.py     シャード作成道具（命名規則・作成・警告）のテスト（16件）
   test_sync_doc_counts.py      文書内数値の機械同期のテスト（16件）
-                               ── 合計 420件
+  test_evidence_keys.py        observation_key 注釈（overlay）の付与・非上書き・重複検出・gap_scan 連携のテスト（17件）
+                               ── 合計 437件
 contributions/         研究ノート（統合レポート・調査メモ・全文読解レポート・共通モード測定）
 docs/                  分析レポートと設計記録（並行作業の所有マップは docs/parallel-work-ownership.md。強制力なし）
 .github/workflows/
@@ -158,7 +172,7 @@ docs/                  分析レポートと設計記録（並行作業の所有
 ## 使い方
 
 ```sh
-# 1. テスト（約5秒・420件）
+# 1. テスト（約5秒・437件）
 python3 -m unittest discover -s tests -v
 
 # 2. ベンチマークの再現性確認（fresh実行と成果物の照合）

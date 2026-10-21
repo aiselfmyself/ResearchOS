@@ -1,7 +1,7 @@
 {
   "plan": "relation_backfill_integration",
   "created_at": "2026-10-21",
-  "status": "awaiting_human_approval",
+  "status": "inserted",
   "source_candidates": [
     "contributions/2026-10-21_relation_backfill_ALL.json"
   ],
@@ -1747,5 +1747,20 @@
       "adjudication": "as_proposed",
       "rationale": "神経回路網の符号保存と閾値シフトの事後解析結果であり、多数決投票には無関係。"
     }
-  ]
+  ],
+  "inserted": {
+    "relations_shard": "state/relations.d/2026-10-21-a194d1a9b885.jsonl",
+    "hypotheses_shard": "state/hypotheses.d/2026-10-21-3990b64b4fdb.jsonl",
+    "evidence_keys_shard": "state/evidence_keys.d/2026-10-21-3ead52ec8d51.jsonl",
+    "relations_total": 235,
+    "hypotheses_total": 4,
+    "observation_keys_total": 30,
+    "label_to_hypothesis": {
+      "NEW-ALL1": "HYP-20261021-9f99",
+      "NEW-ALL2": "HYP-20261021-fee7",
+      "NEW-ALL3": "HYP-20261021-4cdb",
+      "NEW-ALL4": "HYP-20261021-a10b"
+    },
+    "note": "172 行は adjudication 済みの verdict のまま投入。NEW-* 63 行は 4 件の HYP 登録後に投入。"
+  }
 }
