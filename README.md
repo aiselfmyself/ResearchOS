@@ -62,9 +62,13 @@
 以下は**実測値**であり、`scripts/check_doc_numbers.py`（CI の 8 番目のゲート）が本文書の記述と
 リポジトリからの再計算値を突き合わせて検査する。算出コマンドは下記「使い方」節。
 
-- 台帳: sources=23 / evidence=86 / claims=9 / verifications=34 / hypotheses=2
-- テスト: 合計 388件（`tests/` の 17 ファイル。内訳は下記 §構成）
+- 台帳: sources=23 / evidence=86 / claims=9 / verifications=34 / hypotheses=2 / relations=0
+- テスト: 合計 420件（`tests/` の 19 ファイル。内訳は下記 §構成）
 - CI ゲート: 8ゲート（`.github/workflows/core-check.yml` の `run:` を持つステップ数）
+
+台帳の件数は**凍結ベースとシャードの統合ビューのレコード数**である。既存の `state/*.jsonl` は
+凍結ベースであり、2026-10-21 以降の追記先は `state/<台帳名>.d/<YYYY-MM-DD>-<12桁hex>.jsonl`。
+旧パスは**全件一覧ではない**（履歴的な参照はそのまま解決する）。
 
 **なぜこの節を引用ブロック（`>`）で書かないか** —— ゲートは「`>` で始まる行」を**過去の
 スナップショット**として数値検査から除外する。上の各段落で日付付きに述べた件数はその時点の
@@ -82,10 +86,16 @@
 ```text
 task/                  研究課題定義（Long-Horizon Agent Architectures 文献調査）
 schemas/               研究オブジェクトのスキーマ（source/evidence/claim/verification/hypothesis）
-state/                 研究台帳（JSONL。監査訂正済みデータ）
+state/                 研究台帳。凍結ベース（state/*.jsonl）＋セッション別シャード
+                       （state/<台帳名>.d/*.jsonl）の統合ビューとして読む（scripts/ledger_store.py。
+                       追記はシャードへ。ベースは書き換えない）
 scripts/
   validate_state.py    研究台帳の決定論的検証器（標準ライブラリのみ）
-  new_id.py            非連番レコードIDの採番器（並行作業のID衝突対策）
+  new_id.py            非連番レコードIDの採番器（並行作業のID衝突対策。統合ビューのIDと衝突確認）
+  new_ledger_shard.py  台帳／書誌スナップショットのシャードファイルを作る（命名規則の強制）
+  ledger_store.py      台帳とスナップショットの統合ビュー読み取り（凍結ベース＋シャード）
+  ledger_digest.py     台帳レコードの内容ハッシュ（移行・revert の同一性証明。計測器）
+  merge_ledgers.py     単一JSONLの3方向マージ道具（IDキーで和集合・競合は停止。手動修復用）
   check_citations.py   書誌のarXiv照合（オフラインfixture、--liveは手動専用）
   check_memo_citations.py 調査メモ内引用のarXiv照合（オフラインfixture、--liveは手動専用）
   check_ownership.py   並行作業の所有マップによるパス分類（助言専用・CI非接続）
@@ -99,6 +109,8 @@ scripts/
                         実測値と突き合わせて検出する（**CI8番目のゲート**。
                         監査 ID 19。監査は ID 12 と ID 14 で同型の欠陥を
                         2 回とも手作業で見つけていた）
+  sync_doc_counts.py    ゲート8が stale と報告した数値だけを機械的に同期する
+                        （README と docs/minimal-core-and-ci.md の現在値の行）
   holdout_eval.py       検査器を dev / hold-out 分割で評価し、過適合を検出する
                         （計測器。RRSI の hold-out/OOD 分離の実装）
   prune_candidates.py   低寄与コンポーネントを報告する（計測器。**何も削除しない**。
@@ -114,7 +126,8 @@ gitswarm/
   readout_sim.py       同質ワーカーの多数決＝共通モード障害の決定論的測定（--write/--check）
   artifacts/           実行で再生成できる成果物（ベンチマーク行列・投票スイープ行列）
 tests/
-  fixtures/            arXiv書誌スナップショット（オフライン照合用・2026-10-20取得）
+  fixtures/            arXiv書誌スナップショット（オフライン照合用・2026-10-20取得。
+                       凍結ベース＋arxiv_metadata_snapshot.d/ の追加パーツ）
   test_minimal_core.py         履歴非依存の回帰テスト（34件）
   test_check_citations.py      書誌照合テスト（17件・ネットワーク非依存）
   test_check_memo_citations.py 調査メモ内引用の照合テスト（33件）
@@ -132,7 +145,9 @@ tests/
   test_relations.py            関係台帳（REL）の検査・採番・メモ参照解決のテスト（37件）
   test_gap_scan.py             仮説カバレッジの穴（unassessed / unexplained / provisional ゲート）の報告テスト（46件）
   test_ledger_shards.py        台帳シャード（凍結ベース＋サイドカー）の読取・件数・参照整合性（39件）
-                               ── 合計 388件
+  test_new_ledger_shard.py     シャード作成道具（命名規則・作成・警告）のテスト（16件）
+  test_sync_doc_counts.py      文書内数値の機械同期のテスト（16件）
+                               ── 合計 420件
 contributions/         研究ノート（統合レポート・調査メモ・全文読解レポート・共通モード測定）
 docs/                  分析レポートと設計記録（並行作業の所有マップは docs/parallel-work-ownership.md。強制力なし）
 .github/workflows/
@@ -143,7 +158,7 @@ docs/                  分析レポートと設計記録（並行作業の所有
 ## 使い方
 
 ```sh
-# 1. テスト（約5秒・388件）
+# 1. テスト（約5秒・420件）
 python3 -m unittest discover -s tests -v
 
 # 2. ベンチマークの再現性確認（fresh実行と成果物の照合）
@@ -164,6 +179,11 @@ python3 scripts/check_memo_citations.py
 # 成果物の再生成（実行できることの証明。数値は不変のはず）
 python3 gitswarm/benchmarks/benchmark.py --write
 python3 gitswarm/readout_sim.py --write
+
+# 台帳に追記するとき（凍結ベースは書き換えない。docs/record-id-scheme.md §2）
+python3 scripts/new_ledger_shard.py evidence --create   # シャードのパスを作る
+python3 scripts/new_id.py EVD                          # IDを採番する
+python3 scripts/sync_doc_counts.py                     # 件数の数値行を実測へ同期する
 ```
 
 CI（`core-check.yml`）は上記1〜6に加え、**7. メモ内の台帳ID・パス参照の存在検査**と

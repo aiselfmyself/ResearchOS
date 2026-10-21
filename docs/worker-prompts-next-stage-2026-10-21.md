@@ -57,7 +57,7 @@
 
 ## 背景（前提知識として読むこと）
 - 台帳 state/*.jsonl への追記は全セッションが承認なしで行える（docs/parallel-work-ownership.md §2.1）。しかし複数ブランチが同一ファイルの末尾に追記するとテキスト衝突が起き（実例：PR #48/#49 のマージ）、毎回統合役が人手で「ID単位の和集合」として解決している。
-- 非連番ID（docs/record-id-scheme.md）はID衝突を解いたが、テキスト衝突は解いていない（同文書 §4 で「1レコード1ファイル分割は未実施」と明記）。
+- 非連番ID（docs/record-id-scheme.md）はID衝突を解いたが、テキスト衝突は解いていない。※この節は S1 依頼時点（2026-10-21 午前）の前提である。テキスト衝突は同日の方式B移行で解消済み（`contributions/2026-10-21_ledger_sharding_migration.md` §4）。
 - 開始時点の参考値（必ず自分で再測すること）：台帳は sources/evidence/claims/verifications/hypotheses の5ファイル、合計150行あまり。テストは tests/ 配下、CI ゲートは .github/workflows/core-check.yml を見ること。
 
 ## 最初にやること
@@ -144,7 +144,7 @@ PR を作成する。CI が緑で MERGEABLE/CLEAN なら自分でマージして
 あなたは ResearchOS リポジトリ（/home/user/ResearchOS）の移行実施ワーカーです。日本語で報告してください。
 
 ## 前提
-- 人間が S1 の推奨案《ここに採用方式を人間が記入》を採用している。記入がなければ作業を開始せず、人間に確認を求める報告だけを残す。
+- 人間が S1 の推奨案 **方式B（凍結ベース＋セッション別シャード＋読み取り時統合ビュー）** を採用している（2026-10-21 に人間が決定。実施記録は `contributions/2026-10-21_ledger_sharding_migration.md`）。
 - scripts/merge_ledgers.py（S2）が main に存在する。存在しなければ開始しない。
 - scripts/validate_state.py / scripts/new_id.py を変更しうるため、このタスクは単独で実行する。他のコード変更 PR が開いている場合は人間に確認する。
 
@@ -320,6 +320,12 @@ contributions/2026-10-21_sheldon_reading.md の §3.3〜§3.4（述語と provis
 ```
 
 ## ワーカー R4：関係台帳への統合投入（統合役）
+
+> **2026-10-21 更新（追記先）**：台帳は凍結ベース＋セッション別シャードになった。
+> REL レコードの追記先は `state/relations.jsonl` ではなく
+> **`state/relations.d/<YYYY-MM-DD>-<12桁hex>.jsonl`**。`python3 scripts/new_ledger_shard.py relations --create`
+> で作る（`docs/record-id-scheme.md` §2）。凍結ベースの `state/relations.jsonl` は書き換えない。
+> 以下の本文に「state/relations.jsonl に追記」とある箇所は、この読み替えで実施する。
 
 ```text
 あなたは ResearchOS リポジトリ（/home/user/ResearchOS）の統合役ワーカーです。日本語で報告してください。
