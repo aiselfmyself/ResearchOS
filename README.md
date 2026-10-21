@@ -63,7 +63,7 @@
 リポジトリからの再計算値を突き合わせて検査する。算出コマンドは下記「使い方」節。
 
 - 台帳: sources=23 / evidence=86 / claims=9 / verifications=34 / hypotheses=2
-- テスト: 合計 243件（`tests/` の 12 ファイル。内訳は下記 §構成）
+- テスト: 合計 280件（`tests/` の 13 ファイル。内訳は下記 §構成）
 - CI ゲート: 8ゲート（`.github/workflows/core-check.yml` の `run:` を持つステップ数）
 
 **なぜこの節を引用ブロック（`>`）で書かないか** —— ゲートは「`>` で始まる行」を**過去の
@@ -123,7 +123,8 @@ tests/
   test_check_doc_numbers.py    文書内の陳腐化した数値の検査テスト（21件）
   test_holdout_eval.py         hold-out 分割と過適合判定のテスト（18件）
   test_prune_candidates.py     低寄与コンポーネント報告のテスト（19件）
-                               ── 合計 243件
+  test_relations.py            関係台帳（REL）の検査・採番・メモ参照解決のテスト（37件）
+                               ── 合計 280件
 contributions/         研究ノート（統合レポート・調査メモ・全文読解レポート・共通モード測定）
 docs/                  分析レポートと設計記録（並行作業の所有マップは docs/parallel-work-ownership.md。強制力なし）
 .github/workflows/
@@ -134,7 +135,7 @@ docs/                  分析レポートと設計記録（並行作業の所有
 ## 使い方
 
 ```sh
-# 1. テスト（約5秒・243件）
+# 1. テスト（約5秒・280件）
 python3 -m unittest discover -s tests -v
 
 # 2. ベンチマークの再現性確認（fresh実行と成果物の照合）

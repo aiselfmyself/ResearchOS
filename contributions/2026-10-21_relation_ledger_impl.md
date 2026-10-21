@@ -14,7 +14,7 @@
 2. **既存5台帳のレコードは1件も変わっていない。** `state/` の5ファイルの SHA-256 を移行前と照合し、一致を確認した（§6.2）。
 3. **REL-NNN（連番形式）は拒否される。** REL には凍結連番の範囲が無いため `LEGACY_MAX` にキーを足していない。拒否はテストで確認した（§4）。
 4. **メモ内の REL 参照は検査7（`check_memo_ledger_refs.py`）で解決検査される。** 関係台帳は空なので、現時点で REL を参照するメモは dangling になる。これは仕様どおり。
-5. **ゲートは8つ中6つが緑。残る2つ（ゲート1のうち3テスト、ゲート8）は、テスト件数 243→280 の更新が README.md と docs/minimal-core-and-ci.md に未反映なため赤。** 両ファイルは統合役の所有（`docs/parallel-work-ownership.md` §2）で、依頼文も README の編集を禁じているため、件数更新は行わなかった。文案は §5.1 にある。作業コピーで文案を適用すると8ゲートすべて緑になることを確認した（§6.3）。
+5. **（追補で解消。§9）** 当初はゲートが8つ中6つ緑で、残る2つ（ゲート1のうち3テスト、ゲート8）は、テスト件数 243→280 の更新が README.md と docs/minimal-core-and-ci.md に未反映なため赤だった。統合役の承認を得て件数更新を本 PR に含め、所有ルールに件数同期の例外（§2.2）を追加した。
 6. **逸脱が2点ある。** どちらも §5 に理由つきで書いた。(a) 他セッションのメモ `contributions/2026-10-21_sheldon_reading.md` の §5.1 の例示 ID を、ゲート7が dangling と判定しないよう非トークンのプレースホルダに変えた。(b) `tests/test_minimal_core.py` の 1 テストを、連番を持たない REL に対応させた。
 
 ---
@@ -117,7 +117,7 @@
 
 ## 5. 逸脱提案（コードに反映していないものと、反映したもの）
 
-### 5.1 `README.md` と `docs/minimal-core-and-ci.md` の件数は更新していない（**未解決・統合役の判断待ち**）
+### 5.1 `README.md` と `docs/minimal-core-and-ci.md` の件数（**解消済み。§9**）
 
 - 理由：両ファイルは `docs/parallel-work-ownership.md` §2 で「統合役のみ」。依頼文も README の編集を禁じ、更新が必要なら文案をメモに書くよう指定している。
 - 影響：テスト件数が 243 → 280 になったため、**ゲート1（unittest）の3テストと、ゲート8（check_doc_numbers）が赤になる**。
@@ -271,3 +271,28 @@ state/verifications.jsonl OK
 - `docs/record-id-scheme.md` §2（採番方法）
 - `docs/parallel-work-ownership.md` §2（README と docs/minimal-core の所有）
 - 台帳の現状：`state/hypotheses.jsonl`（HYP-001 / HYP-002）、`state/evidence.jsonl`（EVD 86件）
+
+---
+
+## 9. 追補（2026-10-21）：件数更新の本 PR への取り込みと、所有ルールの変更
+
+- **承認**：人間の承認により、§5.1 の件数更新（README 4箇所相当とファイル一覧1行、`docs/minimal-core-and-ci.md` 1箇所）を本 PR に含めた。差分は §5.1 のものと同一。
+- **ルール変更**：`docs/parallel-work-ownership.md` に §2.2 を追加した。`check_doc_numbers.py` が stale と報告した件数の同期は、全セッションが人間の承認なしに自動実行してよい（台帳・CI 定義・ゲートの判定ロジックは対象外）。`docs/autonomous-merge-policy-2026-10-21.md` §1 の表にも同じ行を加えた。`scripts/check_ownership.py` の分類（パスの文字列だけを見る）は変えていない。
+- **検証**：下記の最終ゲート結果（§9.1）。
+- **マージ**：CI が緑であることを確認したうえで、`docs/autonomous-merge-policy-2026-10-21.md` §2 に従って本 PR をマージした。
+
+### 9.1 最終ゲート結果（件数更新適用後）
+
+| # | コマンド | 結果 |
+|---|---|---|
+| 1 | `python3 -m unittest discover -s tests` | 280件 OK |
+| 2 | `python3 gitswarm/benchmarks/benchmark.py --check` | PASS |
+| 3 | `python3 gitswarm/readout_sim.py --check` | PASS |
+| 4 | `python3 scripts/validate_state.py` | PASS（relations=0） |
+| 5 | `python3 scripts/check_citations.py` | 0 failure(s) |
+| 6 | `python3 scripts/check_memo_citations.py` | 0 failure(s) |
+| 7 | `python3 scripts/check_memo_ledger_refs.py` | 0 dangling |
+| 8 | `python3 scripts/check_doc_numbers.py` | 0 stale（tests=280 gates=8） |
+
+既存台帳5本のハッシュは移行前と一致（§6.2）。
+

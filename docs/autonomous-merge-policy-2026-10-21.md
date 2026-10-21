@@ -26,6 +26,7 @@
 | 台帳レコード（`state/*.jsonl`）の**追記** | **不要**（自発的に実施してよい） | 取り消しが安価。CI（ゲート4・5）が構造と書誌を機械的に検査する。`docs/parallel-work-ownership.md` §2.1 |
 | **ID の採番**（`python3 scripts/new_id.py`） | **不要** | 非連番IDが衝突を原理的に避ける。`docs/record-id-scheme.md` §2 |
 | 台帳レコード（`state/*.jsonl`）の**削除・書き換え** | **要る** | 追記専用という前提を壊す。再現性の根拠が失われる。訂正は追記（`correction_note`）で残す |
+| 文書内の件数の同期（`check_doc_numbers.py` が stale と報告した数値のみ。対象は README と `docs/minimal-core-and-ci.md`） | **不要**（自発的に実施してよい） | 再計算できる事実で、判断の余地がない。`docs/parallel-work-ownership.md` §2.2 |
 | リポジトリ設定・CI 定義の変更 | **要る** | 全セッションに効く。誤りが波及する範囲が最大 |
 
 **「追記」と「書き換え」の区別がすべてである。** 追記は履歴を追加する操作であり、既存のコミットも既存のレコードも消さない。

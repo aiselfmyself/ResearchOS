@@ -22,8 +22,8 @@
 | パス | 書いてよい担当 | 理由 |
 |---|---|---|
 | `state/`（5台帳すべて） | **全セッション（追記のみ）** | 研究の事実データ。**2026-10-21 に統合役限定を解除した**。台帳への追記とID採番は、どのセッションも人間の承認なしに実行してよい。既存レコードの削除・書き換えは引き続き人間の承認が要る。§2.1 |
-| `README.md` | **統合役のみ** | リポジトリの現状表明。複数セッションが同時に直すと「今どこまで進んだか」が壊れる |
-| `docs/minimal-core-and-ci.md` | **統合役のみ** | 最小コア／CIの設計記録。CIの中身と1対1で対応させる |
+| `README.md` | **統合役のみ**（件数の同期だけは §2.2 により全セッション可） | リポジトリの現状表明。複数セッションが同時に直すと「今どこまで進んだか」が壊れる |
+| `docs/minimal-core-and-ci.md` | **統合役のみ**（件数の同期だけは §2.2 により全セッション可） | 最小コア／CIの設計記録。CIの中身と1対1で対応させる |
 | `gitswarm/artifacts/` | **統合役のみ** | `benchmark.py --write` の生成物。手で書かず、統合役が再生成して入れる |
 | `contributions/<自分のファイル>.md` | **各セッション（自分の1本だけ）** | 調査メモ・作業報告。1セッション1ファイルなら衝突しない |
 | それ以外（`scripts/`、`tests/`、`docs/` の他文書、`task/`、`schemas/`） | **規約は何も言わない** | 下記 §5 |
@@ -34,7 +34,7 @@
 - 他のセッションの `contributions/` ファイルは読んでよい。**書き換えない**。
 - 新しい `contributions/` ファイル名は `YYYY-MM-DD_<主題>.md`（例：`2026-10-20_ownership_map.md`）。既存の `workerNN_*.md` は改名しない。
 - `state/` への追記が必要なら、**自分で書いてよい**（統合役への受け渡しは不要。§2.1）。IDは `python3 scripts/new_id.py <PREFIX>` で採番する（`docs/record-id-scheme.md` §2）。追記したら `python3 scripts/validate_state.py` を走らせ、スキーマ・ID一意・参照整合性が緑であることを確認してから PR に出す。
-- `docs/` に新しい分析文書を足すのは可（既存の `docs/*.md` を書き換えない限り）。本マップが「統合役のみ」と名指ししたのは `docs/minimal-core-and-ci.md` **1本だけ**である。
+- `docs/` に新しい分析文書を足すのは可（既存の `docs/*.md` を書き換えない限り）。本マップが「統合役のみ」と名指ししたのは `README.md` と `docs/minimal-core-and-ci.md` の2本であり、その例外は §2.2 の件数同期だけである。
 
 ## 2.1 台帳への追記とID採番は全セッションが自律的に行ってよい（2026-10-21）
 
@@ -77,6 +77,27 @@
 - **追記であること。** 既存レコードの削除・書き換えが混入したら、この規約の前提が崩れている。レビューで扱う。
 
 意味的な誤りが混入し続ける——たとえば EVD の excerpt が原典と食い違う状態が放置される——場合は、`state/` を再び統合役限定に戻すことを検討すべきである。
+
+## 2.2 文書内の件数の同期は全セッションが自動で行ってよい（2026-10-21）
+
+### 定めること
+
+| 操作 | 人間の承認 | 根拠 |
+|---|---|---|
+| `scripts/check_doc_numbers.py` が **stale と報告した数値**の更新（テスト件数・ゲート数・台帳件数）。対象は `README.md` と `docs/minimal-core-and-ci.md` | **不要**（統合役の判断も不要。自発的に実施してよい） | 件数は再計算できる事実で、判断の余地がない。テストを足すたびに統合役の承認を待つと、件数だけが古いまま残る |
+
+### 条件
+
+1. **変更は報告された数値の置換に限る。** 文章の書き換えは対象外。ファイル一覧への1行追加（新しいテストファイルを載せるため）は、件数を正しくするのに必要な範囲で認める。
+2. **更新後に `python3 scripts/check_doc_numbers.py` と全ゲートが緑である。**
+3. **PR 本文に before / after の件数を書く。**
+
+### 境界
+
+- 台帳レコードの書き換え、CI 定義の変更、ゲートの判定ロジックの変更には適用しない。それぞれ従来どおり（`docs/autonomous-merge-policy-2026-10-21.md` §1）。
+- 文書の散文（方針・経緯・解釈）の変更は対象外。統合役の所有のまま。
+- `scripts/check_ownership.py` は**パスの文字列だけ**を見るため、`README.md` と `docs/minimal-core-and-ci.md` は引き続き `INTEGRATOR_ONLY` と分類される。件数同期はその分類に対する例外であり、分類器の判定とは別に運用する。
+
 
 ## 3. なぜ「強制力なし」なのか
 
@@ -146,4 +167,4 @@ python3 scripts/check_ownership.py --selftest
 | 日付 | 内容 |
 |---|---|
 | 2026-10-20 | 初版。`docs/record-id-scheme.md` §4 の未解決3項目のうち「共有ファイルの同時編集」に対する運用規約として作成。`scripts/check_ownership.py` と `tests/fixtures/ownership_cases.json` を同梱 |
-| 2026-10-21 | §2.1 を追加し、`state/` を「統合役のみ」から「全セッション（追記のみ）」に変更。台帳への追記とID採番を人間承認なしで実行してよいことにした。削除・書き換えは引き続き承認が要る。追随して `scripts/check_ownership.py`（`ANY_SESSION_APPEND` を追加し `CONFLICTING` から除外）、`tests/fixtures/ownership_cases.json`、`tests/test_ownership.py` を更新。README と `docs/minimal-core-and-ci.md` のテスト件数は、ゲート8（`check_doc_numbers.py`）が検出したので追随して訂正した |
+| 2026-10-21 | §2.2 を追加。`check_doc_numbers.py` が stale と報告した件数の同期を、全セッションが承認なしで自動実行してよいことにした（README と `docs/minimal-core-and-ci.md` の件数更新を含む）。§2.1 を追加し、`state/` を「統合役のみ」から「全セッション（追記のみ）」に変更。台帳への追記とID採番を人間承認なしで実行してよいことにした。削除・書き換えは引き続き承認が要る。追随して `scripts/check_ownership.py`（`ANY_SESSION_APPEND` を追加し `CONFLICTING` から除外）、`tests/fixtures/ownership_cases.json`、`tests/test_ownership.py` を更新。README と `docs/minimal-core-and-ci.md` のテスト件数は、ゲート8（`check_doc_numbers.py`）が検出したので追随して訂正した |
