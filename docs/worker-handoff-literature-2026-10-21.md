@@ -171,7 +171,7 @@ arXiv:2609.24972 "RRSI: Regularized Recursive Self-Improvement of Agent Harnesse
 - Authors: Honghao Lin, David P. Woodruff, Yuan Deng, Jieming Mao, Song Zuo,
   Vahab Mirrokni（6名）
 - 現在版 **v2**（2026-09-15）。v1 2026-09-14
-- cs.AI / cs.CL / cs.CL
+- cs.AI / cs.CL / cs.LG（2026-10-21 訂正：初版は「cs.AI / cs.CL / cs.CL」と cs.CL を重記していた。abs ページ https://arxiv.org/abs/2609.15983 で第3カテゴリが cs.LG（Machine Learning）と確認できたため、人間の承認を得て訂正。確認経緯は contributions/2026-10-21_stellar_colosseum_reading.md §2.2・§8.4）
 - 抄録で判明済みの點：readiness gate（経路が分解可能か判定）／
   section-level subproblems／verifier の指摘を**影響箇所へ戻す**／
   **targeted falsification**／**overlapping random-sample tree aggregation**
