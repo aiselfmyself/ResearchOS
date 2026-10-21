@@ -63,7 +63,7 @@
 リポジトリからの再計算値を突き合わせて検査する。算出コマンドは下記「使い方」節。
 
 - 台帳: sources=23 / evidence=86 / claims=9 / verifications=34 / hypotheses=2
-- テスト: 合計 339件（`tests/` の 15 ファイル。内訳は下記 §構成）
+- テスト: 合計 349件（`tests/` の 16 ファイル。内訳は下記 §構成）
 - CI ゲート: 8ゲート（`.github/workflows/core-check.yml` の `run:` を持つステップ数）
 
 **なぜこの節を引用ブロック（`>`）で書かないか** —— ゲートは「`>` で始まる行」を**過去の
@@ -118,11 +118,12 @@ tests/
   test_minimal_core.py         履歴非依存の回帰テスト（34件）
   test_check_citations.py      書誌照合テスト（17件・ネットワーク非依存）
   test_check_memo_citations.py 調査メモ内引用の照合テスト（33件）
+  test_merge_ledgers.py        JSONL三者マージの合成テスト（13件）
+  test_score_extraction.py     単一対並行の抽出採点テスト（10件）
   test_measure_agreement.py    並列セッション間一致度の測定テスト（25件）
   test_ownership.py            所有マップによるパス分類テスト（17件）
   test_readout_sim.py          共通モード障害シミュレータの回帰テスト（20件）
   test_check_memo_ledger_refs.py メモ内ID・パス参照の検査テスト（12件）
-  test_merge_ledgers.py        追記型台帳のマージ（ID衝突・欠落の可視化）のテスト（13件）
   test_estimate_rho.py         rho 推定器の回帰テスト（13件）
   test_harness_regime.py       R の単位変換と閾値判定の回帰テスト（14件）
   test_check_doc_numbers.py    文書内の陳腐化した数値の検査テスト（21件）
@@ -130,7 +131,7 @@ tests/
   test_prune_candidates.py     低寄与コンポーネント報告のテスト（19件）
   test_relations.py            関係台帳（REL）の検査・採番・メモ参照解決のテスト（37件）
   test_gap_scan.py             仮説カバレッジの穴（unassessed / unexplained / provisional ゲート）の報告テスト（46件）
-                               ── 合計 339件
+                               ── 合計 349件
 contributions/         研究ノート（統合レポート・調査メモ・全文読解レポート・共通モード測定）
 docs/                  分析レポートと設計記録（並行作業の所有マップは docs/parallel-work-ownership.md。強制力なし）
 .github/workflows/
@@ -141,7 +142,7 @@ docs/                  分析レポートと設計記録（並行作業の所有
 ## 使い方
 
 ```sh
-# 1. テスト（約5秒・339件）
+# 1. テスト（約5秒・349件）
 python3 -m unittest discover -s tests -v
 
 # 2. ベンチマークの再現性確認（fresh実行と成果物の照合）

@@ -14,7 +14,7 @@
 2. **反駁は 0 件。** `observation_key` を持つ EVD は 86 件中 **0 件**なので、provisional 導出（fail-closed）により全 86 件が provisional になる。非 provisional は 0 件で、`refute` は両仮説とも 0。将来 `refute` の REL が入っても、独立出典による再遭遇が無い限り「抑止」として計上される。
 3. **観測領域（source_id）23 個すべてが未評価。** 最大は `SRC-20261020-f295`（Agora）の 11 件、次いで `SRC-20261021-a3a2` の 8 件。EVD を持たない出典は 0 件。
 4. **SHELDON メモ §6.3 の予測（全件未評価・refutation 0 件）は形状として的中した。** ただし絶対値は 54 件ではなく 86 件である。§6.3 の 54 は**メモ執筆時点（PR #45 相当）のスナップショット**であり、その後の複数の PR の取り込みで EVD が 32 件増えた。§6.1 の「12 領域」も現在は 23 領域。
-5. **CI ゲートは 8/8 緑。** ただし開始時点（`352f8fe`）は 8 中 6 緑で、赤の 2 つは**本 PR の変更前から赤**だった（`README.md` の「合計 280件」に対し実測 293 件、`docs/minimal-core-and-ci.md` も同様）。計測器の欠陥ではなく、過去 PR のテスト追加に対する件数同期の漏れである。**承認を得て本 PR で件数を実測値（339 件）に同期**し、8/8 緑を確認した（§7）。
+5. **CI ゲートは 8/8 緑。** ただし開始時点（`352f8fe`）は 8 中 6 緑で、赤の 2 つは**本 PR の変更前から赤**だった（`README.md` の「合計 280件」に対し実測 293 件、`docs/minimal-core-and-ci.md` も同様）。計測器の欠陥ではなく、過去 PR のテスト追加に対する件数同期の漏れである。**承認を得て本 PR で件数を実測値（349 件）に同期**し、8/8 緑を確認した（§7）。
 
 ---
 
@@ -186,7 +186,7 @@ python3 scripts/gap_scan.py --state-dir <dir>   # 合成台帳を指す（テス
 
 | # | コマンド | 終了コード | 結果 |
 |---|---|---|---|
-| 1 | `python3 -m unittest discover -s tests` | 0 | **339 件 OK** |
+| 1 | `python3 -m unittest discover -s tests` | 0 | **349 件 OK** |
 | 2 | `python3 gitswarm/benchmarks/benchmark.py --check` | 0 | PASS |
 | 3 | `python3 gitswarm/readout_sim.py --check` | 0 | PASS |
 | 4 | `python3 scripts/validate_state.py` | 0 | PASS（`sources=23, evidence=86, claims=9, verifications=34, hypotheses=2, relations=0`） |
@@ -202,16 +202,18 @@ python3 scripts/gap_scan.py --state-dir <dir>   # 合成台帳を指す（テス
 - ゲート 1：`Ran 293 tests` → `FAILED (failures=2)`（`test_check_doc_numbers.RealRepoTest` の 2 件）
 - ゲート 8：`actual: tests=293` に対し文書側 280 → 4 件 STALE（`README.md` ×3、`docs/minimal-core-and-ci.md` ×1）
 
-つまり **`main` の `352f8fe` は既に赤**であった。原因は、テストを追加した過去の PR が `README.md` と `docs/minimal-core-and-ci.md` の件数（280）を更新しなかったこと。`tests/test_merge_ledgers.py`（13件）と本 PR の `tests/test_gap_scan.py`（46件）が文書の一覧から漏れており、実測は 293 → 339 になっていた。
+つまり **`main` の `352f8fe` は既に赤**であった。原因は、テストを追加した過去の PR が `README.md` と `docs/minimal-core-and-ci.md` の件数（280）を更新しなかったこと。`tests/test_merge_ledgers.py`（13件）と本 PR の `tests/test_gap_scan.py`（46件）が文書の一覧から漏れており、実測は 293 → 339 になっていた（その後 `main` は PR #55 で `tests/test_score_extraction.py`（10件）を取り込み、文書を 303 に同期した）。
 
 本 PR の依頼条件は「成果物は新規作成のみ、既存ファイル・`state/` は変更しない」だったため、当初はこの同期を**行わずに報告**した。**承認を得たうえで**、次の最小限の同期を行った（R1 が同じ状況を承認込みで解消した前例に倣う：`contributions/2026-10-21_relation_ledger_impl.md` §9）。
 
 | ファイル | 変更 |
 |---|---|
-| `README.md` | 「現在の状態」のテスト件数 280 → **339**、ファイル数 13 → **15**。§構成に `scripts/gap_scan.py`、`tests/test_merge_ledgers.py`（13件）、`tests/test_gap_scan.py`（46件）を追加し、合計を 339 に更新。§使い方の「280件」→ 339 |
-| `docs/minimal-core-and-ci.md` | §2 の `280テスト` → **339テスト** |
+| `README.md` | 「現在の状態」のテスト件数 → **349**、ファイル数 → **16**。§構成に `scripts/gap_scan.py` と `tests/test_gap_scan.py`（46件）を追加し、合計を 349 に更新。§使い方の件数も 349 |
+| `docs/minimal-core-and-ci.md` | §2 のゲート1の件数 → **349テスト** |
 
-**台帳（`state/`）・スキーマ・CI 設定・ゲートの意味論は変更していない。** 変更は件数の文字列のみで、テストの追加・削除は無い（`def test_` の計数が 339 であることはゲート 8 が再計算して確認している）。
+`main` は本 PR の作業中に PR #55（`scripts/score_extraction.py` と 10 テスト）を取り込み、同じ件数行を 303 に更新していた。**競合は件数行のみ**で、両方の追加（`test_score_extraction.py` 10件 と `test_gap_scan.py` 46件）を残したうえで合計を 349 に統一した。`scripts/score_extraction.py` の README §構成への追記は本 PR の範囲外（別 PR の持ち分）として行っていない。
+
+**台帳（`state/`）・スキーマ・CI 設定・ゲートの意味論は変更していない。** 変更は件数の文字列のみで、テストの追加・削除は無い（`def test_` の計数が 349 であることはゲート 8 が再計算して確認している）。
 
 ### 7.2 マージ判断
 
